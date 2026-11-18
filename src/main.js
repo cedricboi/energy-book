@@ -194,6 +194,10 @@ async function start() {
       loop.request();
     },
     values: () => book?.state.scene?.values?.(),
+    /** True once every diagram on the page has finished drawing in. */
+    drawInDone() {
+      return (book?.state.objects ?? []).every((o) => o.formUniforms[0].value >= 1);
+    },
     get pageCount() {
       return book?.state.lesson?.pages.length ?? 0;
     },

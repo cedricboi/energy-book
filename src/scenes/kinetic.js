@@ -13,6 +13,7 @@ import { pageSurfaceY, BOOK } from '../objects/book.js';
 import { carGeometry, addRuler } from './helpers.js';
 import { kineticEnergy, distanceFromWorkDone } from '../physics/equations.js';
 import { formatQuantity } from '../physics/format.js';
+import { play } from '../core/sound.js';
 
 export const SLOW = 0.1;
 export const CLAY_FORCE = 50; // N, the steady push of the clay on the car
@@ -136,6 +137,7 @@ export default function createKineticScene(ctx) {
         placeClay();
         if (v <= 0 && phase !== 'done') {
           phase = 'done';
+          play('thud');
           records.push([formatQuantity(s.mass, 'kg', 2), formatQuantity(s.speed, 'm/s', 2), formatQuantity(total, 'J', 2)]);
           api.onRecord?.();
           ctx.overlay.setHtml('dent', `dent ${formatQuantity(fullDent * 1000, 'mm', 2)}`);

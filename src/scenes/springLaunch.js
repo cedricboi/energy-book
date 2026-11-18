@@ -9,6 +9,7 @@ import { createCrate } from '../objects/crate.js';
 import { springGeometry, createSpring } from '../objects/spring.js';
 import { pageSurfaceY } from '../objects/book.js';
 import { hullFrom } from '../ink/inkObject.js';
+import { play } from '../core/sound.js';
 
 export const SLOW = 0.25;
 
@@ -81,6 +82,7 @@ export default function createSpringLaunchScene(ctx) {
       if (id === 'run' && !locked) {
         reset();
         running = true;
+        play('spring-release');
       }
       if (id === 'reset') reset();
     },

@@ -12,6 +12,7 @@ import { pageSurfaceY, BOOK } from '../objects/book.js';
 import { addRuler } from './helpers.js';
 import { createBounceModel, BALLS, SOUND_SHARE } from '../physics/models/bounce.js';
 import { gravitationalPotentialEnergy } from '../physics/equations.js';
+import { play } from '../core/sound.js';
 
 export const DRAW_SCALE = 1 / 10;
 export const SLOW = 0.25;
@@ -119,6 +120,7 @@ export default function createBounceScene(ctx) {
     if (v.bounces > lastBounces) {
       lastBounces = v.bounces;
       rippleAge = 0;
+      play('ball-bounce');
     }
     if (rippleAge >= 0) {
       rippleAge += screenDt;

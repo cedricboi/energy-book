@@ -13,6 +13,7 @@ import { inkStyle } from '../ink/inkMaterial.js';
 import { loadLesson, saveLesson, allNamedTerms } from '../ui/progress.js';
 import { renderGlossary } from '../ui/glossary.js';
 import { report } from '../hub/report.js';
+import { play } from '../core/sound.js';
 
 function combine(list) {
   return {
@@ -70,6 +71,7 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     })));
     Object.assign(state, { scene, group, drawIn, objects: scene.objects, sceneId: id });
     drawIn.play();
+    play('pen-scratch');
     onChange?.();
   }
 
@@ -96,6 +98,7 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
         if (rec.id === page.question?.id) state.scene?.setHideValues?.(false);
         save();
         report({ lesson: lesson.id, ...rec });
+        if (page.type !== 'predict') play(rec.correct ? 'chime' : 'wrong');
       },
       onNamed(termId) {
         if (!state.progress.named.includes(termId)) {
@@ -140,6 +143,7 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     }
     const sceneChanges = (page.scene ?? null) !== state.sceneId;
     if (sceneChanges) clearScene();
+    play('page-turn');
     const turning = turner.turn(direction);
     onChange?.(); // keep the render loop running while the leaf turns
     await turning;

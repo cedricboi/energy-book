@@ -11,8 +11,8 @@ export default defineConfig({
     chunkSizeWarningLimit: 1400,
     rollupOptions: {
       input: {
+        // teachers.html is generated after the build by scripts/build-teachers.js.
         main: resolve(import.meta.dirname, 'index.html'),
-        teachers: resolve(import.meta.dirname, 'teachers.html'),
       },
     },
   },
