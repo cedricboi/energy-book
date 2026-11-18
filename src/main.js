@@ -1,12 +1,15 @@
 // src/main.js
-// Entry point. Phase 2: the stage only (book on the desk at night), with no
-// lesson content.
+// Entry point. Phase 3: the stage plus one ink beaker on the right-hand page,
+// for choosing the house ink style. No lesson content yet.
 //
 // URL options (for testing and the teacher):
 //   ?q=high|medium|low   force a quality tier (otherwise a 2 s probe decides)
 //   ?tm=agx|aces         tone mapping (default agx)
 //   ?view=intro          the wider view that shows the window
+//   ?view=closeup        close view of the beaker
 //   ?debug=hot           luminance view: red marks anything above the bloom threshold
+//   ?debug=1             ink debug panel (sliders, presets, replay)
+//   ?ink=A|B|C           ink preset (default A)
 import '@fontsource-variable/newsreader/opsz.css';
 import '@fontsource/kalam/latin-400.css';
 import './styles/main.css';
@@ -17,6 +20,9 @@ import { createPost } from './core/post.js';
 import { createLoop } from './core/loop.js';
 import { createDragOrbit } from './core/input.js';
 import { forcedTier, tierSettings, tierFromFrameTime, probeFrameTime } from './core/quality.js';
+import { setInkResolution, usePreset, setInkStyle, inkStyle, INK_PRESETS } from './ink/inkMaterial.js';
+import { createBeakerDemo, BEAKER_SPOT } from './demo/beakerDemo.js';
+import { createDebugPanel } from './ui/debug.js';
 
 const params = new URLSearchParams(location.search);
 
@@ -37,12 +43,14 @@ async function start() {
   const renderer = createRenderer(canvas, tier);
   if (!renderer) return showFallback();
 
-  const view = params.get('view') === 'intro' ? 'intro' : 'reading';
-  const stage = createStage({ tier, view });
+  const view = ['intro', 'closeup'].includes(params.get('view')) ? params.get('view') : 'reading';
+  const stage = createStage({ tier, view, focus: { x: BEAKER_SPOT.x, y: 0.058, z: BEAKER_SPOT.z } });
+  usePreset(INK_PRESETS[params.get('ink')] ? params.get('ink') : 'A');
   const post = createPost(renderer, stage.scene, stage.camera, { tier, toneMapping: params.get('tm') ?? 'agx' });
   if (params.get('debug') === 'hot') post.setDebugHot(true);
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const demo = createBeakerDemo(stage.scene, { reducedMotion });
   // eslint-disable-next-line prefer-const
   let loop;
   const orbit = createDragOrbit(canvas, {
@@ -58,9 +66,10 @@ async function start() {
   }
 
   loop = createLoop((dt) => {
-    const moving = orbit.update(dt);
+    const orbiting = orbit.update(dt);
+    const drawing = demo.drawIn.update(dt);
     drawFrame(dt);
-    return moving;
+    return orbiting || drawing;
   });
 
   function resize() {
@@ -68,6 +77,7 @@ async function start() {
     const h = window.innerHeight;
     stage.setAspect(w / h);
     post.setSize(w, h);
+    setInkResolution(w, h, renderer.getPixelRatio(), tier.hatchLayers);
     loop.request();
   }
   window.addEventListener('resize', resize);
@@ -86,10 +96,42 @@ async function start() {
     tierName = tier.name;
   }
 
-  // Draw once at the final settings, then let the loop go idle.
+  // The beaker rises, draws itself in, then its form fades in.
+  if (params.get('drawin') === 'off') demo.drawIn.setTime(99);
+  else demo.drawIn.play();
+  loop.request();
   drawFrame();
   document.documentElement.dataset.tier = tierName;
   document.documentElement.dataset.ready = 'true';
+
+  if (params.get('debug') === '1') {
+    createDebugPanel({
+      style: inkStyle,
+      setStyle: (v) => { setInkStyle(v); loop.request(); },
+      usePreset: (name) => { usePreset(name); loop.request(); },
+      presets: Object.keys(INK_PRESETS),
+      replay: () => { demo.drawIn.play(); loop.request(); },
+    });
+  }
+
+  window.__ink = {
+    usePreset(name) {
+      usePreset(name);
+      drawFrame();
+    },
+    /** Freeze the draw-in at a time in seconds (99 = finished), and draw it. */
+    setDrawIn(seconds) {
+      demo.drawIn.setTime(seconds);
+      drawFrame();
+    },
+    replay() {
+      demo.drawIn.play();
+      loop.request();
+    },
+    get style() {
+      return { ...inkStyle };
+    },
+  };
 
   // Hooks for the Playwright tests and for checking on a real device.
   window.__stage = {

@@ -34,5 +34,9 @@ await page.goto(url);
 await page.waitForFunction(() => document.documentElement.dataset.ready === 'true');
 console.log('probe', await page.evaluate(() => `${window.__stage.probeMs.toFixed(1)} ms, chose ${window.__stage.tier}`));
 await browser.close();
-server?.kill();
+// On Windows, kill the whole process tree, or the preview server lingers.
+if (server) {
+  if (process.platform === 'win32') spawn('taskkill', ['/pid', String(server.pid), '/T', '/F']);
+  else server.kill();
+}
 process.exit(0);

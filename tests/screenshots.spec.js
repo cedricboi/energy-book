@@ -59,7 +59,8 @@ test.describe('stage', () => {
   });
 
   test('render loop stops within 2 s when nothing moves', async ({ page: tab }) => {
-    await open(tab, '?q=low');
+    // The draw-in is skipped, so nothing on the page is moving.
+    await open(tab, '?q=low&drawin=off');
     await tab.waitForTimeout(2000);
     expect(await tab.evaluate(() => window.__stage.idle)).toBe(true);
   });

@@ -61,3 +61,24 @@ html, body {
 .fallback h2 { font-weight: 500; margin: 0 0 0.5rem; font-size: 1.75rem; }
 .fallback p { margin: 0; }
 .fallback a { color: var(--lamp); }
+
+/* Ink debug panel (?debug=1 only). */
+.debug-panel {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: min(380px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  padding: 10px 12px;
+  background: rgba(12, 18, 48, 0.88);
+  color: var(--paper);
+  border-radius: 8px;
+  font: 14px/1.3 system-ui, sans-serif;
+  z-index: 10;
+}
+.debug-row { display: grid; grid-template-columns: 1fr 28px 110px 28px 44px; gap: 6px; align-items: center; margin: 4px 0; }
+.debug-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.debug-panel button { min-height: 28px; background: #2a3466; color: var(--paper); border: 1px solid #4a5596; border-radius: 4px; cursor: pointer; }
+.debug-panel button:focus-visible, .debug-panel input:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+.debug-panel output { text-align: right; font-variant-numeric: tabular-nums; }

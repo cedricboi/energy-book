@@ -9,6 +9,7 @@ import {
 import { createBook, BOOK, BOOK_EXTENT } from '../objects/book.js';
 import { createDesk } from '../objects/desk.js';
 import { createNightWindow, NIGHT_HEX } from '../objects/nightWindow.js';
+import { setPageLightProvider } from '../ink/inkMaterial.js';
 
 export const LAMP_HEX = '#FFD9A0';
 const WALL_Z = -0.42;
@@ -61,7 +62,7 @@ const POSES = {
   intro: { fovDeg: 34, position: new Vector3(0, 0.2, 0.92), target: new Vector3(0, 0.2, -0.3) },
 };
 
-export function createStage({ tier, view = 'reading' }) {
+export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.05, z: 0 } }) {
   const scene = new Scene();
   scene.background = new Color(NIGHT_HEX);
 
@@ -96,7 +97,37 @@ export function createStage({ tier, view = 'reading' }) {
   const moon = new DirectionalLight(new Color('#7D93D9'), 0.22);
   moon.position.set(0.25, 0.7, WALL_Z - 1);
   scene.add(moon);
-  scene.add(new HemisphereLight(new Color('#1A2448'), new Color('#24170F'), 0.32));
+  const hemi = new HemisphereLight(new Color('#1A2448'), new Color('#24170F'), 0.32);
+  scene.add(hemi);
+
+  // Light falling on an upward-facing page at a point, in the shader's units
+  // (irradiance / pi, as luminance). The ink uses it to decide where to hatch.
+  const lum = (c) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+  const tmp = new Vector3();
+  const axis = new Vector3();
+  function pageLight(p) {
+    let e = 0;
+    for (const l of [lamp, spill]) {
+      tmp.copy(l.position).sub(p);
+      const d = tmp.length();
+      tmp.divideScalar(d);
+      const cosUp = Math.max(0, tmp.y);
+      let spot = 1;
+      if (l.isSpotLight) {
+        axis.copy(l.position).sub(l.target.position).normalize();
+        const c = tmp.dot(axis);
+        const cone = Math.cos(l.angle);
+        const pen = Math.cos(l.angle * (1 - l.penumbra));
+        const x = Math.min(1, Math.max(0, (c - cone) / Math.max(pen - cone, 1e-4)));
+        spot = x * x * (3 - 2 * x);
+      }
+      e += lum(l.color) * l.intensity * spot * cosUp / Math.max(d * d, 0.01);
+    }
+    e += lum(moon.color) * moon.intensity * Math.max(0, moon.position.clone().normalize().y);
+    e += lum(hemi.color) * hemi.intensity;
+    return e / Math.PI;
+  }
+  setPageLightProvider(pageLight);
 
   const camera = new PerspectiveCamera(POSES.reading.fovDeg, 1, 0.02, 10);
   let aspect = 1;
@@ -182,6 +213,21 @@ export function createStage({ tier, view = 'reading' }) {
     const pose = POSES[view] ?? POSES.reading;
     camera.aspect = aspect;
     camera.fov = pose.fovDeg;
+    if (view === 'closeup') {
+      // A close view of one object, for judging the ink style up close.
+      const target = new Vector3(focus.x, focus.y, focus.z);
+      const elevation = MathUtils.degToRad(36) + pitch;
+      const dist = aspect < 1 ? 0.46 : 0.34;
+      camera.fov = 28;
+      camera.position.set(
+        target.x + dist * Math.cos(elevation) * Math.sin(yaw),
+        target.y + dist * Math.sin(elevation),
+        target.z + dist * Math.cos(elevation) * Math.cos(yaw),
+      );
+      camera.lookAt(target);
+      camera.updateProjectionMatrix();
+      return;
+    }
     if (view === 'intro') {
       const offset = pose.position.clone().sub(pose.target);
       // On a tall screen, step back so the whole book and window fit.

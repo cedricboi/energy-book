@@ -4,7 +4,35 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
-## 19 Nov 2026. Phase 2 (the stage), waiting for the teacher's review
+## 19 Nov 2026. Phase 3 part 1 (ink style on one beaker), waiting for the teacher to choose A, B or C
+
+The teacher approved Phase 2 as it stands.
+
+### Done
+- `objects/lathe.js`: profile to lathe mesh, seam welded (no cracks), creased normals for shading, a separate smooth-normal copy for the outline.
+- `objects/beaker.js`: 250 ml low-form beaker at real size (70 mm across, 95 mm tall, 1.3 mm glass, 2 mm base), rolled lip, pouring spout. Ink rings at the lip top, the inside of the lip (so the glass thickness shows), the base edge and the inside base. Two side silhouette lines that turn to face the camera.
+- `ink/outline.js`: inverted hull in clip space, constant screen width, a slight swell along the line, drawn after the glass and depth-tested against it.
+- `ink/creases.js`: EdgesGeometry creases and polylines with LineSegments2 and LineMaterial, a fixed low-frequency wobble injected into the line shader (under 0.6 px), and segments joined into chains so lines draw as strokes.
+- `ink/inkMaterial.js`: screen-space hatching in MeshLambertMaterial after `lights_fragment_end`, thresholds 0.75, 0.5 and 0.25, fwidth anti-aliasing, spacing in ink pixels. Tone is measured against the light falling on the page beside the object (from `core/stage.js`), so a surface as bright as the page is bare paper. Glass is hatched with one layer at most and only on its outer surface. The pattern is anchored to each object's projected centre (no shower-door effect). Ink pixels scale with the viewport, so the drawing keeps its proportions at every size.
+- `ink/drawIn.js`: pop-up spring (3.8% overshoot), lines draw themselves with dashes, then the form fades in. Reduced motion shows everything at once. Invisible glass does not write depth, so ambient occlusion cannot shade the page before the glass appears.
+- `ui/debug.js`: `?debug=1` panel with sliders (each with − and +) for every ink value, the three presets and a replay button.
+- `demo/beakerDemo.js`: the development scene. Not lesson content.
+- Test tooling: `tests/ink.spec.js` (presets, close-ups, draw-in frames, bloom check), `tests/compose.spec.js` (comparison sheets). Playwright now always starts a fresh server, after a leftover preview server served a stale build once.
+
+### Checks run
+- `npm run test`: 41 passed. `npm run build`: no warnings, JS 333 kB gzipped.
+- Playwright: 54 passed at the four sizes, including the bloom check with the beaker (0 pixels above 1).
+
+### Not checked yet
+- The hatching was not looked at mid-drag, so the anchoring (no shower-door effect) is untested by eye.
+- Line width and hatch spacing across the four sizes are checked in part 2, after the choice.
+
+### Waiting on the teacher
+Choose A, B or C (or a mix). Then part 2: lock the values as defaults, write them into `CLAUDE.md` section 4, and draw a ball, a wooden crate and a spring in the same style.
+
+---
+
+## 19 Nov 2026. Phase 2 (the stage), approved
 
 ### Done
 - `core/renderer.js`: WebGL2, DPR from the tier (never above 2), sRGB output, no renderer tone mapping (post does it), soft shadows. three r18x removed `PCFSoftShadowMap`, so this uses `PCFShadowMap` with `shadow.radius`.
