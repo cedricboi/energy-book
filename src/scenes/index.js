@@ -16,6 +16,7 @@ export const SCENES = {
   stores: () => import('./stores.js'),
   transfers: () => import('./transfers.js'),
   kinetic: () => import('./kinetic.js'),
+  gpe: () => import('./gpe.js'),
 };
 
 export async function loadScene(id) {
