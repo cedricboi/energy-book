@@ -12,6 +12,7 @@
 //   setTime(t)  jump in time (screenshots), values() -> numbers, destroy()
 export const SCENES = {
   springLaunch: () => import('./springLaunch.js'),
+  ramp: () => import('./ramp.js'),
 };
 
 export async function loadScene(id) {

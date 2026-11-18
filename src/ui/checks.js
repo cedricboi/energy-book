@@ -46,7 +46,7 @@ export function renderQuestion(parent, q, { saved, onCommit, checkLabel = 'Check
     // The text uses {id} for each blank. Each blank is a choice from a word bank.
     const bank = q.bank ?? q.blanks.map((b) => b.answer);
     const html = q.text.replace(/\{(\w+)\}/g, (_, bid) => `<label class="sr-only" for="${id}-${bid}">Blank ${bid}</label><select id="${id}-${bid}" class="q-blank" data-blank="${bid}"><option value="">choose</option>${bank.map((w) => `<option>${esc(w)}</option>`).join('')}</select>`);
-    body = `<p class="q-cloze">${html}</p>`;
+    body = `<div class="q-cloze">${html}</div>`;
     read = () => ({ answers: Object.fromEntries([...box.querySelectorAll('.q-blank')].map((s) => [s.dataset.blank, s.value])) });
   } else if (q.type === 'match' || q.type === 'label') {
     body = `<div class="q-match">${q.pairs.map((p) => `

@@ -7,6 +7,8 @@ import { test, expect } from '@playwright/test';
 const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
 export async function checkPage(tab, info, name) {
+  // Screenshot first, so a failing page can still be looked at.
+  await tab.screenshot({ path: `tests/screenshots/${info.project.name}/${name}.png` });
   const fit = await tab.evaluate(() => window.__book.panelFits());
   expect(fit.fits, `${name}: the text panel needs ${fit.scrollHeight}px but has ${fit.clientHeight}px`).toBe(true);
   const { labels, glows } = await tab.evaluate(() => window.__book.labelRects());
@@ -16,7 +18,6 @@ export async function checkPage(tab, info, name) {
   }
   const overflow = await tab.evaluate(() => document.documentElement.scrollHeight > innerHeight || document.documentElement.scrollWidth > innerWidth);
   expect(overflow).toBe(false);
-  await tab.screenshot({ path: `tests/screenshots/${info.project.name}/${name}.png` });
 }
 
 export async function openBook(tab, query = '') {

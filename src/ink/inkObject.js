@@ -25,17 +25,18 @@ export function hullFrom(geometry) {
  * @param {number|false} [o.creaseDeg]  crease threshold, or false for none
  * @param {number[]} [o.extraSegments]  extra ink line segment pairs
  * @param {boolean} [o.castShadow]
+ * @param {number} [o.maxLayers] most hatch layers (big background shapes use fewer)
  * @param {string} [o.name]
  */
 export function createInkObject(geometry, {
-  color = '#F4EEDF', glass = false, hull, creaseDeg = 30, extraSegments, castShadow = true, name = 'ink-object',
+  color = '#F4EEDF', glass = false, hull, creaseDeg = 30, extraSegments, castShadow = true, name = 'ink-object', maxLayers,
 } = {}) {
   const group = new Group();
   group.name = name;
   const rise = new Group();
   group.add(rise);
 
-  const body = new Mesh(geometry, createInkMaterial({ color, glass }));
+  const body = new Mesh(geometry, createInkMaterial({ color, glass, ...(maxLayers ? { maxLayers } : {}) }));
   body.name = `${name}-body`;
   body.castShadow = castShadow && !glass;
   body.receiveShadow = true;

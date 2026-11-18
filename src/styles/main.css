@@ -120,6 +120,11 @@ html, body {
 .ledger-key { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 0; margin: 6px 0 0; }
 .ledger-key li { display: flex; align-items: center; gap: 4px; }
 .ledger-key .k-val { font-variant-numeric: tabular-nums; }
+.ledger-bar.values-hidden .k-val { visibility: hidden; }
+.ledger-table { border-collapse: collapse; width: 100%; font-size: 0.9em; }
+.ledger-table th, .ledger-table td { border: 1px solid var(--ink); padding: 0.15em 0.3em; text-align: left; }
+.ledger-table th { font-weight: 600; }
+.q-cloze { margin-bottom: 0.3em; }
 .ledger-key .k-swatch { width: 14px; height: 12px; border: 1px solid var(--ink); background: repeating-linear-gradient(45deg, var(--paper) 0 3px, rgba(30,27,36,.5) 3px 4.5px); }
 .demo-ledger { left: 50%; transform: translateX(-50%); bottom: 2.5vh; width: min(560px, 92vw); }
 
@@ -131,7 +136,7 @@ html, body {
   color: var(--ink);
   font-family: var(--font-book);
   font-size: clamp(18px, 1.15vw, 24px);
-  line-height: 1.38;
+  line-height: 1.33;
   transition: opacity 0.25s ease;
   font-optical-sizing: auto;
 }
@@ -142,7 +147,7 @@ html, body {
   padding: 12px 14px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
 }
-.page-head { margin: 0 0 0.4em; }
+.page-head { margin: 0 0 0.3em; }
 .page-kicker {
   margin: 0;
   font-size: 0.72em;
@@ -150,7 +155,7 @@ html, body {
   text-transform: uppercase;
   color: #5a4e3c;
 }
-.page-title { margin: 0.1em 0 0; font-size: 1.45em; font-weight: 600; line-height: 1.15; }
+.page-title { margin: 0.05em 0 0; font-size: 1.3em; font-weight: 600; line-height: 1.12; }
 .page-body p { margin: 0 0 0.55em; }
 .page-note { font-size: 0.8em; color: #4a4036; font-style: italic; }
 .todays-questions {
@@ -165,7 +170,7 @@ html, body {
 .hook-photo { margin: 0 0 0.6em; }
 .hook-photo img { max-width: 100%; max-height: 30vh; display: block; border: 1px solid var(--ink); }
 .hook-photo figcaption { font-size: 0.7em; color: #5a4e3c; }
-.photo-missing { border: 1.5px dashed var(--ink); padding: 0.8em; text-align: center; font-style: italic; }
+.photo-missing { border: 1.5px dashed var(--ink); padding: 0.2em 0.5em; margin: 0; font-size: 0.8em; font-style: italic; }
 
 .build-steps { margin: 0 0 0.5em; padding-left: 1.2em; }
 .build-step { margin-bottom: 0.35em; animation: step-in 0.35s ease both; }
@@ -310,3 +315,21 @@ html, body {
 .book-menu::backdrop { background: rgba(12, 18, 48, 0.6); }
 .glossary dt { font-weight: 700; margin-top: 0.5em; }
 .glossary dd { margin: 0; }
+
+/* Denser spacing when a page would not otherwise fit (text size unchanged). */
+.page-panel.dense { line-height: 1.24; }
+.page-panel.dense .page-body p { margin-bottom: 0.35em; }
+.page-panel.dense .page-title { font-size: 1.18em; }
+.page-panel.dense .page-kicker { display: none; }
+.page-panel.dense button { min-height: 40px; padding: 0.15em 0.7em; }
+.page-panel.dense .work-box { padding: 0.3em 0.55em 0.4em; margin: 0.25em 0 0.3em; }
+.page-panel.dense .ctl-line { grid-template-columns: 40px 1fr 40px auto; }
+.page-panel.dense .ctl { margin: 0.05em 0; }
+.page-panel.dense .q-option { padding: 0.08em 0.3em; }
+.page-panel.dense .todays-questions { padding: 0.2em 0.55em; margin-bottom: 0.4em; }
+.page-panel.dense textarea { min-height: 0; }
+.page-panel.denser { line-height: 1.18; }
+.page-panel.denser .page-title { font-size: 1.08em; }
+.page-panel.denser .ctl-label { display: inline; }
+.page-panel.denser button { min-height: 38px; }
+.page-panel.denser .q-feedback { padding: 0.2em 0.45em; margin-top: 0.3em; }

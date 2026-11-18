@@ -4,6 +4,42 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 20 Nov 2026. Phase 5B (Lesson 5, energy on a ramp)
+
+### Done
+- `physics/models/ramp.js`: half-pipe y = kx² (3.2 m walls, 6.8 m across). Speed always comes from the energy left over, so the ledger is exact. Friction is a constant force (3.5% of the weight) and the internal store grows by work done = F × d. With no friction the model stops after four passes, so the render loop can idle.
+- `objects/halfPipe.js` (one hatch layer, so it does not compete with the rider), `objects/skater.js`, `scenes/ramp.js`: drawn at 1 : 50 beside a height ruler, a dashed line at the start height, a "pause at the bottom" speed reading, three jars on one page scale (the largest possible start energy, 2400 J, so the smallest start, 150 J, still fills 6%).
+- `lessons/l5-ramp.js`: 14 pages. Hook, predict (unmarked, reason required, run locked until committed), explore (height and mass), name the principle (built in four steps, ending with the notes' exact wording), explore with friction, name the internal store of the surroundings, use (v = √(2gh) on a new slope), use (mass cancels, MCQ), check (roller coaster dip), check (ledger with friction), close the loop (playground slide, short answer), notes (cloze for the principle), notes (ledger table), exit (today's questions).
+- Engine changes found while building it: pages can set the scene up as data (`sceneState`) and hide the scene's numbers while a question asks for them (`hideValues`). Overflowing panels switch to denser spacing automatically. The landscape book is framed at 85% of the width (was 80%) to give the text page room.
+- Tests: `tests/ramp.test.js` (ledger with and without friction, start height reached, lower peaks with friction, bottom speed from mgh = ½mv², mass independence, ramp to scale), `tests/lessons.test.js` (every question in every lesson: ids, right answers, every known mistake has its own feedback, parallel MCQ options, cloze banks, model answers contain the key ideas), `tests/lessons.spec.js` (every page at four sizes, fits with no scrolling, no label overlap).
+
+### Strict review (weak Sec 3 student on an iPad), scores out of 10
+
+| Page | Clarity | Beauty | Student thinking | Notes |
+|---|---|---|---|---|
+| 1 Hook | 8 | 8 | 6 | Real event with a twist. Needs the teacher's skatepark photo. |
+| 2 Predict | 9 | 8 | 9 | Reason required, run locked until committed. |
+| 3 Explore | 8 | 8 | 8 | Instruction, sliders and buttons in one box. |
+| 4 Name the principle | 9 | 8 | 6 | Built step by step. Students read rather than do. |
+| 5 Friction on | 9 | 9 | 8 | Internal jar fills visibly, total line still. |
+| 6 Name the surroundings | 8 | 8 | 6 | |
+| 7 Use (slope) | 9 | 7 | 9 | Feedback for missing root, missing 2, gh. |
+| 8 Use (mass) | 9 | 7 | 8 | Parallel options, each with its own feedback. |
+| 9 Check (coaster) | 8 | 7 | 9 | Catches using the full height or the dip height. |
+| 10 Check (ledger) | 8 | 7 | 9 | Catches Ep only, Ek only, adding, not squaring. |
+| 11 Playground slide | 8 | 7 | 9 | Closes the hook. Key-idea feedback plus model answer. |
+| 12 Notes (principle) | 9 | 7 | 7 | |
+| 13 Notes (ledger) | 9 | 8 | 8 | Scene values hidden until answered. |
+| 14 Exit | 9 | 7 | 8 | Returns to today's questions. |
+
+Changed during the review: predict options shortened, hook text shortened, ruler labels moved off the ramp wall, the half-pipe limited to one hatch layer, the ledger notes made a table, and answer values hidden on the ledger notes page.
+
+### Open points
+- The skateboarder is small (1 : 50) and blocky. It reads as a figure on a board, but a better ink figure would help.
+- Short answers are checked for key ideas only. The model answer is shown after the student commits.
+
+---
+
 ## 20 Nov 2026. Phase 5A (the book engine)
 
 ### Done

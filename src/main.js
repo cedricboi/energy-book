@@ -194,6 +194,9 @@ async function start() {
       loop.request();
     },
     values: () => book?.state.scene?.values?.(),
+    get pageCount() {
+      return book?.state.lesson?.pages.length ?? 0;
+    },
     /** True if the text panel's content fits without scrolling. */
     panelFits() {
       const p = book.panel;

@@ -21,6 +21,7 @@ const paras = (list) => (list ?? []).map((p) => `<p>${p}</p>`).join('');
 export function renderPage(panel, page, c) {
   panel.innerHTML = '';
   panel.dataset.type = page.type;
+  panel.dataset.pageKey = `${c.lesson.id}-${c.index}`;
   const head = document.createElement('header');
   head.className = 'page-head';
   const kicker = KICKER[page.type] ?? '';
@@ -43,7 +44,7 @@ export function renderPage(panel, page, c) {
         fig.className = 'hook-photo';
         fig.innerHTML = `<img src="${page.photo}" alt="${page.photoAlt ?? ''}"><figcaption>${page.photoCredit ?? ''}</figcaption>`;
         fig.querySelector('img').addEventListener('error', () => {
-          fig.innerHTML = `<p class="photo-missing">${page.photoAlt ?? 'Photo'} (the teacher's photo goes here)</p>`;
+          fig.innerHTML = `<p class="photo-missing">Photo to come: ${page.photoAlt ?? 'photo'}</p>`;
         });
         body.append(fig);
       }

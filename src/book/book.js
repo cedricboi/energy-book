@@ -82,6 +82,9 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
 
   function showPanel(page) {
     const lesson = state.lesson;
+    // A page can set the scene up (data only), for example friction off.
+    // This runs before the controls are drawn, so they show the right values.
+    for (const [k, v] of Object.entries(page.sceneState ?? {})) state.scene?.setParam?.(k, v);
     renderPage(panel, page, {
       lesson,
       index: state.index,
@@ -90,6 +93,7 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
       values: () => state.scene?.values?.() ?? {},
       onAnswer(rec) {
         state.progress.answers[rec.id] = rec;
+        if (rec.id === page.question?.id) state.scene?.setHideValues?.(false);
         save();
         report({ lesson: lesson.id, ...rec });
       },
@@ -103,6 +107,10 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
         state.scene?.setLocked?.(false);
       },
     });
+    // Hide the scene's numbers while this page's question asks for them
+    // (CLAUDE.md section 5, rule 6), until the student has answered.
+    const qid = page.question?.id;
+    state.scene?.setHideValues?.(!!page.hideValues && !(qid && state.progress.answers[qid]));
     // Lock the run on a predict page until the prediction is committed.
     if (page.type === 'predict' && !state.progress.answers[page.question.id]) state.scene?.setLocked?.(true);
     else state.scene?.setLocked?.(false);
@@ -111,7 +119,6 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
       state.cue = state.scene.cueTargets[page.cue];
       state.cue.position.y += 0.006;
     }
-    page.setup?.(state.scene);
     hud.setTitle(`${lesson.title} · page ${state.index + 1} of ${lesson.pages.length}`);
     hud.setNav({ canPrev: state.index > 0 || true, canNext: state.index < lesson.pages.length - 1 });
     panel.classList.remove('is-leaving');
@@ -205,8 +212,17 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     /** Fit the text panel and ledger to the pages. Call after the camera moves. */
     layout(rect) {
       const l = computeLayout(stage.camera, rect, { wide: !state.lesson });
+      const sizeChanged = panel.style.height !== `${Math.round(l.text.h)}px` || panel.style.width !== `${Math.round(l.text.w)}px`;
       placeBox(panel, l.text);
       panel.classList.toggle('is-portrait', l.portrait);
+      // If the page does not fit, tighten the spacing (text stays at its
+      // minimum size). Re-check only when the panel or its page changes.
+      if (sizeChanged || panel.dataset.fitFor !== panel.dataset.pageKey) {
+        panel.dataset.fitFor = panel.dataset.pageKey;
+        panel.classList.remove('dense', 'denser');
+        if (panel.scrollHeight > panel.clientHeight + 1) panel.classList.add('dense');
+        if (panel.scrollHeight > panel.clientHeight + 1) panel.classList.add('denser');
+      }
       placeBox(ledgerRoot, l.ledger);
     },
     get state() {

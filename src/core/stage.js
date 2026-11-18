@@ -181,7 +181,8 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
     const pose = POSES.reading;
     const pts = corners(portrait);
     const elevation = MathUtils.degToRad(pose.elevationDeg);
-    const widthFill = portrait ? 0.9 : 0.8;
+    // Landscape: about 80% of the width (85%, which gives the text page more room).
+    const widthFill = portrait ? 0.9 : 0.85;
     const heightFill = 0.84;
     const target = new Vector3(portrait ? BOOK_EXTENT.width / 4 : 0, 0.008, 0);
     let dist = 0.6;

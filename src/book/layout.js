@@ -45,7 +45,7 @@ const G = BOOK.gutter;
 
 /** Areas of the two pages, in page coordinates. */
 export const AREAS = {
-  leftText: { x0: -(G + W) + 0.012, x1: -G - 0.01, z0: -H + 0.012, z1: H - 0.01 },
+  leftText: { x0: -(G + W) + 0.01, x1: -G - 0.008, z0: -H + 0.006, z1: H - 0.004 },
   rightLedger: { x0: G + 0.012, x1: G + W - 0.01, z0: H - 0.05, z1: H - 0.006 },
   spread: { x0: -(G + W) + 0.012, x1: G + W - 0.012, z0: -H + 0.012, z1: H - 0.01 },
 };
@@ -75,7 +75,7 @@ export function computeLayout(camera, rect, { wide = false } = {}) {
   }
   return {
     portrait,
-    text: pageRect(camera, rect, AREAS.leftText, 14),
+    text: pageRect(camera, rect, AREAS.leftText, 8),
     ledger: pageRect(camera, rect, AREAS.rightLedger, 4),
   };
 }

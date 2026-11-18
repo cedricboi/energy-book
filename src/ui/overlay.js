@@ -46,7 +46,7 @@ export function createOverlay(root, camera) {
      * @param {string} o.html
      * @param {'part'|'value'} [o.kind] part names use the handwritten font
      * @param {number} [o.gap] px between anchor and label
-     * @param {'above'|'below'} [o.prefer] which side to try first
+     * @param {'above'|'below'|'left'} [o.prefer] which side to try first
      */
     add({ id, anchor, html, kind = 'value', gap = 10, prefer = 'above' }) {
       const el = document.createElement('div');
@@ -93,7 +93,8 @@ export function createOverlay(root, camera) {
         const w = l.el.offsetWidth;
         const h = l.el.offsetHeight;
         let chosen = null;
-        const order = l.prefer === 'below' ? [CANDIDATES[3], ...CANDIDATES.filter((c, i) => i !== 3)] : CANDIDATES;
+        const first = { below: 3, left: 2 }[l.prefer];
+        const order = first !== undefined ? [CANDIDATES[first], ...CANDIDATES.filter((c, i) => i !== first)] : CANDIDATES;
         for (const [cx, cy] of order) {
           const rect = {
             x: a.x + cx * (w / 2 + l.gap) - w / 2,

@@ -25,8 +25,10 @@ export const JAR_ROW_Z = -0.07;
  * @param {number} [o.travel]          seconds a packet takes, in model time
  * @param {string} [o.caption]
  * @param {number} [o.total]           total for the ledger line (defaults to the start sum)
+ * @param {number} [o.jarSize]         drawing size of the jars
+ * @param {number} [o.rowZ]            how far back the jars stand
  */
-export function createEnergyKit(ctx, { stores, scale, start, transfers = [], travel = 0.3, caption, total }) {
+export function createEnergyKit(ctx, { stores, scale, start, transfers = [], travel = 0.3, caption, total, jarSize = 0.6, rowZ = JAR_ROW_Z }) {
   const { scene, overlay } = ctx;
   const n = stores.length;
   const span = Math.min(0.17, 0.055 * (n - 1));
@@ -34,8 +36,8 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
   const jars = {};
   stores.forEach((s, i) => {
     const x = n === 1 ? BOOK.gutter + BOOK.pageW / 2 : x0 + (span * i) / (n - 1);
-    const jar = createStoreJar({ store: s, scale, value: start[s] ?? 0 });
-    jar.group.position.set(x, pageSurfaceY(x, JAR_ROW_Z), JAR_ROW_Z);
+    const jar = createStoreJar({ store: s, scale, value: start[s] ?? 0, size: jarSize });
+    jar.group.position.set(x, pageSurfaceY(x, rowZ), rowZ);
     scene.add(jar.group);
     jars[s] = jar;
   });
@@ -46,12 +48,13 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
     const a = jars[tr.from].group.position;
     const b = jars[tr.to].group.position;
     const dir = Math.sign(b.x - a.x) || 1;
-    const side = 0.022;
-    const from = a.clone().add(new Vector3(dir * side, 0.03, 0));
-    const to = b.clone().add(new Vector3(-dir * side, 0.03, 0));
+    const side = 0.035 * jarSize;
+    const lift = tr.lift ?? 0.03;
+    const from = a.clone().add(new Vector3(dir * side, lift, 0));
+    const to = b.clone().add(new Vector3(-dir * side, lift, 0));
     const f = createFlowPath({
       from, to, pathway: tr.pathway, fromStore: tr.from, toStore: tr.to,
-      arc: 0.02 + Math.abs(b.x - a.x) * 0.15, bulge: new Vector3(0, 0.6, 1), travel,
+      arc: tr.arc ?? 0.02 + Math.abs(b.x - a.x) * 0.15, bulge: tr.bulge ?? new Vector3(0, 0.6, 1), travel,
     });
     scene.add(f.pathLine, f.points);
     return f;
@@ -71,15 +74,18 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
 
   let shown = dl.snapshot();
   let glow = 0;
+  // While a question asks for these values, show the stores without numbers.
+  let hideValues = false;
 
   function refresh() {
     for (const s of stores) {
       const val = Math.max(0, shown.display[s] ?? 0);
       jars[s].setValue(val);
       jars[s].setGlowFade(glow);
-      overlay.setHtml(`jar-${s}`, `<span class="jar-name">${iconSvg(s, 16)} ${STORES[s].short}</span><span class="jar-val">${formatQuantity(val, 'J', 2)}</span>`);
+      overlay.setHtml(`jar-${s}`, `<span class="jar-name">${iconSvg(s, 16)} ${STORES[s].short}</span><span class="jar-val">${hideValues ? '?' : formatQuantity(val, 'J', 2)}</span>`);
     }
     ledger.update(shown.display, shown.transit);
+    ledger.el.classList.toggle('values-hidden', hideValues);
   }
   refresh();
 
@@ -102,6 +108,10 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
       dl.reset(values);
       for (const f of flows) f.clear();
       shown = dl.snapshot();
+      refresh();
+    },
+    setHideValues(on) {
+      hideValues = on;
       refresh();
     },
     setTotal(t) {
