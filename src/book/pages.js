@@ -162,6 +162,18 @@ function workBox(parent, page, c) {
     const a = c.scene.actions[id];
     if (a) createActionButton(actions, a, () => c.scene.act(id));
   }
+  if (c.scene.records) {
+    const table = document.createElement('table');
+    table.className = 'runs-table';
+    box.append(table);
+    const draw = () => {
+      const rows = c.scene.records.slice(-4);
+      table.innerHTML = `<caption>Your runs</caption><tr>${c.scene.recordColumns.map((h) => `<th>${h}</th>`).join('')}</tr>${rows.map((r) => `<tr>${r.map((v) => `<td>${v}</td>`).join('')}</tr>`).join('')}`;
+      table.hidden = rows.length === 0;
+    };
+    c.scene.onRecord = draw;
+    draw();
+  }
   parent.append(box);
 }
 

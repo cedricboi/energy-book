@@ -220,9 +220,11 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
       if (sizeChanged || panel.dataset.fitFor !== panel.dataset.pageKey) {
         panel.dataset.fitFor = panel.dataset.pageKey;
         panel.classList.remove('dense', 'denser');
-        if (panel.scrollHeight > panel.clientHeight + 1) panel.classList.add('dense');
-        if (panel.scrollHeight > panel.clientHeight + 1) panel.classList.add('denser');
       }
+      // Content can grow after the page opens (feedback, a table of runs),
+      // so keep checking and step to denser spacing when needed.
+      if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('dense')) panel.classList.add('dense');
+      if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('denser')) panel.classList.add('denser');
       placeBox(ledgerRoot, l.ledger);
     },
     get state() {

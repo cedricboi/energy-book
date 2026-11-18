@@ -15,6 +15,7 @@ export const SCENES = {
   ramp: () => import('./ramp.js'),
   stores: () => import('./stores.js'),
   transfers: () => import('./transfers.js'),
+  kinetic: () => import('./kinetic.js'),
 };
 
 export async function loadScene(id) {

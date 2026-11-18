@@ -344,5 +344,15 @@ html, body {
 /* Tables inside fill-the-blank questions: compact rows, menus fit the cell. */
 .q-cloze table { line-height: 1.2; }
 .q-cloze th { width: 42%; font-size: 0.88em; }
-.q-cloze td select { max-width: 100%; min-width: 0; width: 100%; }
+.q-cloze td select { max-width: 100%; min-width: 0; width: auto; }
 .q-cloze td { padding: 0.15em 0.25em; }
+
+.runs-table { border-collapse: collapse; margin-top: 0.35em; font-size: 0.82em; width: 100%; }
+.runs-table caption { text-align: left; font-weight: 600; }
+.runs-table th, .runs-table td { border: 1px solid rgba(30, 27, 36, 0.5); padding: 0.05em 0.35em; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Dense mode: each slider's label sits beside it, saving a line per control. */
+.page-panel.dense .ctl-slider { display: grid; grid-template-columns: 6.6em 1fr; align-items: center; gap: 0.3em; }
+.page-panel.dense .ctl-label { font-size: 0.8em; line-height: 1.1; }
+.page-panel.dense .ctl-value { min-width: 3.8em; font-size: 0.9em; }
+.page-panel.dense .runs-table { font-size: 0.75em; }
