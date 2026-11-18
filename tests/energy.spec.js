@@ -13,13 +13,13 @@ const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h 
 
 test.describe('energy', () => {
   test('stores, flows and ledger mid-transfer', async ({ page: tab }, info) => {
-    await open(tab, '?q=high&drawin=off');
+    await open(tab, '?q=high&drawin=off&demo=energy');
     await tab.evaluate(() => window.__energy.setTime(0.3));
     await shot(tab, info, 'energy-mid');
-    await open(tab, '?q=high&drawin=off&tm=aces');
+    await open(tab, '?q=high&drawin=off&tm=aces&demo=energy');
     await tab.evaluate(() => window.__energy.setTime(0.3));
     await shot(tab, info, 'energy-mid-aces');
-    await open(tab, '?q=high&drawin=off');
+    await open(tab, '?q=high&drawin=off&demo=energy');
     await tab.evaluate(() => window.__energy.setTime(0.3));
     const { labels, glows } = await tab.evaluate(() => window.__energy.labelRects());
     for (let i = 0; i < labels.length; i++) {
@@ -30,7 +30,7 @@ test.describe('energy', () => {
 
   test('frame sequence of the transfer', async ({ page: tab }, info) => {
     test.skip(info.project.name !== 'laptop-1366x768', 'one size is enough for the sequence');
-    await open(tab, '?q=high&drawin=off');
+    await open(tab, '?q=high&drawin=off&demo=energy');
     for (const t of [0, 0.05, 0.1, 0.15, 0.22, 0.32, 0.45, 0.62]) {
       const snap = await tab.evaluate((s) => window.__energy.setTime(s), t);
       const sum = snap.display.elastic + snap.display.kinetic + snap.display.internal + snap.transit;
@@ -41,7 +41,7 @@ test.describe('energy', () => {
 
   test('energy glows bloom', async ({ page: tab }, info) => {
     test.skip(info.project.name.includes('portrait'), 'this demo puts its jars on the left page, which portrait does not show')
-    await open(tab, '?q=high&drawin=off');
+    await open(tab, '?q=high&drawin=off&demo=energy');
     await tab.evaluate(() => window.__energy.setTime(0.3));
     const hot = await tab.evaluate(() => window.__stage.hotPixels());
     expect(hot.red, 'the energy glow should pass the bloom threshold').toBeGreaterThan(50);

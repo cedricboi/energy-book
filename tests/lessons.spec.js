@@ -4,7 +4,7 @@
 // saved as tests/screenshots/<size>/<lesson>-pNN.png.
 // Set LESSONS=l5-ramp,l3-kinetic to limit the run.
 import { test } from '@playwright/test';
-import { checkPage, openBook } from './book.spec.js';
+import { checkPage, openBook } from './helpers.js';
 
 const ALL = ['l1-stores', 'l2-transfers', 'l3-kinetic', 'l4-gpe', 'l5-ramp', 'l6-bounce', 'l7-work', 'l8-power', 'game'];
 const wanted = (process.env.LESSONS ?? ALL.join(',')).split(',');

@@ -4,6 +4,42 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 20 Nov 2026. Phase 7 (game, sound, teachers' page, accessibility, deployment)
+
+### 7A. Ledger Run
+- `physics/game.js`: eight levels (one ramp, two ramps, spring launcher, spring and tower, the lift, lift and spring, speed gate, the five-part machine). Inputs are start height (Ep = mgh), spring energy in joules (given, ½kx² is not in the syllabus), and motor times (E = P × t). Every part states its loss in joules. A level is won when the energy left at the target is within half an input step of what it needs.
+- Scoring: 100 for the target, +50 for the least input energy, +25 × streak for first-try clears. No speed bonus. Three tries per level, then the worked accounts are shown.
+- Tests prove every level can be solved from the physics alone, level 1 is solved explicitly (0.45 m), and a random setting wins under 10% of the time on every level.
+- `scenes/ledgerRun.js`: the machine at 1 : 10 with each part's numbers labelled on the part, five jars and the machine's accounts. `book/gamePage.js`: the game and win pages.
+
+### 7B. Sound, teachers' page, accessibility
+- `docs/SOUND_LIST.md` lists the ten sounds. `npm run sounds` joins `public/audio/raw/*` into the sprite with ffmpeg. Sounds are wired to page turns, draw-ins, answers, bounces, the clay and the spring. Until the files exist, the book is silent and nothing breaks.
+- `teachers.html` is generated on every build from the lesson data: every page's text, every question with its answer, the feedback for known mistakes, model answers, game solutions, the glossary and the sources. Printable, no WebGL.
+- Accessibility tests pass: keyboard only (Tab, Enter, arrows, PageDown), visible focus rings, HTML button twins for scene objects, reduced motion (no draw-in or page curl), and the WebGL fallback message linking to the teachers' page.
+
+### 7C. Deployment and performance
+- `.github/workflows/deploy.yml` builds, runs the unit tests and publishes to GitHub Pages on every push to main. The Vite base is relative (`./`), so it works at any path.
+- **Not live yet.** The repo is private, and GitHub Pages on a free account needs a public repo. The teacher must either make the repo public (Settings, General, Danger zone) or use GitHub Pro, then turn on Pages with "GitHub Actions" as the source (Settings, Pages).
+- Bundle: 493 kB of JavaScript gzipped (budget 1.2 MB). Each lesson is its own chunk. KaTeX loads only with Lesson 8.
+- Frame time on this laptop's Radeon RX 9070: 60 fps on every tier for the heaviest pages (Lesson 6 bounce, game level 8). SwiftShader numbers measure the CPU only. **An iPad test is still needed.**
+
+### 7D. Teacher Hub link
+- **Not built.** `docs/reference/` is empty, so the Lesson 5 deck's Teacher Hub protocol is not available, and the rule is to copy it exactly rather than invent one. Every committed answer already goes to `hub/report.js` with its stable id, so wiring it later is one file.
+
+### What the teacher needs to do
+1. Make the repo public or use GitHub Pro, then enable Pages (see 7C). Then test on a student iPad and the projector.
+2. Put the skatepark photo at `public/photos/skatepark.jpg` (Lesson 5 hook).
+3. Get the ten sounds in `docs/SOUND_LIST.md`, put them in `public/audio/raw/`, and run `npm run sounds`.
+4. Put the Lesson 5 deck with the Teacher Hub code in `docs/reference/` for Phase 7D.
+5. Review the decisions logged in Phases 3 to 6 (tone mapping ACES, light reference 0.75, the 85% framing, the four-times slow motion in the demo, the braking figures from the UK Highway Code).
+
+### Known limits
+- Short written answers are checked for key ideas, not marked like an exam. The model answer appears after the student commits.
+- The skateboarder and people are simple ink figures.
+- The page turn bends on the CPU rather than in a vertex shader.
+
+---
+
 ## 20 Nov 2026. Phase 6 (Lessons 1, 2, 3, 4, 6, 7 and 8)
 
 Every lesson follows Lesson 5's structure (hook with today's questions, explore before any question, name, use, check on new cases, a notes page students complete, an exit ticket that returns to today's questions). All pass: question marking tests, writing-rule tests, and every page at four sizes with no scrolling and no label overlap.

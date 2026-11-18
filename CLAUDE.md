@@ -40,25 +40,32 @@ energy-book/
   CLAUDE.md
   PROGRESS.md              session log (section 13)
   docs/                    syllabus PDF, textbook pages, reference decks (read-only input)
-                           plus LESSON_PLAN.md and SYLLABUS_COVERAGE.md (Phase 1 output)
+                           plus LESSON_PLAN.md, SYLLABUS_COVERAGE.md, SOUND_LIST.md
   public/
-    audio/sfx.mp3, sfx.json
+    audio/sfx.mp3, sfx.json   (built by `npm run sounds` from audio/raw/)
     photos/                real photos supplied by the teacher (credited in sources.js)
   src/
     main.js
     core/      renderer.js  stage.js  post.js  quality.js  input.js  sound.js  loop.js
-    ink/       inkMaterial.js  outline.js  creases.js  paper.js  drawIn.js
-    energy/    palette.js  storeJar.js  flow.js  ledgerBar.js
-    objects/   lathe.js  primitives.js  (one file per object: car.js, ball.js, crate.js ...)
-    physics/   constants.js  equations.js  format.js  units.js
-    lessons/   index.js  l1-stores.js ... l8-power.js  game.js
+    ink/       inkMaterial.js  outline.js  creases.js  paper.js  drawIn.js  inkObject.js
+    energy/    palette.js  storeJar.js  flow.js  ledgerBar.js  displayLedger.js
+    objects/   lathe.js  book.js  desk.js  nightWindow.js  beaker.js  ball.js  crate.js
+               spring.js  halfPipe.js  skater.js (one file per object)
+    physics/   constants.js  equations.js  format.js  units.js  game.js
+               models/  ramp.js  bounce.js  springLaunch.js
+    scenes/    index.js  energyKit.js  helpers.js  and one scene per lesson
+               (stores, transfers, kinetic, gpe, ramp, bounce, work, power, ledgerRun)
+    lessons/   index.js  l1-stores.js ... l8-power.js  game.js  glossaryTerms.js
                sources.js  (every [verify] fact, with its link and the date it was checked)
-    book/      book.js  pageTurn.js  layout.js
-    ui/        hud.js  controls.js  checks.js  glossary.js  overlay.js
-    hub/       report.js   (Teacher Hub reporting, Phase 7)
+    book/      book.js  pageTurn.js  layout.js  pages.js  gamePage.js
+    ui/        hud.js  controls.js  checks.js  marking.js  glossary.js  overlay.js
+               progress.js  maths.js  debug.js
+    demo/      development scenes from Phases 3 and 4 (?demo=beaker|objects|energy)
+    hub/       report.js   (Teacher Hub reporting, Phase 7D)
     styles/    main.css
-  teachers.html            plain teachers' page, works without WebGL
-  tests/     physics.test.js  screenshots.spec.js
+  scripts/     check-budget.js  build-teachers.js  build-sounds.js  perf-gpu.js
+  teachers.html            generated at build time, works without WebGL
+  tests/     *.test.js (Vitest)  *.spec.js (Playwright)
 ```
 
 ## 4. Art direction
