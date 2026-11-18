@@ -45,3 +45,5 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 - The notes' table of the six stores is an image, so the exact name "nuclear store" or "nuclear potential store" was not confirmed from the notes. `CLAUDE.md` uses "nuclear store", as in the syllabus.
 - [verify] facts still to confirm before Lessons 3 and 4: braking distances at two speeds (Traffic Police or LTA) and durian tree height and fruit mass.
 - Lesson 5 needs the teacher's skatepark photo.
+- `docs/syllabus.pdf` is kept out of git (it is SEAB's document), so it lives only on this laptop. Copy it in again on any other machine.
+- GitHub Pages on a free account only works for a public repo. The repo (github.com/cedricboi/energy-book) is private. Before deploying, either make it public or use GitHub Pro.
