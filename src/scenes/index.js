@@ -18,6 +18,7 @@ export const SCENES = {
   kinetic: () => import('./kinetic.js'),
   gpe: () => import('./gpe.js'),
   bounce: () => import('./bounce.js'),
+  work: () => import('./work.js'),
 };
 
 export async function loadScene(id) {

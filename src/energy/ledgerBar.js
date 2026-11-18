@@ -52,7 +52,8 @@ export function createLedgerBar(parent, { stores, total, caption = 'Energy ledge
   const fullWidth = () => state.total * 1.12;
 
   function update(values, inTransit = 0) {
-    const W = 400 / fullWidth();
+    // A total of zero (no work done) draws an empty bar, not a broken one.
+    const W = fullWidth() > 0 ? 400 / fullWidth() : 0;
     let x = 0;
     let html = '';
     for (const s of stores) {
