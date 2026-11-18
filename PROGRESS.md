@@ -4,6 +4,30 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 20 Nov 2026. Phase 6 (Lessons 1, 2, 3, 4, 6, 7 and 8)
+
+Every lesson follows Lesson 5's structure (hook with today's questions, explore before any question, name, use, check on new cases, a notes page students complete, an exit ticket that returns to today's questions). All pass: question marking tests, writing-rule tests, and every page at four sizes with no scrolling and no label overlap.
+
+| Lesson | Scene | Pages | Notes |
+|---|---|---|---|
+| 1 Energy stores | six jars, six objects, energy flows to the matching jar | 11 | No joules (before any equation). |
+| 2 Energy transfers | catapult, kettle, torch, speaker, with chained pathways | 12 | Sound scene added (mechanical waves). |
+| 3 Kinetic energy | toy car into clay at real size, dent ∝ energy, table of runs | 11 | Hook: UK Highway Code braking distances. |
+| 4 Gravitational potential energy | shelves 0.5 to 2.0 m at 1 : 20 by a metre rule | 11 | Hook: durian mass and tree height (cited). |
+| 6 Bouncing ball | ball at 1 : 10 by a metre rule, elastic store, sound ripples, step mode | 11 | Tennis ball keeps 55% (ITF rule). Includes the energy-in equals energy-out ledger from the old Lesson 9. |
+| 7 Work done | push a crate or a wall, force arrow and distance to scale | 12 | Jar scale steps to 100 J for small amounts, with a note. Links braking back to Lesson 3. |
+| 8 Power | stairs race and two kettles | 12 | P = E/t rendered as a fraction with KaTeX. |
+
+### Facts checked (`src/lessons/sources.js`)
+- Braking distance 14 m at 30 mph and 55 m at 60 mph (UK Highway Code, via Cornwall Council). **No official Singapore table was found online.** The teacher may want Basic Theory of Driving figures instead.
+- Durian 1 to 3 kg, wild trees 25 to 50 m (Wikipedia).
+- Tennis ball rebound 135 to 147 cm from 254 cm (ITF 2023 technical booklet).
+
+### Engine changes made while building them
+- Runs table in the work box (`scene.records`). Kit options: no ledger, no joules, compact staggered labels for four or more jars, custom jar positions. Labels have a soft paper backing. Panel fit is re-checked as content grows. Table layout for fill-the-blank questions.
+
+---
+
 ## 20 Nov 2026. Phase 5B (Lesson 5, energy on a ramp)
 
 ### Done

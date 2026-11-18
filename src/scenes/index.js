@@ -19,6 +19,7 @@ export const SCENES = {
   gpe: () => import('./gpe.js'),
   bounce: () => import('./bounce.js'),
   work: () => import('./work.js'),
+  power: () => import('./power.js'),
 };
 
 export async function loadScene(id) {
