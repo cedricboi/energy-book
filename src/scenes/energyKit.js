@@ -27,15 +27,19 @@ export const JAR_ROW_Z = -0.07;
  * @param {number} [o.total]           total for the ledger line (defaults to the start sum)
  * @param {number} [o.jarSize]         drawing size of the jars
  * @param {number} [o.rowZ]            how far back the jars stand
+ * @param {boolean} [o.ledger]         show the ledger bar
+ * @param {boolean} [o.values]         show joules (false for lessons before any equation)
+ * @param {number[]} [o.xs]            x positions for the jars, if not evenly spaced
+ * @param {boolean} [o.compactLabels]  two-line names, staggered heights (many jars)
  */
-export function createEnergyKit(ctx, { stores, scale, start, transfers = [], travel = 0.3, caption, total, jarSize = 0.6, rowZ = JAR_ROW_Z }) {
+export function createEnergyKit(ctx, { stores, scale, start, transfers = [], travel = 0.3, caption, total, jarSize = 0.6, rowZ = JAR_ROW_Z, ledger: withLedger = true, values: withValues = true, xs, compactLabels = false }) {
   const { scene, overlay } = ctx;
   const n = stores.length;
   const span = Math.min(0.17, 0.055 * (n - 1));
   const x0 = BOOK.gutter + BOOK.pageW / 2 - span / 2;
   const jars = {};
   stores.forEach((s, i) => {
-    const x = n === 1 ? BOOK.gutter + BOOK.pageW / 2 : x0 + (span * i) / (n - 1);
+    const x = xs?.[i] ?? (n === 1 ? BOOK.gutter + BOOK.pageW / 2 : x0 + (span * i) / (n - 1));
     const jar = createStoreJar({ store: s, scale, value: start[s] ?? 0, size: jarSize });
     jar.group.position.set(x, pageSurfaceY(x, rowZ), rowZ);
     scene.add(jar.group);
@@ -65,12 +69,15 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
     dl.ledgers[i] = f.ledger;
   });
 
-  for (const s of stores) {
-    overlay.add({ id: `jar-${s}`, anchor: () => jars[s].labelPoint(), html: '', gap: 4 });
+  stores.forEach((s, i) => {
+    const stagger = compactLabels && i % 2 === 1 ? 0.03 : 0;
+    overlay.add({ id: `jar-${s}`, anchor: () => jars[s].labelPoint().add(new Vector3(0, stagger, 0)), html: '', gap: 4 });
     overlay.addGlow(() => jars[s].glowCorners());
-  }
+  });
   const ledgerTotal = total ?? stores.reduce((a, s) => a + (start[s] ?? 0), 0);
-  const ledger = createLedgerBar(ctx.ledgerRoot, { stores, total: ledgerTotal, caption: caption ?? 'Energy ledger. The dark line marks the total.' });
+  const ledger = withLedger
+    ? createLedgerBar(ctx.ledgerRoot, { stores, total: ledgerTotal, caption: caption ?? 'Energy ledger. The dark line marks the total.' })
+    : { update() {}, setTotal() {}, destroy() {}, el: document.createElement('div') };
 
   let shown = dl.snapshot();
   let glow = 0;
@@ -82,7 +89,8 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
       const val = Math.max(0, shown.display[s] ?? 0);
       jars[s].setValue(val);
       jars[s].setGlowFade(glow);
-      overlay.setHtml(`jar-${s}`, `<span class="jar-name">${iconSvg(s, 16)} ${STORES[s].short}</span><span class="jar-val">${hideValues ? '?' : formatQuantity(val, 'J', 2)}</span>`);
+      const name = compactLabels ? STORES[s].short.replace(' potential', '<br>potential') : STORES[s].short;
+      overlay.setHtml(`jar-${s}`, `<span class="jar-name">${iconSvg(s, 16)} ${name}</span>${withValues ? `<span class="jar-val">${hideValues ? '?' : formatQuantity(val, 'J', 2)}</span>` : ''}`);
     }
     ledger.update(shown.display, shown.transit);
     ledger.el.classList.toggle('values-hidden', hideValues);

@@ -95,11 +95,16 @@ html, body {
   line-height: 1.15;
   white-space: nowrap;
   /* A soft paper-coloured halo keeps labels readable on any part of the page. */
-  text-shadow: 0 0 3px var(--paper), 0 0 6px var(--paper), 0 0 10px var(--paper);
+  text-shadow: 0 0 3px var(--paper), 0 0 6px var(--paper);
+  /* A soft paper backing, so labels read on the page and on the dark desk. */
+  background: rgba(244, 238, 223, 0.82);
+  border-radius: 5px;
+  padding: 0 0.3em;
   will-change: transform;
 }
 .label-part { font-family: var(--font-hand); font-size: clamp(16px, 1.3vw, 24px); }
 .label .jar-name, .label .jar-val { display: block; text-align: center; }
+.label .jar-name { line-height: 1.05; }
 .label .jar-val { font-variant-numeric: tabular-nums; font-weight: 600; }
 .store-icon { vertical-align: -3px; }
 
@@ -241,7 +246,9 @@ html, body {
 .q-model summary { cursor: pointer; font-weight: 600; margin-top: 0.3em; }
 .q-cloze select { margin: 0.1em 0.15em; }
 .q-cloze { line-height: 2; }
-.q-match { display: grid; gap: 0.3em; }
+.q-match { display: grid; gap: 0.25em; }
+.q-pair select { max-width: 62%; }
+.page-panel.dense .q-pair select { min-height: 36px; }
 .q-pair { display: grid; grid-template-columns: 1fr auto; gap: 0.5em; align-items: center; }
 .q-order { padding-left: 1.3em; margin: 0; }
 .q-order li { display: flex; align-items: center; gap: 0.3em; margin: 0.15em 0; }

@@ -13,6 +13,7 @@
 export const SCENES = {
   springLaunch: () => import('./springLaunch.js'),
   ramp: () => import('./ramp.js'),
+  stores: () => import('./stores.js'),
 };
 
 export async function loadScene(id) {
