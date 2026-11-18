@@ -340,3 +340,9 @@ html, body {
 .page-panel.denser .ctl-label { display: inline; }
 .page-panel.denser button { min-height: 38px; }
 .page-panel.denser .q-feedback { padding: 0.2em 0.45em; margin-top: 0.3em; }
+
+/* Tables inside fill-the-blank questions: compact rows, menus fit the cell. */
+.q-cloze table { line-height: 1.2; }
+.q-cloze th { width: 42%; font-size: 0.88em; }
+.q-cloze td select { max-width: 100%; min-width: 0; width: 100%; }
+.q-cloze td { padding: 0.15em 0.25em; }
