@@ -32,7 +32,7 @@ export const JAR_ROW_Z = -0.07;
  * @param {number[]} [o.xs]            x positions for the jars, if not evenly spaced
  * @param {boolean} [o.compactLabels]  two-line names, staggered heights (many jars)
  */
-export function createEnergyKit(ctx, { stores, scale, start, transfers = [], travel = 0.3, caption, total, jarSize = 0.6, rowZ = JAR_ROW_Z, ledger: withLedger = true, values: withValues = true, xs, compactLabels = false }) {
+export function createEnergyKit(ctx, { stores, scale, start, transfers = [], travel = 0.3, caption, total, jarSize = 0.6, rowZ = JAR_ROW_Z, ledger: withLedger = true, values: withValues = true, xs, compactLabels = stores.length >= 4 }) {
   const { scene, overlay } = ctx;
   const n = stores.length;
   const span = Math.min(0.17, 0.055 * (n - 1));
