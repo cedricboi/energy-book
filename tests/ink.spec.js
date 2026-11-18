@@ -31,6 +31,14 @@ test.describe('ink', () => {
     }
   });
 
+  test('house style on three test objects', async ({ page: tab }, info) => {
+    await open(tab, '?q=high&demo=objects&drawin=off');
+    await tab.evaluate(() => window.__ink.setDrawIn(99));
+    await shot(tab, info, 'ink-objects');
+    await tab.evaluate(() => window.__stage.setDrag(10, -6));
+    await shot(tab, info, 'ink-objects-drag');
+  });
+
   test('hatching stays under the bloom threshold', async ({ page: tab }) => {
     await open(tab, '?q=high&drawin=off');
     await tab.evaluate(() => window.__ink.setDrawIn(99));

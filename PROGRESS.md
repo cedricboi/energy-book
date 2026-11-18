@@ -4,6 +4,19 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 19 Nov 2026. Phase 3 part 2 (house style locked: look C)
+
+The teacher chose **C (bold, illustrated)** and asked for every remaining phase to run without stopping for approval. From here on, decisions the spec would normally show first are made and logged in these entries for the teacher to review.
+
+### Done
+- `INK_PRESETS.C` is the default (`HOUSE_INK`), written into `CLAUDE.md` section 4 as the house ink settings table.
+- Two changes to C after testing on more objects (recorded in the table): light reference 0.9 to 0.75, so dark faces get two hatch layers rather than three, and the flattened body colour now takes the warm colour of the lamp-lit page. Before this, shaded sides turned blue-purple from the window fill light.
+- `ink/inkObject.js`: wraps any geometry as an ink drawing (body, hull, creases, extra lines, draw-in pieces).
+- Test objects: `objects/ball.js` (tennis ball with its seam), `objects/crate.js` (plank-framed crate with braces), `objects/spring.js` (helix tube, rebuildable at any length). `?demo=objects` shows them.
+- Line width and hatch spacing checked at all four sizes: they scale with the viewport, so the drawing keeps the same proportions.
+
+---
+
 ## 19 Nov 2026. Phase 3 part 1 (ink style on one beaker), waiting for the teacher to choose A, B or C
 
 The teacher approved Phase 2 as it stands.

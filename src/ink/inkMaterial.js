@@ -20,7 +20,10 @@ import { MeshLambertMaterial, Color, Vector2, Vector3 } from 'three';
 
 export const INK_HEX = '#1E1B24';
 
-/** The three looks shown to the teacher in Phase 3. Values in ink pixels. */
+/**
+ * The three looks shown to the teacher in Phase 3. Values in ink pixels.
+ * The teacher chose C (19 Nov 2026). HOUSE_INK is the default for the book.
+ */
 export const INK_PRESETS = {
   A: {
     label: 'A. Fine technical pen',
@@ -40,7 +43,7 @@ export const INK_PRESETS = {
     label: 'C. Bolder, illustrated',
     outlinePx: 3.0, creasePx: 2.0, wobblePx: 0.3, wobbleFreq: 25,
     hatchSpacing: 6.5, hatchWidth: 1.35, hatchJitter: 0.25,
-    t1: 0.75, t2: 0.5, t3: 0.25, lightRef: 0.9, flatten: 0.85, widthJitter: 0.25,
+    t1: 0.75, t2: 0.5, t3: 0.25, lightRef: 0.75, flatten: 0.85, widthJitter: 0.25,
     drawInSeconds: 1.0,
   },
 };
@@ -68,7 +71,8 @@ export const inkUniforms = {
 };
 
 /** The live style, including values that are not uniforms. */
-export const inkStyle = { ...INK_PRESETS.A, preset: 'A' };
+export const HOUSE_INK = 'C';
+export const inkStyle = { ...INK_PRESETS[HOUSE_INK], preset: HOUSE_INK };
 
 const lineMaterials = new Set();
 const listeners = new Set();
@@ -247,10 +251,13 @@ export function createInkMaterial({ color = '#F4EEDF', glass = false, glassAlpha
           #endif
           // Flatten the 3D shading towards the paper, so form is read from
           // the hatching rather than from a smooth gradient.
+          // The flat colour takes the warm colour of the lamp-lit page, so a
+          // shaded side stays paper-coloured and only the hatching darkens it.
           float flatLight = pow(max(light, 1e-4), 1.0 - uFlatten) * pow(uPageLight, uFlatten);
-          float k = flatLight / max(light, 1e-4);
-          reflectedLight.directDiffuse *= k;
-          reflectedLight.indirectDiffuse *= k;
+          vec3 flatColour = diffuseColor.rgb * flatLight * vec3(1.13, 0.98, 0.78);
+          vec3 shaded = lit * (flatLight / max(light, 1e-4));
+          reflectedLight.directDiffuse = mix(shaded, flatColour, uFlatten);
+          reflectedLight.indirectDiffuse = vec3(0.0);
         }`,
       )
       .replace(
@@ -290,3 +297,6 @@ export function anchorHatching(mesh, anchorObject = mesh) {
     own.uAnchor.value.set(Math.round((_v.x * 0.5 + 0.5) * _size.x), Math.round((_v.y * 0.5 + 0.5) * _size.y));
   };
 }
+
+// Start every page in the house style.
+setInkStyle(inkStyle);

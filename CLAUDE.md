@@ -95,6 +95,26 @@ Each store has one colour, one pattern and one icon. **Colour is never the only 
 
 Run a colour-blind simulation (deuteranopia and protanopia) on the palette in Phase 3. Adjust it if two stores cannot be told apart by both pattern and label.
 
+### House ink settings (chosen 19 Nov 2026: look C, bold illustrated)
+
+These are the defaults in `src/ink/inkMaterial.js` (`INK_PRESETS.C`, `HOUSE_INK`). Sizes are in ink pixels: CSS pixels at 1366x768, scaled with the viewport (square root of the area ratio) and multiplied by the device pixel ratio, so the drawing keeps its proportions at every size.
+
+| Setting | Value |
+|---|---|
+| Outline (inverted hull) | 3.0 px, swell 0.25 |
+| Lines (creases, rings, profiles) | 2.0 px |
+| Wobble | 0.3 px at 25 cycles per metre (always under 0.6 px) |
+| Hatch spacing | 6.5 px |
+| Hatch line width | 1.35 px |
+| Hatch looseness | 0.25 px |
+| Thresholds | 0.75, 0.5, 0.25 (tone relative to the page light beside the object) |
+| Light reference | 0.75 |
+| Flatten shading | 0.85 (towards the warm colour of the lamp-lit page) |
+| Draw-in | 1.0 s of lines, then 0.45 s form fade |
+| Glass | one hatch layer at most, outer surface only |
+
+Change these only with the teacher's approval, then update this table.
+
 ### Line and shading rules
 
 - **Silhouettes** come from an inverted-hull outline. Use a back-face mesh pushed along smooth normals in view space, so the line keeps a constant screen width (about 2.2 px at 1366x768). Merge vertices first so the hull has no cracks.

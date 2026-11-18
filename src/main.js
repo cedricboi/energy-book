@@ -20,8 +20,9 @@ import { createPost } from './core/post.js';
 import { createLoop } from './core/loop.js';
 import { createDragOrbit } from './core/input.js';
 import { forcedTier, tierSettings, tierFromFrameTime, probeFrameTime } from './core/quality.js';
-import { setInkResolution, usePreset, setInkStyle, inkStyle, INK_PRESETS } from './ink/inkMaterial.js';
+import { setInkResolution, usePreset, setInkStyle, inkStyle, INK_PRESETS, HOUSE_INK } from './ink/inkMaterial.js';
 import { createBeakerDemo, BEAKER_SPOT } from './demo/beakerDemo.js';
+import { createObjectsDemo } from './demo/objectsDemo.js';
 import { createDebugPanel } from './ui/debug.js';
 
 const params = new URLSearchParams(location.search);
@@ -45,12 +46,14 @@ async function start() {
 
   const view = ['intro', 'closeup'].includes(params.get('view')) ? params.get('view') : 'reading';
   const stage = createStage({ tier, view, focus: { x: BEAKER_SPOT.x, y: 0.058, z: BEAKER_SPOT.z } });
-  usePreset(INK_PRESETS[params.get('ink')] ? params.get('ink') : 'A');
+  usePreset(INK_PRESETS[params.get('ink')] ? params.get('ink') : HOUSE_INK);
   const post = createPost(renderer, stage.scene, stage.camera, { tier, toneMapping: params.get('tm') ?? 'agx' });
   if (params.get('debug') === 'hot') post.setDebugHot(true);
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const demo = createBeakerDemo(stage.scene, { reducedMotion });
+  const demo = params.get('demo') === 'objects'
+    ? createObjectsDemo(stage.scene, { reducedMotion })
+    : createBeakerDemo(stage.scene, { reducedMotion });
   // eslint-disable-next-line prefer-const
   let loop;
   const orbit = createDragOrbit(canvas, {
