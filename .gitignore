@@ -1,0 +1,8 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+tests/screenshots/
+docs/syllabus.txt
+.DS_Store
+docs/syllabus.pdf
