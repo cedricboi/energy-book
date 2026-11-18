@@ -6,7 +6,7 @@
   "description": "The Energy Ledger: an interactive 3D physics book on energy for G2 Science (Physics).",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/check-budget.js",
     "preview": "vite preview --port 4173 --strictPort",
     "test": "vitest run",
     "test:watch": "vitest",

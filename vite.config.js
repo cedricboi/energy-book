@@ -6,8 +6,9 @@ export default defineConfig({
   base: './',
   build: {
     target: 'es2022',
-    // CLAUDE.md section 9: total JS under 1.2 MB gzipped. Warn early on big chunks.
-    chunkSizeWarningLimit: 600,
+    // three and postprocessing make one ~940 kB raw chunk (~330 kB gzipped).
+    // The real budget is checked on gzipped size by scripts/check-budget.js.
+    chunkSizeWarningLimit: 1400,
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
