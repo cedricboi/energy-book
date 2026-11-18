@@ -4,7 +4,7 @@
 //
 // URL options (for testing and the teacher):
 //   ?q=high|medium|low   force a quality tier (otherwise a 2 s probe decides)
-//   ?tm=agx|aces         tone mapping (default agx)
+//   ?tm=aces|agx         tone mapping (default aces, chosen in Phase 4)
 //   ?view=intro          the wider view that shows the window
 //   ?view=closeup        close view of the beaker
 //   ?debug=hot           luminance view: red marks anything above the bloom threshold
@@ -23,6 +23,8 @@ import { forcedTier, tierSettings, tierFromFrameTime, probeFrameTime } from './c
 import { setInkResolution, usePreset, setInkStyle, inkStyle, INK_PRESETS, HOUSE_INK } from './ink/inkMaterial.js';
 import { createBeakerDemo, BEAKER_SPOT } from './demo/beakerDemo.js';
 import { createObjectsDemo } from './demo/objectsDemo.js';
+import { createEnergyDemo } from './demo/energyDemo.js';
+import { createOverlay } from './ui/overlay.js';
 import { createDebugPanel } from './ui/debug.js';
 
 const params = new URLSearchParams(location.search);
@@ -47,13 +49,17 @@ async function start() {
   const view = ['intro', 'closeup'].includes(params.get('view')) ? params.get('view') : 'reading';
   const stage = createStage({ tier, view, focus: { x: BEAKER_SPOT.x, y: 0.058, z: BEAKER_SPOT.z } });
   usePreset(INK_PRESETS[params.get('ink')] ? params.get('ink') : HOUSE_INK);
-  const post = createPost(renderer, stage.scene, stage.camera, { tier, toneMapping: params.get('tm') ?? 'agx' });
+  const post = createPost(renderer, stage.scene, stage.camera, { tier, toneMapping: params.get('tm') ?? 'aces' });
   if (params.get('debug') === 'hot') post.setDebugHot(true);
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const demo = params.get('demo') === 'objects'
-    ? createObjectsDemo(stage.scene, { reducedMotion })
-    : createBeakerDemo(stage.scene, { reducedMotion });
+  const overlayRoot = document.getElementById('overlay');
+  const overlay = createOverlay(overlayRoot, stage.camera);
+  const which = params.get('demo') ?? 'energy';
+  let demo;
+  if (which === 'objects') demo = createObjectsDemo(stage.scene, { reducedMotion });
+  else if (which === 'beaker') demo = createBeakerDemo(stage.scene, { reducedMotion });
+  else demo = createEnergyDemo(stage.scene, overlay, overlayRoot, { reducedMotion });
   // eslint-disable-next-line prefer-const
   let loop;
   const orbit = createDragOrbit(canvas, {
@@ -65,14 +71,17 @@ async function start() {
 
   function drawFrame(dt = 0) {
     stage.placeCamera(orbit.yaw, orbit.pitch);
+    stage.camera.updateMatrixWorld();
     post.render(dt);
+    overlay.update();
   }
 
   loop = createLoop((dt) => {
     const orbiting = orbit.update(dt);
     const drawing = demo.drawIn.update(dt);
+    const energy = demo.update ? demo.update(dt) : false;
     drawFrame(dt);
-    return orbiting || drawing;
+    return orbiting || drawing || energy;
   });
 
   function resize() {
@@ -116,6 +125,16 @@ async function start() {
       replay: () => { demo.drawIn.play(); loop.request(); },
     });
   }
+
+  window.__energy = {
+    setTime(t) {
+      demo.drawIn.setTime(99);
+      demo.setTime?.(t);
+      drawFrame();
+      return demo.snapshot?.();
+    },
+    labelRects: () => overlay.debugRects(),
+  };
 
   window.__ink = {
     usePreset(name) {

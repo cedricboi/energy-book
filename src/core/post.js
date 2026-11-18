@@ -9,7 +9,7 @@
 // pixels, orange above 0.9, red above 1. Only energy may ever show red.
 import {
   EffectComposer, RenderPass, EffectPass, Effect, SMAAEffect, SMAAPreset,
-  ToneMappingEffect, ToneMappingMode, VignetteEffect,
+  ToneMappingEffect, ToneMappingMode, VignetteEffect, BloomEffect,
 } from 'postprocessing';
 import { HalfFloatType, Uniform } from 'three';
 import { N8AOPostPass } from 'n8ao';
@@ -55,7 +55,7 @@ export const TONE_MAPPINGS = {
   aces: ToneMappingMode.ACES_FILMIC,
 };
 
-export function createPost(renderer, scene, camera, { tier, toneMapping = 'agx' }) {
+export function createPost(renderer, scene, camera, { tier, toneMapping = 'aces' }) {
   const composer = new EffectComposer(renderer, { frameBufferType: HalfFloatType });
   composer.addPass(new RenderPass(scene, camera));
 
@@ -78,7 +78,19 @@ export function createPost(renderer, scene, camera, { tier, toneMapping = 'agx' 
   const toneMappingEffect = new ToneMappingEffect({ mode: TONE_MAPPINGS[toneMapping] ?? ToneMappingMode.AGX });
   const vignette = new VignetteEffect({ offset: 0.32, darkness: 0.42 });
   const grain = new StillGrainEffect({ amount: 0.007 });
-  const mainPass = new EffectPass(camera, toneMappingEffect, vignette, grain);
+  // Bloom on the HDR image, before tone mapping. Only energy is above a
+  // luminance of 1, so only energy blooms (CLAUDE.md section 4). Lower tiers
+  // use fewer mip levels, which is the mipmap-blur equivalent of a lower
+  // bloom resolution.
+  const bloom = new BloomEffect({
+    luminanceThreshold: 1,
+    luminanceSmoothing: 0.05,
+    mipmapBlur: true,
+    intensity: 0.9,
+    radius: 0.62,
+    levels: { high: 8, medium: 6, low: 5 }[tier.name] ?? 6,
+  });
+  const mainPass = new EffectPass(camera, bloom, toneMappingEffect, vignette, grain);
   const smaaPass = new EffectPass(camera, new SMAAEffect({ preset: SMAAPreset.HIGH }));
   // The composer sends the last pass in its list to the screen, so the debug
   // view swaps passes in and out rather than toggling `enabled`.

@@ -21,8 +21,12 @@ function groupThousands(intPart) {
   return intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
+/** Values smaller than this are rounding leftovers and are shown as zero. */
+export const ZERO_BELOW = 1e-12;
+
 /** Format a number (no unit) to significant figures, without trailing zeros. */
 export function formatNumber(value, sigFigs = DEFAULT_SIG_FIGS) {
+  if (Number.isFinite(value) && Math.abs(value) < ZERO_BELOW) return '0';
   const rounded = roundSig(value, sigFigs);
   if (rounded === 0) return '0';
   const magnitude = Math.floor(Math.log10(Math.abs(rounded)));

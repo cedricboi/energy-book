@@ -191,6 +191,11 @@ describe('format.js', () => {
     expect(formatNumber(9.996, 3)).toBe('10');
     expect(formatNumber(99999, 3)).toBe('100 000');
   });
+  it('shows rounding leftovers as zero', () => {
+    expect(formatQuantity(8.7e-20, 'J')).toBe('0 J');
+    expect(formatQuantity(-3e-15, 'J')).toBe('0 J');
+    expect(formatQuantity(2e-9, 'J')).toBe('0.000000002 J');
+  });
   it('insists on a unit', () => {
     expect(() => formatQuantity(5, '')).toThrow(TypeError);
     expect(() => formatQuantity(5)).toThrow(TypeError);

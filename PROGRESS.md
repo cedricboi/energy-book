@@ -4,6 +4,31 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 20 Nov 2026. Phase 4 (energy you can see)
+
+### Done
+- `energy/palette.js`: the six stores with syllabus names, colours, patterns (chevrons, bands, zigzag, dots, waves, rings) and SVG icons, the four pathways in syllabus words, colour maths and the Machado (2009) colour-blind matrices.
+- `energy/storeJar.js`: the beaker becomes a jar of glowing liquid. Fill height is proportional to joules on one page scale. The pattern moves only while energy flows. Jars are drawn at 60% of a real beaker, so three fit across a page.
+- `energy/flow.js`: particles along a CatmullRom curve, four path styles (arrows and an arrow-headed path for mechanical, dots and a double line for electrical, shimmer and a wavy line for heating, rings and a dotted line for waves). `TransferLedger` keeps source + in transit + destination constant at every frame.
+- `energy/displayLedger.js`: what the jars show while energy is visibly travelling. Tested to balance within 0.1% at every frame and never go negative.
+- `energy/ledgerBar.js`: SVG stacked bar with each store's pattern, an "in transit" segment and a fixed total line, plus a key with icons and values.
+- `ui/overlay.js`: HTML labels from 3D points, placed to avoid each other and every glow (tested).
+- Bloom (mipmap blur, threshold 1) before tone mapping. Lower tiers use fewer mip levels.
+- `physics/models/springLaunch.js` and `demo/energyDemo.js`: spring to ball to internal store, using only Ek = ½mv², W = F × d and F = ma. The spring's starting energy is given, because ½kx² is not in the syllabus.
+- `format.js` shows rounding leftovers below 10⁻¹² as 0.
+
+### Decisions made without stopping (for the teacher to review)
+1. **Tone mapping is now ACES.** Under AgX the glows looked pastel. ACES keeps the store colours strong and the paper warm.
+2. **Glow brightness** is a luminance of 1.3, just above the bloom threshold. Brighter values washed the colours towards white.
+3. **Palette unchanged.** The colour-blind check found gravitational (blue) and elastic (purple) nearly identical under deuteranopia (ΔE 2.8). Their patterns and labels differ, which is what the spec requires, so the colours stay. The simulation sheet is `tests/screenshots/laptop-1366x768/sheet-colour-blind.png`.
+4. **The demo runs four times slower than real time**, because the real ball stops in under half a second. Any lesson that slows time must say so on the page.
+5. Demo friction was raised so the ball stops on the page, as rule 5 requires.
+
+### Checks run
+- 55 unit tests pass. Playwright energy checks pass at four sizes (the portrait bloom check is skipped because this demo's jars are on the left page, which portrait does not show).
+
+---
+
 ## 19 Nov 2026. Phase 3 part 2 (house style locked: look C)
 
 The teacher chose **C (bold, illustrated)** and asked for every remaining phase to run without stopping for approval. From here on, decisions the spec would normally show first are made and logged in these entries for the teacher to review.

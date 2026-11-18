@@ -48,12 +48,13 @@ test.describe('stage', () => {
   });
 
   test('nothing but energy reaches the bloom threshold', async ({ page: tab }, info) => {
-    await open(tab, '?q=high');
+    // The beaker scene has no energy in it, so no pixel may reach 1.
+    await open(tab, '?q=high&demo=beaker&drawin=off');
     const hot = await tab.evaluate(() => window.__stage.hotPixels());
     console.log(`[${info.project.name}] hot pixels: red ${hot.red}, orange ${hot.orange}, brightest ${hot.maxLuminance.toFixed(3)}`);
     expect(hot.red, 'no non-energy pixel may exceed luminance 1').toBe(0);
     expect(hot.orange, 'lit surfaces stay below about 0.9 (CLAUDE.md section 4)').toBeLessThan(hot.pixels * 0.0005);
-    await tab.goto('/?q=high&debug=hot');
+    await tab.goto('/?q=high&debug=hot&demo=beaker&drawin=off');
     await tab.waitForFunction(() => document.documentElement.dataset.ready === 'true');
     await shot(tab, info, 'stage-debug-hot');
   });
