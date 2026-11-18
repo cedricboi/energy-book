@@ -4,6 +4,22 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 20 Nov 2026. Phase 5A (the book engine)
+
+### Done
+- `book/book.js`: opens a lesson (lazy-loaded), turns pages, swaps scenes only when the scene changes, draws each new diagram in after the turn, saves progress, applies the lit-object cue (lift by 6 mm), locks the run on predict pages until the prediction is committed, reports every committed answer to `hub/report.js`.
+- `book/pages.js`: page types hook (with today's questions on the first page and a photo slot), predict (MCQ plus reason, not marked, unlocks the run), explore (instruction, controls and actions in one work box), name (adds terms to the glossary, reveals steps one at a time), use, check, notes and exit (one question at a time).
+- `book/layout.js`: landscape puts the text, question and controls on the left page and the diagram and ledger bar on the right page. Portrait frames the right page at the top with a text panel below. The contents page uses the whole spread. The stage keeps the bottom bar (and the portrait panel) clear with a camera view offset.
+- `book/pageTurn.js`: the leaf curls as it turns (each column of the page lags with distance from the spine). The bend is computed on the CPU rather than in a vertex shader, which is simpler and keeps the paper shader identical to the pages.
+- `ui/hud.js`: contents, back, title, next, sound, quality, full screen. Arrows and PageUp/PageDown turn pages (arrows are left alone while a slider or text box has focus).
+- `ui/controls.js` (sliders with − and +, switches, choices, action buttons), `ui/checks.js` and `ui/marking.js` (MCQ, MCQ with reason, numeric with units and known-mistake feedback, short answer with key ideas and a model answer, fill the blanks, match or label, ordering), `ui/glossary.js`, `ui/progress.js` (localStorage in try/catch).
+- `scenes/energyKit.js`: the jars, flows, display ledger, ledger bar and labels every lesson scene shares. `scenes/index.js` lazy-loads scenes.
+- `core/sound.js`: muted on wide screens by default, starts only after the first tap, loads the sprite only if it exists (Phase 7B supplies it).
+- `hub/report.js`: queues answers in memory only, until the teacher's reference deck arrives (Phase 7D).
+- Tests: marking (7), writing rules for every lesson (semicolons, dashes, colon fragments, Singlish markers), book pages at four sizes (panel must fit with no scrolling, no label overlap).
+
+---
+
 ## 20 Nov 2026. Phase 4 (energy you can see)
 
 ### Done

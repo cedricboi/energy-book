@@ -117,18 +117,19 @@ function particleMaterial(style) {
  * @param {string} o.pathway id from PATHWAYS
  * @param {string} o.fromStore
  * @param {string} o.toStore
- * @param {number} [o.arc]   how high the path rises (m)
+ * @param {number} [o.arc]   how far the path bows out (m)
+ * @param {Vector3} [o.bulge] direction the path bows towards (default up)
  * @param {number} [o.travel] seconds for a packet to cross
  */
-export function createFlowPath({ from, to, pathway, fromStore, toStore, arc = 0.05, travel = 0.9 }) {
+export function createFlowPath({ from, to, pathway, fromStore, toStore, arc = 0.05, bulge = new Vector3(0, 1, 0), travel = 0.9 }) {
   const style = PATHWAYS[pathway].style;
-  const mid = from.clone().lerp(to, 0.5);
-  mid.y += arc;
+  const b = bulge.clone().normalize();
+  const mid = from.clone().lerp(to, 0.5).addScaledVector(b, arc);
   const curve = new CatmullRomCurve3([
     from.clone(),
-    from.clone().lerp(mid, 0.55).add(new Vector3(0, arc * 0.35, 0)),
+    from.clone().lerp(mid, 0.55).addScaledVector(b, arc * 0.35),
     mid,
-    to.clone().lerp(mid, 0.55).add(new Vector3(0, arc * 0.35, 0)),
+    to.clone().lerp(mid, 0.55).addScaledVector(b, arc * 0.35),
     to.clone(),
   ], false, 'centripetal');
   const ledger = new TransferLedger(travel);

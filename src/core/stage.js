@@ -131,6 +131,11 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
 
   const camera = new PerspectiveCamera(POSES.reading.fovDeg, 1, 0.02, 10);
   let aspect = 1;
+  // Part of the screen kept clear at the bottom (the control bar, and in
+  // portrait the text panel). The book is framed in the area above it.
+  let reserveBottom = 0;
+  let viewW = 1;
+  let viewH = 1;
 
   // Framing is fitted by projecting the corners of the book, because the
   // near edge of the book looks larger than the far edge.
@@ -170,11 +175,10 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
    * page fills 90% of the width. The book is centred, and never touches the
    * top or bottom edge.
    */
-  function framing(a) {
-    const key = a.toFixed(4);
+  function framing(a, portrait = a < 1) {
+    const key = `${a.toFixed(4)}-${portrait}`;
     if (framingCache.has(key)) return framingCache.get(key);
     const pose = POSES.reading;
-    const portrait = a < 1;
     const pts = corners(portrait);
     const elevation = MathUtils.degToRad(pose.elevationDeg);
     const widthFill = portrait ? 0.9 : 0.8;
@@ -211,8 +215,12 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
    */
   function placeCamera(yaw = 0, pitch = 0) {
     const pose = POSES[view] ?? POSES.reading;
-    camera.aspect = aspect;
+    const regionAspect = aspect / (1 - reserveBottom);
+    camera.aspect = regionAspect;
     camera.fov = pose.fovDeg;
+    // Render the full canvas, with the framed region at the top.
+    if (reserveBottom > 0) camera.setViewOffset(viewW, viewH * (1 - reserveBottom), 0, 0, viewW, viewH);
+    else camera.clearViewOffset();
     if (view === 'closeup') {
       // A close view of one object, for judging the ink style up close.
       const target = new Vector3(focus.x, focus.y, focus.z);
@@ -239,7 +247,7 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
       camera.updateProjectionMatrix();
       return;
     }
-    const { target, dist } = framing(aspect);
+    const { target, dist } = framing(regionAspect, aspect < 1);
     const elevation = MathUtils.degToRad(pose.elevationDeg) + pitch;
     camera.position.set(
       target.x + dist * Math.cos(elevation) * Math.sin(yaw),
@@ -257,6 +265,13 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
     lamp,
     setAspect(a) {
       aspect = a;
+    },
+    /** Canvas size in CSS px and the fraction of height kept clear at the bottom. */
+    setViewport(w, h, reserve = 0) {
+      viewW = w;
+      viewH = h;
+      aspect = w / h;
+      reserveBottom = Math.min(0.7, Math.max(0, reserve));
     },
     placeCamera,
     setTier(t) {

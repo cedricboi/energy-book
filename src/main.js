@@ -1,15 +1,15 @@
 // src/main.js
-// Entry point. Phase 3: the stage plus one ink beaker on the right-hand page,
-// for choosing the house ink style. No lesson content yet.
+// Entry point: the book on the desk at night.
 //
 // URL options (for testing and the teacher):
-//   ?q=high|medium|low   force a quality tier (otherwise a 2 s probe decides)
-//   ?tm=aces|agx         tone mapping (default aces, chosen in Phase 4)
-//   ?view=intro          the wider view that shows the window
-//   ?view=closeup        close view of the beaker
-//   ?debug=hot           luminance view: red marks anything above the bloom threshold
-//   ?debug=1             ink debug panel (sliders, presets, replay)
-//   ?ink=A|B|C           ink preset (default A)
+//   ?lesson=l5-ramp&page=3  open a lesson at a page (pages count from 1)
+//   ?q=high|medium|low      force a quality tier (otherwise a 2 s probe decides)
+//   ?tm=aces|agx            tone mapping (default aces)
+//   ?view=intro|closeup     other camera views (development)
+//   ?demo=beaker|objects|energy   development scenes from Phases 3 and 4
+//   ?debug=hot              luminance view: red marks anything above the bloom threshold
+//   ?debug=1                ink debug panel
+//   ?drawin=off             skip the draw-in (screenshots)
 import '@fontsource-variable/newsreader/opsz.css';
 import '@fontsource/kalam/latin-400.css';
 import './styles/main.css';
@@ -19,13 +19,14 @@ import { createStage } from './core/stage.js';
 import { createPost } from './core/post.js';
 import { createLoop } from './core/loop.js';
 import { createDragOrbit } from './core/input.js';
-import { forcedTier, tierSettings, tierFromFrameTime, probeFrameTime } from './core/quality.js';
+import { forcedTier, tierSettings, tierFromFrameTime, probeFrameTime, saveTier } from './core/quality.js';
 import { setInkResolution, usePreset, setInkStyle, inkStyle, INK_PRESETS, HOUSE_INK } from './ink/inkMaterial.js';
-import { createBeakerDemo, BEAKER_SPOT } from './demo/beakerDemo.js';
-import { createObjectsDemo } from './demo/objectsDemo.js';
-import { createEnergyDemo } from './demo/energyDemo.js';
 import { createOverlay } from './ui/overlay.js';
+import { createHud } from './ui/hud.js';
+import { createBook } from './book/book.js';
+import { reserveFor } from './book/layout.js';
 import { createDebugPanel } from './ui/debug.js';
+import { setMuted, isMuted, unlockAudio } from './core/sound.js';
 
 const params = new URLSearchParams(location.search);
 
@@ -47,7 +48,7 @@ async function start() {
   if (!renderer) return showFallback();
 
   const view = ['intro', 'closeup'].includes(params.get('view')) ? params.get('view') : 'reading';
-  const stage = createStage({ tier, view, focus: { x: BEAKER_SPOT.x, y: 0.058, z: BEAKER_SPOT.z } });
+  const stage = createStage({ tier, view, focus: { x: 0.1057, y: 0.058, z: 0.06 } });
   usePreset(INK_PRESETS[params.get('ink')] ? params.get('ink') : HOUSE_INK);
   const post = createPost(renderer, stage.scene, stage.camera, { tier, toneMapping: params.get('tm') ?? 'aces' });
   if (params.get('debug') === 'hot') post.setDebugHot(true);
@@ -55,11 +56,8 @@ async function start() {
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const overlayRoot = document.getElementById('overlay');
   const overlay = createOverlay(overlayRoot, stage.camera);
-  const which = params.get('demo') ?? 'energy';
-  let demo;
-  if (which === 'objects') demo = createObjectsDemo(stage.scene, { reducedMotion });
-  else if (which === 'beaker') demo = createBeakerDemo(stage.scene, { reducedMotion });
-  else demo = createEnergyDemo(stage.scene, overlay, overlayRoot, { reducedMotion });
+  const demoName = params.get('demo');
+
   // eslint-disable-next-line prefer-const
   let loop;
   const orbit = createDragOrbit(canvas, {
@@ -69,30 +67,63 @@ async function start() {
     onEnd: () => loop.release('drag'),
   });
 
+  // ---------- the book, or a development demo ----------
+  let book = null;
+  let demo = null;
+  const hudRoot = document.getElementById('hud');
+  const hud = createHud(hudRoot, {
+    onPrev: () => book?.prev(),
+    onNext: () => book?.next(),
+    onMenu: () => book?.openMenu(),
+    onMute: (m) => setMuted(m),
+    onQuality: (q) => {
+      saveTier(q === 'auto' ? null : q);
+      location.reload();
+    },
+    quality: forcedTier() ?? 'auto',
+    muted: isMuted(),
+  });
+
+  function rect() {
+    return { width: window.innerWidth, height: window.innerHeight };
+  }
+
   function drawFrame(dt = 0) {
     stage.placeCamera(orbit.yaw, orbit.pitch);
     stage.camera.updateMatrixWorld();
     post.render(dt);
     overlay.update();
+    book?.layout(rect());
   }
 
   loop = createLoop((dt) => {
     const orbiting = orbit.update(dt);
-    const drawing = demo.drawIn.update(dt);
-    const energy = demo.update ? demo.update(dt) : false;
+    const a = book ? book.update(dt) : false;
+    const b = demo ? demo.drawIn.update(dt) || (demo.update ? demo.update(dt) : false) : false;
     drawFrame(dt);
-    return orbiting || drawing || energy;
+    return orbiting || a || b;
   });
 
   function resize() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    stage.setAspect(w / h);
+    const { width: w, height: h } = rect();
+    stage.setViewport(w, h, demo ? 0 : reserveFor(w, h));
     post.setSize(w, h);
     setInkResolution(w, h, renderer.getPixelRatio(), tier.hatchLayers);
     loop.request();
   }
   window.addEventListener('resize', resize);
+
+  if (demoName) {
+    const mod = {
+      beaker: () => import('./demo/beakerDemo.js').then((m) => m.createBeakerDemo(stage.scene, { reducedMotion })),
+      objects: () => import('./demo/objectsDemo.js').then((m) => m.createObjectsDemo(stage.scene, { reducedMotion })),
+      energy: () => import('./demo/energyDemo.js').then((m) => m.createEnergyDemo(stage.scene, overlay, overlayRoot, { reducedMotion })),
+    }[demoName];
+    demo = await (mod ?? (() => null))();
+    hudRoot.hidden = true;
+  } else {
+    book = createBook({ stage, overlay, overlayRoot, reducedMotion, hud, onChange: () => loop.request(), instant: params.get('drawin') === 'off' });
+  }
   resize();
 
   let probeMs = null;
@@ -108,9 +139,20 @@ async function start() {
     tierName = tier.name;
   }
 
-  // The beaker rises, draws itself in, then its form fades in.
-  if (params.get('drawin') === 'off') demo.drawIn.setTime(99);
-  else demo.drawIn.play();
+  // Sound may only start after the first tap (browsers block autoplay).
+  window.addEventListener('pointerdown', unlockAudio, { once: true });
+  window.addEventListener('keydown', unlockAudio, { once: true });
+
+  if (book) {
+    const lessonId = params.get('lesson');
+    const pageNum = Number(params.get('page'));
+    if (lessonId) await book.openLesson(lessonId, Number.isFinite(pageNum) && pageNum > 0 ? pageNum - 1 : undefined);
+    else book.openContents();
+    if (params.get('drawin') === 'off') book.settle();
+  } else if (demo) {
+    if (params.get('drawin') === 'off') demo.drawIn.setTime(99);
+    else demo.drawIn.play();
+  }
   loop.request();
   drawFrame();
   document.documentElement.dataset.tier = tierName;
@@ -122,16 +164,50 @@ async function start() {
       setStyle: (v) => { setInkStyle(v); loop.request(); },
       usePreset: (name) => { usePreset(name); loop.request(); },
       presets: Object.keys(INK_PRESETS),
-      replay: () => { demo.drawIn.play(); loop.request(); },
+      replay: () => { (book?.state.drawIn ?? demo?.drawIn)?.play(); loop.request(); },
     });
   }
 
+  // ---------- hooks for the Playwright tests and for checking on a device ----------
+  window.__book = {
+    get state() {
+      const s = book?.state;
+      return s ? { lesson: s.lesson?.id ?? null, index: s.index, busy: s.busy, scene: s.sceneId } : null;
+    },
+    async open(id, page) {
+      await book.openLesson(id, page);
+      book.settle();
+      drawFrame();
+    },
+    async next() {
+      await book.next();
+      drawFrame();
+    },
+    /** Finish the draw-in and put the scene at model time t, then draw. */
+    settle(t) {
+      book.settle(t);
+      drawFrame();
+      return book.state.scene?.values?.();
+    },
+    act(id) {
+      book.state.scene?.act(id);
+      loop.request();
+    },
+    values: () => book?.state.scene?.values?.(),
+    /** True if the text panel's content fits without scrolling. */
+    panelFits() {
+      const p = book.panel;
+      return { fits: p.scrollHeight <= p.clientHeight + 1, scrollHeight: p.scrollHeight, clientHeight: p.clientHeight };
+    },
+    labelRects: () => overlay.debugRects(),
+  };
+
   window.__energy = {
     setTime(t) {
-      demo.drawIn.setTime(99);
-      demo.setTime?.(t);
+      demo?.drawIn.setTime(99);
+      demo?.setTime?.(t);
       drawFrame();
-      return demo.snapshot?.();
+      return demo?.snapshot?.();
     },
     labelRects: () => overlay.debugRects(),
   };
@@ -141,13 +217,12 @@ async function start() {
       usePreset(name);
       drawFrame();
     },
-    /** Freeze the draw-in at a time in seconds (99 = finished), and draw it. */
     setDrawIn(seconds) {
-      demo.drawIn.setTime(seconds);
+      (demo?.drawIn ?? book?.state.drawIn)?.setTime(seconds);
       drawFrame();
     },
     replay() {
-      demo.drawIn.play();
+      (demo?.drawIn ?? book?.state.drawIn)?.play();
       loop.request();
     },
     get style() {
@@ -155,29 +230,24 @@ async function start() {
     },
   };
 
-  // Hooks for the Playwright tests and for checking on a real device.
   window.__stage = {
     tier: tierName,
     probeMs,
     view,
-    /** Camera position, for checking the framing. */
     get camera() {
       return { position: stage.camera.position.toArray(), aspect: stage.camera.aspect, fov: stage.camera.fov };
     },
     get idle() {
       return !loop.running;
     },
-    /** Hold the view mid-drag at an offset in degrees, and draw it. */
     setDrag(yawDeg, pitchDeg) {
       orbit.setOffset(yawDeg, pitchDeg);
       drawFrame();
     },
-    /** Let go, so the view springs back. */
     releaseDrag() {
       orbit.release();
       loop.request();
     },
-    /** Render continuously for `ms` and return the average frame interval in ms. */
     measure(ms = 3000) {
       loop.clearStats();
       loop.hold('measure');
@@ -189,10 +259,7 @@ async function start() {
         }, ms);
       });
     },
-    /**
-     * Render the luminance view and count pixels above the bloom threshold
-     * (red) and above 0.9 (orange). Also returns the brightest luminance seen.
-     */
+    /** Count pixels above the bloom threshold (red) and above 0.9 (orange). */
     hotPixels() {
       post.setDebugHot(true);
       drawFrame();
@@ -211,7 +278,6 @@ async function start() {
         else if (r > 250 && g > 175 && g < 200 && b < 10) orange++;
         else if (Math.abs(r - g) < 3 && Math.abs(g - b) < 3) maxGrey = Math.max(maxGrey, r);
       }
-      // Grey is luminance / 2, written through the sRGB transfer.
       const s = maxGrey / 255;
       const linear = s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
       if (params.get('debug') !== 'hot') post.setDebugHot(false);
