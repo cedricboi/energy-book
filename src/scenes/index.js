@@ -20,6 +20,7 @@ export const SCENES = {
   bounce: () => import('./bounce.js'),
   work: () => import('./work.js'),
   power: () => import('./power.js'),
+  ledgerRun: () => import('./ledgerRun.js'),
 };
 
 export async function loadScene(id) {

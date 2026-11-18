@@ -5,7 +5,7 @@
 // around its anchor and takes the first one that is clear.
 import { Vector3 } from 'three';
 
-const CANDIDATES = [
+const NEAR = [
   [0, -1], // above
   [1, -0.4], // right
   [-1, -0.4], // left
@@ -13,6 +13,8 @@ const CANDIDATES = [
   [1.2, 0.6],
   [-1.2, 0.6],
 ];
+// If every near position is taken, try a wider ring before giving up.
+const CANDIDATES = [...NEAR, ...NEAR.map(([x, y]) => [x * 2.2, y * 2.4]), [0, -3.6], [0, 3.6]];
 
 function overlaps(a, b, pad = 4) {
   return a.x < b.x + b.w + pad && a.x + a.w + pad > b.x && a.y < b.y + b.h + pad && a.y + a.h + pad > b.y;

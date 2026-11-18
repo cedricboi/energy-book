@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { LESSONS } from '../src/lessons/index.js';
 import { mark, close } from '../src/ui/marking.js';
 
-const PAGE_TYPES = new Set(['hook', 'predict', 'explore', 'name', 'use', 'check', 'notes', 'exit', 'text']);
+const PAGE_TYPES = new Set(['hook', 'predict', 'explore', 'name', 'use', 'check', 'notes', 'exit', 'text', 'game', 'win']);
 
 function questionsOf(lesson) {
   const out = [];
@@ -32,7 +32,7 @@ for (const entry of LESSONS) {
     }
     it('uses only known page types, and opens with today\'s questions', () => {
       for (const p of lesson.pages) expect(PAGE_TYPES.has(p.type), p.type).toBe(true);
-      if (!lesson.hidden) {
+      if (!lesson.hidden && !lesson.game) {
         expect(lesson.questions?.length).toBeGreaterThan(0);
         expect(lesson.pages[0].type).toBe('hook');
         expect(lesson.pages.at(-1).type).toBe('exit');

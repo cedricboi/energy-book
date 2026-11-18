@@ -330,7 +330,6 @@ html, body {
 .page-panel.dense .page-kicker { display: none; }
 .page-panel.dense button { min-height: 40px; padding: 0.15em 0.7em; }
 .page-panel.dense .work-box { padding: 0.3em 0.55em 0.4em; margin: 0.25em 0 0.3em; }
-.page-panel.dense .ctl-line { grid-template-columns: 40px 1fr 40px auto; }
 .page-panel.dense .ctl { margin: 0.05em 0; }
 .page-panel.dense .q-option { padding: 0.08em 0.3em; }
 .page-panel.dense .todays-questions { padding: 0.2em 0.55em; margin-bottom: 0.4em; }
@@ -352,7 +351,14 @@ html, body {
 .runs-table th, .runs-table td { border: 1px solid rgba(30, 27, 36, 0.5); padding: 0.05em 0.35em; text-align: right; font-variant-numeric: tabular-nums; }
 
 /* Dense mode: each slider's label sits beside it, saving a line per control. */
-.page-panel.dense .ctl-slider { display: grid; grid-template-columns: 6.6em 1fr; align-items: center; gap: 0.3em; }
+.page-panel.dense .ctl-slider { display: grid; grid-template-columns: minmax(4.5em, 30%) 1fr; align-items: center; gap: 0.3em; }
+.page-panel.dense .ctl-line { grid-template-columns: 36px minmax(60px, 1fr) 36px auto; gap: 4px; }
+.page-panel.dense .ctl-step { min-height: 36px !important; }
 .page-panel.dense .ctl-label { font-size: 0.8em; line-height: 1.1; }
 .page-panel.dense .ctl-value { min-width: 3.8em; font-size: 0.9em; }
 .page-panel.dense .runs-table { font-size: 0.75em; }
+
+/* Ledger Run */
+.game-story { margin-bottom: 0.3em !important; }
+.game-parts { margin: 0 0 0.3em; font-size: 0.82em; line-height: 1.25; }
+.game-total { font-size: 1.2em; font-weight: 600; }

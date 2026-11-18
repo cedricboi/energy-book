@@ -4,10 +4,11 @@
 // Lessons are data. Nothing here knows about a particular lesson.
 import { renderQuestion } from '../ui/checks.js';
 import { createSlider, createSwitch, createChoice, createActionButton } from '../ui/controls.js';
+import { gamePage, winPage } from './gamePage.js';
 
 const KICKER = {
   hook: 'Starting point', predict: 'Predict', explore: 'Explore', name: 'New term', use: 'Use it',
-  check: 'Check', notes: 'Notes', exit: 'Exit ticket', text: '', contents: '',
+  check: 'Check', notes: 'Notes', exit: 'Exit ticket', text: '', contents: '', game: 'Ledger Run', win: 'Ledger Run',
 };
 
 const paras = (list) => (list ?? []).map((p) => `<p>${p}</p>`).join('');
@@ -104,6 +105,13 @@ export function renderPage(panel, page, c) {
       questionSequence(body, page.questions, c);
       break;
     }
+    case 'game':
+      gamePage(body, page, c);
+      break;
+    case 'win':
+      body.insertAdjacentHTML('beforeend', paras(text));
+      winPage(body, page, c);
+      break;
     default:
       body.insertAdjacentHTML('beforeend', paras(text));
   }
