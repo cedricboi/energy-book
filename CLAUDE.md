@@ -60,7 +60,7 @@ energy-book/
 
 ### Mood
 
-A hand-inked field notebook lies open on a dark wooden desk at night. A warm desk lamp lights it from the upper left. A window at the back shows a deep blue night sky with a few stars, which ties the book to the cinematic night-sky look of the teacher's Teacher Hub. The scene is calm and quiet. The only saturated colour in it is energy.
+A hand-inked field notebook lies open on a light oak desk in soft daylight, which falls from a high window at the upper left. The paper reads white, the ink is crisp and the shadows are soft. The scene is calm and quiet. The only saturated colour in it is energy. (The teacher chose daylight on 19 Nov 2026. The earlier lamp-lit night look is kept as `?look=night`.)
 
 ### Base colours
 
@@ -69,9 +69,9 @@ A hand-inked field notebook lies open on a dark wooden desk at night. A warm des
 | Paper | `#F4EEDF` |
 | Paper shadow tone | `#D9CFB8` |
 | Ink | `#1E1B24` |
-| Desk wood | `#3A2A20` |
-| Night sky | `#0C1230` |
-| Lamp light | `#FFD9A0` |
+| Desk wood | `#C4A988` |
+| Background | `#DCD6CB` |
+| Daylight | `#FFF7EC` |
 
 ### Energy store palette
 

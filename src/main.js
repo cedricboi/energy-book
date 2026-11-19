@@ -50,8 +50,8 @@ async function start() {
   if (!renderer) return showFallback();
 
   const view = ['intro', 'closeup'].includes(params.get('view')) ? params.get('view') : 'reading';
-  // ?look=day shows the daylight version (for comparison); night is the default.
-  const look = params.get('look') === 'day' ? 'day' : 'night';
+  // Daylight is the house look. ?look=night shows the lamp-lit night version.
+  const look = params.get('look') === 'night' ? 'night' : 'day';
   document.documentElement.dataset.look = look;
   const stage = createStage({ tier, view, focus: { x: 0.1057, y: 0.058, z: 0.06 }, look });
   usePreset(INK_PRESETS[params.get('ink')] ? params.get('ink') : HOUSE_INK);

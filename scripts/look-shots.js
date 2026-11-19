@@ -7,7 +7,7 @@ import { chromium } from '@playwright/test';
 const [base = 'http://localhost:5199', lesson = 'l5-ramp', page = '2', size = '1355x1205'] = process.argv.slice(2);
 const [width, height] = size.split('x').map(Number);
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-for (const look of ['night', 'day']) {
+for (const look of ['day', 'night']) {
   for (const hot of [false, true]) {
     const tab = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
     tab.on('pageerror', (e) => console.log('pageerror', e.message));

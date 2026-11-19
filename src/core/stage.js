@@ -74,15 +74,15 @@ const POSES = {
 };
 
 /**
- * Two looks. Night (the default): a lamp-lit desk at night. Day: the same
- * desk in soft daylight, light oak and a pale wall, for comparison.
+ * Two looks. Day (the house look, chosen by the teacher): soft daylight, light
+ * oak and a pale background. Night (?look=night): the lamp-lit desk at night.
  */
 const LOOKS = {
   night: { background: NIGHT_HEX, desk: undefined, wall: '#4A4038' },
   day: { background: '#DCD6CB', desk: '#C4A988', wall: '#CFC8BA' },
 };
 
-export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.05, z: 0 }, look = 'night' }) {
+export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.05, z: 0 }, look = 'day' }) {
   const L = LOOKS[look] ?? LOOKS.night;
   const scene = new Scene();
   scene.background = new Color(L.background);

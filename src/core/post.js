@@ -56,7 +56,7 @@ export const TONE_MAPPINGS = {
   neutral: ToneMappingMode.NEUTRAL,
 };
 
-export function createPost(renderer, scene, camera, { tier, toneMapping = 'aces', look = 'night' }) {
+export function createPost(renderer, scene, camera, { tier, toneMapping = 'neutral', look = 'day' }) {
   const composer = new EffectComposer(renderer, { frameBufferType: HalfFloatType });
   composer.addPass(new RenderPass(scene, camera));
 
