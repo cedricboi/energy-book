@@ -137,3 +137,28 @@ export function shotOf(objects, { fill = 2.6, minDist = 0.06, elevationDeg = 26,
 export function shotOfJars(kit, stores, opts = {}) {
   return shotOf(() => (stores ?? Object.keys(kit.jars)).map((s) => kit.jars[s]?.group), { fill: 2.2, elevationDeg: 22, ...opts });
 }
+
+/**
+ * A short note printed in the drawing (a reading, a scale note), mapped onto
+ * the scene in perspective rather than floating over it. By default it lies
+ * flat on the page (text along x, its top away from the reader).
+ * @param {object} ctx
+ * @param {object} o
+ * @param {string} o.id
+ * @param {() => Vector3} o.centre  centre of the note, in scene coordinates
+ * @param {Vector3} [o.u]  the direction the text runs
+ * @param {Vector3} [o.v]  up the text
+ * @param {number} [o.width]   metres
+ * @param {number} [o.height]  metres
+ */
+export function addNote(ctx, { id, centre, u = new Vector3(1, 0, 0), v = new Vector3(0, 0, -1), width = 0.034, height = 0.008, className = '' }) {
+  const lift = new Vector3(0, 0.0004, 0);
+  const corner = (a, b) => ctx.scene.localToWorld(centre().add(lift).addScaledVector(u, a * width / 2).addScaledVector(v, b * height / 2));
+  return ctx.overlay.addPrinted({
+    id,
+    className: `scene-note ${className}`,
+    size: [Math.round((220 * width) / height / 4.25), 52],
+    html: '',
+    quad: () => [corner(-1, 1), corner(1, 1), corner(1, -1), corner(-1, -1)],
+  });
+}

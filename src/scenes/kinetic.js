@@ -10,7 +10,7 @@ import { createEnergyKit } from './energyKit.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { createInkLines, polylineToSegments } from '../ink/creases.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
-import { carGeometry, addRuler, shotOf, shotOfJars } from './helpers.js';
+import { carGeometry, addRuler, shotOf, shotOfJars, addNote } from './helpers.js';
 import { kineticEnergy, distanceFromWorkDone } from '../physics/equations.js';
 import { formatQuantity } from '../physics/format.js';
 import { play } from '../core/sound.js';
@@ -57,7 +57,8 @@ export default function createKineticScene(ctx) {
   ctx.scene.add(clay.group);
   ctx.overlay.add({ id: 'part-car', kind: 'part', anchor: () => car.group.position.clone().add(new Vector3(0, 0.05, 0)), html: 'toy car', gap: 2 });
   ctx.overlay.add({ id: 'part-clay', kind: 'part', anchor: () => clay.group.position.clone().add(new Vector3(0.025, 0.04, 0)), html: 'soft clay', gap: 2 });
-  const dentLabel = ctx.overlay.add({ id: 'dent', anchor: () => new Vector3(clayFront + 0.01, y(clayFront), z + 0.03), html: '' });
+  // The dent depth is written on the clay block's front face.
+  addNote(ctx, { id: 'dent', centre: () => new Vector3(clay.group.position.x + 0.024, y(clayFront) + 0.015, z + 0.0256), v: new Vector3(0, 1, 0), width: 0.042, height: 0.0095 });
   ctx.overlay.setVisible('dent', false);
 
   let dent = 0; // m
@@ -153,7 +154,6 @@ export default function createKineticScene(ctx) {
           api.onRecord?.();
           ctx.overlay.setHtml('dent', `dent ${formatQuantity(fullDent * 1000, 'mm', 2)}`);
           ctx.overlay.setVisible('dent', true);
-          dentLabel.classList.add('label-reading');
         }
       }
       const flowing = kit.step({ kinetic: total - internal, internal }, mdt, dt);

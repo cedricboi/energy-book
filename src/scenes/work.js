@@ -11,7 +11,7 @@ import { createCrate } from '../objects/crate.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { createInkLines, polylineToSegments } from '../ink/creases.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
-import { createPerson, arrowSegments, addRuler, shotOf, shotOfJars } from './helpers.js';
+import { createPerson, arrowSegments, addRuler, shotOf, shotOfJars, addNote } from './helpers.js';
 import { workDone } from '../physics/equations.js';
 import { formatQuantity } from '../physics/format.js';
 
@@ -46,7 +46,8 @@ export default function createWorkScene(ctx) {
     caption: 'Energy ledger. The dark line marks the work done in this push.',
     transfers: [{ from: 'chemical', to: 'internal', pathway: 'mechanical', moved: (p, c) => Math.max(0, c.internal - p.internal) }],
   });
-  ctx.overlay.add({ id: 'jar-scale', anchor: () => kit.jars.internal.group.position.clone().add(new Vector3(0.035, 0.0, 0.03)), html: '', gap: 2 });
+  // The jar's scale is printed on the page in front of the jars.
+  addNote(ctx, { id: 'jar-scale', centre: () => kit.jars.internal.group.position.clone().add(new Vector3(0, -0.001, 0.044)), width: 0.06, height: 0.0098 });
 
   // Floor line with the distance marker (0 to 5 m) along the front.
   addRuler(ctx, { at: (m) => W(1.0 + m, 0, 0.03), length: 5, tick: 0.5, labelEvery: 1, tickDir: new Vector3(0, 0, 0.004), id: 'dist', prefer: 'below' });
@@ -58,8 +59,8 @@ export default function createWorkScene(ctx) {
   ctx.scene.add(person.group, crate.group, wall.group);
   ctx.overlay.add({ id: 'part-person', kind: 'part', anchor: () => person.group.position.clone().add(new Vector3(0, 1.8 * S, 0)), html: 'person', gap: 2 });
   ctx.overlay.add({ id: 'part-target', kind: 'part', anchor: () => (s.target === 'wall' ? wall.group.position : crate.group.position).clone().add(new Vector3(0, 1.3 * S, 0)), html: 'crate', gap: 2 });
-  const forceLabel = ctx.overlay.add({ id: 'force', anchor: () => W(0.9, 1.25), html: '', gap: 3 });
-  forceLabel.classList.add('label-reading');
+  // The force is printed upright beside the arrow, in the drawing's plane.
+  addNote(ctx, { id: 'force', centre: () => W(0.9, 1.6), v: new Vector3(0, 1, 0), width: 0.042, height: 0.0098 });
 
   let arrow = null;
   let along = 0; // m moved so far in this push
