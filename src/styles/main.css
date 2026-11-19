@@ -670,3 +670,7 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 .is-inked img, .is-inked svg:not(button svg) { visibility: hidden; }
 /* Forced colours would make the invisible copy show over the print. */
 @media (forced-colors: active) { .is-inked * { forced-color-adjust: none; } }
+
+/* Part names are handwritten on the paper, like notes in a workbook: no tag
+   behind them, only the paper-coloured halo, set at a slight hand angle. */
+.label-part { background: none; padding: 0 0.15em; rotate: -1.5deg; text-shadow: 0 0 2px var(--paper), 0 0 5px var(--paper), 0 0 9px var(--paper); }
