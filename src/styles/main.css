@@ -707,3 +707,10 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 .toc-title { flex: 1; font-size: 1em; }
 .page-panel .toc button.ink-row:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
 .toc .c-stamp { align-self: center; }
+
+/* Bold house look (ink C): the page's printed rules and boxes carry more ink,
+   so the text page matches the weight of the drawing beside it. */
+:root { --rule: rgba(30, 27, 36, 0.55); }
+.eq-box, .work-box, .todays-questions { border-width: 1.4px; }
+.page-running { border-bottom-width: 1.4px; }
+.page-kicker, .key-words-head, .key-head, .how-to h3, .toc-num { font-weight: 700; }
