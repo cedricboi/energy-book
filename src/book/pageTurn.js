@@ -9,7 +9,7 @@ import { Mesh, PlaneGeometry, DoubleSide } from 'three';
 import { BOOK, pageSurfaceY } from '../objects/book.js';
 import { createPaperMaterial } from '../ink/paper.js';
 
-const DURATION = 0.9;
+const DURATION = 1.1;
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 export function createPageTurn(scene, { reducedMotion = false } = {}) {
@@ -39,7 +39,9 @@ export function createPageTurn(scene, { reducedMotion = false } = {}) {
     for (let i = 0; i < pos.count; i++) {
       const u = (base[i * 3] + pageW / 2) / pageW; // 0 at the spine, 1 at the edge
       const z = base[i * 3 + 2];
-      const local = Math.min(1, Math.max(0, (p * (1 + lag) - lag * u)));
+      // The top corner leads a little, so the leaf curls like paper.
+      const lead = 0.12 * u * (0.5 - z / pageH) * Math.sin(Math.PI * Math.min(1, p));
+      const local = Math.min(1, Math.max(0, (p * (1 + lag) - lag * u + lead)));
       const a = Math.PI * ease(local);
       const r = gutter + u * pageW;
       // Angle 0 lies on the right page, angle pi on the left page.

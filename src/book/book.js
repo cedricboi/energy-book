@@ -74,7 +74,42 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
   };
 
   // ---------- scenes ----------
+  /** Run fn(p) for p from 0 to 1 over `seconds`, rendering each frame. */
+  function tween(seconds, fn) {
+    return new Promise((resolve) => {
+      const start = performance.now();
+      const tick = () => {
+        const p = Math.min(1, (performance.now() - start) / 1000 / seconds);
+        fn(p);
+        onChange?.();
+        if (p < 1) requestAnimationFrame(tick);
+        else resolve();
+      };
+      tick();
+    });
+  }
+
+  /**
+   * Before the leaf turns, the diagram folds back onto the page: its
+   * surfaces fade first, then the drawing lies down flat, and its labels
+   * fade with it. (The new page's drawing rises, inks itself and fills in.)
+   */
+  async function foldDown() {
+    if (reducedMotion || instant || !state.objects.length) return;
+    const objs = state.objects;
+    const roots = objs.map((o) => o.rise).filter(Boolean);
+    overlayRoot.classList.add('is-folding');
+    await tween(0.5, (p) => {
+      const fade = 1 - Math.min(1, p / 0.3);
+      for (const o of objs) for (const u of o.formUniforms) u.value = Math.min(u.value, fade);
+      const k = p < 0.3 ? 0 : (p - 0.3) / 0.7;
+      const s = 1 - k * k * (3 - 2 * k);
+      for (const r of roots) r.scale.y = Math.max(0.001, s);
+    });
+  }
+
   function clearScene() {
+    overlayRoot.classList.remove('is-folding');
     if (state.cue) {
       state.cue.position.y -= 0.006;
       state.cue = null;
@@ -188,6 +223,10 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
       state.cue = null;
     }
     const sceneChanges = (page.scene ?? null) !== state.sceneId;
+    // Every turn folds the drawing down first, so the leaf never sweeps
+    // through a standing diagram. The new page's drawing then rises and
+    // inks itself again, as if printed on that page.
+    await foldDown();
     if (sceneChanges) clearScene();
     play('page-turn');
     const turning = turner.turn(direction);
@@ -197,6 +236,11 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     state.progress.page = index;
     save();
     if (sceneChanges && page.scene) await makeScene(page.scene);
+    else if (state.drawIn) {
+      overlayRoot.classList.remove('is-folding');
+      state.drawIn.play();
+      play('pen-scratch');
+    }
     showPanel(page);
     state.busy = false;
     // A predict page plays its steps only once the prediction is in.

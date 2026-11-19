@@ -549,3 +549,7 @@ html[data-look=day] .hud-btn, html[data-look=day] .hud-quality select { color: v
 html[data-look=day] .hud-btn:hover { background: rgba(30, 27, 36, 0.07); }
 html[data-look=day] .hud-dots i { border-color: rgba(30, 27, 36, 0.5); }
 html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
+
+/* While a diagram folds back onto the page, its labels and cards fade. */
+.label, .printed { transition: opacity 0.25s ease; }
+.is-folding .label, .is-folding .printed { opacity: 0; }
