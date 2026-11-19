@@ -6,10 +6,14 @@
 //
 // The paper is a MeshLambertMaterial with code injected by onBeforeCompile,
 // the same route the hatching shader takes in Phase 3.
-import { MeshLambertMaterial, Color, Vector2 } from 'three';
+import { MeshLambertMaterial, Color, Vector2, DataTexture } from 'three';
 
 export const PAPER_HEX = '#F4EEDF';
 export const PAPER_SHADOW_HEX = '#D9CFB8';
+
+// A blank print: one transparent texel, used until a page has text on it.
+const BLANK = new DataTexture(new Uint8Array(4), 1, 1);
+BLANK.needsUpdate = true;
 
 /** Value noise and fbm shared by every procedural material. */
 export const NOISE_GLSL = /* glsl */ `
@@ -75,14 +79,23 @@ export function createPaperMaterial({ width, height, spineU, seed = 0 }) {
     uSpineU: { value: spineU },
     uSeed: { value: seed },
     uShadowTone: { value: new Color(PAPER_SHADOW_HEX) },
+    // The printed text (book/pagePrint.js): a canvas covering the whole
+    // page, for the front face and the back face (the turning leaf has
+    // both). uPrintFlip says, per face, whether the canvas runs from the
+    // fore-edge (a left-hand page) rather than from the spine.
+    uPrint: { value: BLANK },
+    uPrintBack: { value: BLANK },
+    uPrintOn: { value: 0 },
+    uPrintFlip: { value: new Vector2(0, 1) },
   };
+  material.userData.print = uniforms;
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     injectVaryings(shader);
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
-        '#include <common>\nuniform vec2 uPageSize;\nuniform float uSpineU;\nuniform float uSeed;\nuniform vec3 uShadowTone;',
+        '#include <common>\nuniform vec2 uPageSize;\nuniform float uSpineU;\nuniform float uSeed;\nuniform vec3 uShadowTone;\nuniform sampler2D uPrint;\nuniform sampler2D uPrintBack;\nuniform float uPrintOn;\nuniform vec2 uPrintFlip;',
       )
       .replace(
         '#include <color_fragment>',
@@ -118,6 +131,18 @@ export function createPaperMaterial({ width, height, spineU, seed = 0 }) {
           float dEdge = min(min(vElUv.y, 1.0 - vElUv.y) * uPageSize.y,
                             abs(vElUv.x - (1.0 - uSpineU)) * uPageSize.x);
           c = mix(c * vec3(0.95, 0.92, 0.86), c, smoothstep(0.0, 0.01, dEdge));
+
+          // Printed text. The canvas is premultiplied sRGB, so blending in
+          // sRGB and then decoding matches how the browser draws type on
+          // paper (multiplying commutes with the gamma curve).
+          if (uPrintOn > 0.0) {
+            float flip = gl_FrontFacing ? uPrintFlip.x : uPrintFlip.y;
+            vec2 pu = vec2(mix(vElUv.x, 1.0 - vElUv.x, flip), vElUv.y);
+            vec4 ink = gl_FrontFacing ? texture2D(uPrint, pu) : texture2D(uPrintBack, pu);
+            vec3 f = vec3(1.0 - ink.a) + ink.rgb;
+            f = pow(max(f, vec3(0.0)), vec3(2.2));
+            c *= mix(vec3(1.0), f, uPrintOn);
+          }
 
           diffuseColor.rgb = c;
         }`,

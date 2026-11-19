@@ -4,6 +4,29 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 20 Nov 2026. The page text is printed into the paper
+
+The largest gap from the technique study (TECHNIQUES.md C1) is closed. On landscape lesson pages the words are now part of the page itself.
+
+- **How:** the browser still lays the page out in HTML. `src/book/printer.js` reads where each word, rule, box, list number and equation part landed and draws the same thing onto a canvas covering the whole sheet (6.4 px per mm). Type is drawn at its real size under a scale, so the variable font picks the same optical size as on screen. `src/book/pagePrint.js` makes each canvas the paper's texture (`ink/paper.js` gained print uniforms). The words take the window light, darken in the gutter and follow the page's curve.
+- **The HTML copy** stays in place, invisible (class `is-inked`), so screen readers and keyboard focus work as before. Live controls (buttons, sliders, tick boxes, typed answers, the feedback card, the stamp) stay visible as real HTML.
+- **Page turns:** the new page is made before the leaf moves (hidden, undrawn). The leaf carries the page it lifts from on its front and the arriving page on its back, and the page it uncovers is already printed. For the turn, a full print that also draws the controls is used, so nothing looks missing. The leaf now starts and lands flush with the curved page.
+- **Guided close-ups** no longer hide the text: it stays printed on the page while the camera moves in.
+- **Updates:** a change to the page (feedback, a revealed step, a new class, fonts or images arriving) reprints it on the next frame. A print takes about 2 ms of script time.
+- **Unchanged:** the stacked (portrait) layout and the contents page keep the HTML panel. The ledger stays live HTML.
+
+### Checks
+- 196 unit tests pass.
+- Browser specs (book, accessibility, lessons, handling): 63 passed. Two projector-size lesson runs timed out under load and pass when run alone.
+- Screenshots of every lesson's pages checked by eye, including forward and backward turns caught mid-curl.
+
+### Next
+- Print the ledger bar and a flat copy of the diagram on the leaf, so the right page turns with its drawing (TECHNIQUES.md C2).
+- Cutaways for the kettle (Lessons 2 and 8).
+- Part names (Kalam labels) could also be printed in the drawing.
+
+---
+
 ## 19 Nov 2026. Daylight look, Lesson 5 illustration, and the eight technique steps
 
 The teacher chose **daylight** as the house look (CLAUDE.md section 4 updated; night stays as `?look=night`). The book's public build was then studied for techniques at the teacher's request. Notes are in our own words in `docs/TECHNIQUES.md`, and no code or text was copied. Built on our own code, one step at a time:

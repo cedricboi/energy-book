@@ -47,13 +47,18 @@ export function createPageTurn(scene, { reducedMotion = false } = {}) {
       // Angle 0 lies on the right page, angle pi on the left page.
       const ang = dir > 0 ? a : Math.PI - a;
       const bow = Math.sin(ang) * 0.02 * u; // a little extra lift mid-turn
-      pos.setXYZ(i, r * Math.cos(ang), lift + r * Math.sin(ang) * 0.92 + bow, z);
+      // Lying on either page, the leaf takes that page's curve, so it starts
+      // and lands flush with the paper (and its print lines up).
+      const c = Math.cos(ang);
+      const flush = (pageSurfaceY(r, z) + 0.0004 - lift) * c * c;
+      pos.setXYZ(i, r * c, lift + r * Math.sin(ang) * 0.92 + bow + flush, z);
     }
     pos.needsUpdate = true;
     geo.computeVertexNormals();
   }
 
   return {
+    leaf,
     get turning() {
       return t < 1;
     },

@@ -190,6 +190,10 @@ async function start() {
 
   // ---------- hooks for the Playwright tests and for checking on a device ----------
   window.__book = {
+    /** For tests: the page printer (its sheets show what is printed on each page). */
+    get printer() {
+      return book?.printer;
+    },
     get state() {
       const s = book?.state;
       return s ? { lesson: s.lesson?.id ?? null, index: s.index, busy: s.busy, scene: s.sceneId } : null;
@@ -214,6 +218,14 @@ async function start() {
         el.style.transition = 'none';
         void el.offsetHeight;
         el.style.transition = '';
+      }
+      // Finish every fade still running (labels and cards coming back after a turn).
+      for (const anim of document.getAnimations()) {
+        try {
+          anim.finish();
+        } catch {
+          // endless animations keep running
+        }
       }
       book.settle(t);
       drawFrame();

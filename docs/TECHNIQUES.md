@@ -113,7 +113,7 @@ The headline: Every Joule is built the same way as our book (three.js, everythin
   - the folio
 - **The right page:** the figure, then a caption, then the italic try-it hint.
 - **Live layer:** a second, transparent canvas is laid over the page for pen ticks, handwritten margin working and stamps, redrawn as things change.
-- **Ours today:** HTML laid onto the page with a perspective transform. It can't turn with the leaf or take the light. Our sliders, number boxes and written answers need real inputs, so ours will be a hybrid. Printed text, ticks and toggles go into the page texture. A small number of real inputs (a written answer, a number) appear printed in place, and a drawer is used in portrait.
+- **Ours (built 20 Nov 2026):** a hybrid. The browser still lays the page out in HTML, and `book/printer.js` reads where every word, rule and box landed and draws the same thing on a canvas covering the whole sheet (6.4 px per mm). That canvas is the paper's texture (`book/pagePrint.js`), so the words take the light, sit in the gutter's shade and turn with the leaf. The HTML copy stays in place, invisible, for screen readers and keyboard focus. Its live controls (buttons, sliders, tick boxes, typed answers, the feedback card) stay visible as real HTML. For a turn, a full print that also draws the controls goes on the leaf and on the page it uncovers. The stacked (portrait) layout keeps the HTML panel.
 
 ### C2. The diagram is printed on the page, then peels up
 - **On the turning leaf:** the diagram is a flat, slanted "printed" snapshot.

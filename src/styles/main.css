@@ -552,7 +552,7 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 
 /* While a diagram folds back onto the page, its labels and cards fade. */
 .label, .printed { transition: opacity 0.25s ease; }
-.is-folding .label, .is-folding .printed { opacity: 0; }
+.is-folding .label, .is-folding .printed, .is-folding .ledger-slot { opacity: 0; }
 
 /* ---------- Lift the flap: a two-sided paper flap hinged at its top ---------- */
 .q-feedback { overflow: visible; }
@@ -656,3 +656,17 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 .jar-card .card-time { font-size: 24px; font-variant-numeric: tabular-nums; color: var(--soft-ink); }
 
 .scene-note { display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 600; white-space: nowrap; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* Printed into the paper (book/pagePrint.js). The HTML copy keeps its place
+   for screen readers and keyboard focus, but only its live controls show:
+   the words, rules and boxes are in the page's own texture. */
+.is-inked :not(:is(button, input, textarea, select, output, canvas, video, .q-feedback, .stamp-slot), :is(button, .q-feedback, .stamp-slot) *) {
+  color: transparent !important;
+  border-color: transparent !important;
+  background-color: transparent !important;
+  text-decoration-color: transparent !important;
+  box-shadow: none !important;
+}
+.is-inked img, .is-inked svg:not(button svg) { visibility: hidden; }
+/* Forced colours would make the invisible copy show over the print. */
+@media (forced-colors: active) { .is-inked * { forced-color-adjust: none; } }

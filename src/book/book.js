@@ -8,6 +8,7 @@ import { loadScene } from '../scenes/index.js';
 import { renderPage } from './pages.js';
 import { createPageTurn } from './pageTurn.js';
 import { createBeats } from './beats.js';
+import { createPagePrint } from './pagePrint.js';
 import { computeLayout, placeBox, quadMatrix, PRINT_W, printHeight, AREAS } from './layout.js';
 import { createDrawIn } from '../ink/drawIn.js';
 import { inkStyle } from '../ink/inkMaterial.js';
@@ -60,6 +61,9 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
 
   // Instant turns are for screenshots only. Reduced motion also skips the turn.
   const turner = createPageTurn(stage.scene, { reducedMotion: reducedMotion || instant });
+  // The page text is printed into the paper (landscape only).
+  const printer = createPagePrint({ scene: stage.scene, leaf: turner.leaf, panel, figure: figureRoot, onChange: () => onChange?.() });
+  let lastRect = null;
   const state = {
     lesson: null,
     index: 0,
@@ -121,7 +125,8 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     Object.assign(state, { scene: null, group: null, drawIn: null, objects: [], sceneId: null });
   }
 
-  async function makeScene(id) {
+  /** Build a page's scene. Hidden: it waits, undrawn, until the leaf lands. */
+  async function makeScene(id, { hidden = false } = {}) {
     const create = await loadScene(id);
     const group = new Group();
     group.name = `scene-${id}`;
@@ -141,8 +146,12 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
       root: o.rise, lines: o.lines, formUniforms: o.formUniforms, seconds: () => inkStyle.drawInSeconds, reducedMotion,
     })));
     Object.assign(state, { scene, group, drawIn, objects: scene.objects, sceneId: id });
-    drawIn.play();
-    play('pen-scratch');
+    if (hidden) {
+      group.visible = false;
+    } else {
+      drawIn.play();
+      play('pen-scratch');
+    }
     onChange?.();
   }
 
@@ -211,7 +220,6 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     }
     hud.setTitle(`${lesson.title} · page ${state.index + 1} of ${lesson.pages.length}`);
     hud.setNav({ canPrev: state.index > 0 || true, canNext: state.index < lesson.pages.length - 1 });
-    panel.classList.remove('is-leaving');
     panel.scrollTop = 0;
     onChange?.();
   }
@@ -234,21 +242,69 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     // through a standing diagram. The new page's drawing then rises and
     // inks itself again, as if printed on that page.
     await foldDown();
+    // The leaf carries the page it lifts from: going on, the right page
+    // (its front); going back, the left page (its back).
+    const { sheets } = printer;
+    printer.hold(true);
+    // The page's controls are hidden from here on, so its print takes them
+    // in too: nothing on the page looks missing while the leaf turns.
+    if (printer.enabled) {
+      if (direction > 0) {
+        printer.copy(sheets.right, sheets.leafFront);
+        printer.print('left', sheets.left, { full: true });
+      } else {
+        printer.print('left', sheets.leafBack, { full: true });
+      }
+    } else {
+      printer.clear(sheets.leafFront);
+      printer.clear(sheets.leafBack);
+    }
+    // The new page is made before the leaf moves, hidden, so its text can
+    // be printed on the leaf and on the page the leaf uncovers.
     if (sceneChanges) clearScene();
+    overlayRoot.classList.add('is-folding');
+    if (sceneChanges && page.scene) await makeScene(page.scene, { hidden: true });
+    else if (state.group) state.group.visible = false;
+    state.index = index;
+    state.progress.page = index;
+    save();
+    showPanel(page);
+    if (lastRect) layout(lastRect);
+    if (printer.enabled) {
+      if (direction > 0) {
+        printer.print('left', sheets.leafBack, { full: true });
+        printer.print('right');
+      } else {
+        printer.print('right', sheets.leafFront);
+        printer.print('left', sheets.left, { full: true });
+      }
+    }
     play('page-turn');
     const turning = turner.turn(direction);
     onChange?.(); // keep the render loop running while the leaf turns
     await turning;
-    state.index = index;
-    state.progress.page = index;
-    save();
-    if (sceneChanges && page.scene) await makeScene(page.scene);
-    else if (state.drawIn) {
-      overlayRoot.classList.remove('is-folding');
+    // The leaf has landed: its far side is now that page.
+    if (printer.enabled) {
+      if (direction > 0) printer.copy(sheets.leafBack, sheets.left);
+      else printer.copy(sheets.leafFront, sheets.right);
+    }
+    printer.hold(false);
+    overlayRoot.classList.remove('is-folding');
+    if (state.group) state.group.visible = true;
+    if (state.drawIn) {
       state.drawIn.play();
       play('pen-scratch');
     }
-    showPanel(page);
+    // On a printed page the controls are already drawn where they go, so
+    // the HTML ones appear at once and the print drops its copies.
+    if (printer.enabled) {
+      panel.style.transition = 'none';
+      panel.classList.remove('is-leaving');
+      void panel.offsetHeight;
+      panel.style.transition = '';
+    } else {
+      panel.classList.remove('is-leaving');
+    }
     state.busy = false;
     // A predict page plays its steps only once the prediction is in.
     if (!(page.type === 'predict' && !state.progress.answers[page.question?.id])) beats.start(page.beats);
@@ -299,6 +355,52 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     dlg.showModal();
   }
 
+  /** Fit the text panel and ledger to the pages. Call after the camera moves. */
+  function layout(rect) {
+    lastRect = rect;
+    const l = computeLayout(stage.camera, rect, { wide: !state.lesson });
+    // Landscape: the text is printed on the left page, laid out at a fixed
+    // page size and mapped onto the page in perspective.
+    const printed = !!l.textQuad;
+    const box = printed ? { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.leftText) } : l.text;
+    const sizeChanged = panel.style.height !== `${Math.round(box.h)}px` || panel.style.width !== `${Math.round(box.w)}px`;
+    placeBox(panel, box);
+    panel.style.transform = printed ? quadMatrix(box.w, box.h, l.textQuad) : '';
+    panel.classList.toggle('is-printed', printed);
+    panel.classList.toggle('is-portrait', l.portrait);
+    // Landscape lesson pages are printed into the paper.
+    printer.setEnabled(printed && !!state.lesson);
+    // If the page does not fit, tighten the spacing (text stays at its
+    // minimum size). Re-check only when the panel or its page changes.
+    if (sizeChanged || panel.dataset.fitFor !== panel.dataset.pageKey) {
+      panel.dataset.fitFor = panel.dataset.pageKey;
+      panel.classList.remove('dense', 'denser');
+    }
+    // Content can grow after the page opens (feedback, a table of runs),
+    // so keep checking and step to denser spacing when needed.
+    if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('dense')) panel.classList.add('dense');
+    if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('denser')) panel.classList.add('denser');
+    // A page never scrolls (focus can nudge it), so keep it at its top.
+    if (panel.scrollTop) panel.scrollTop = 0;
+    // The caption is printed only in landscape, where the page is in view.
+    figureRoot.hidden = !l.figureQuad || !figureRoot.innerHTML;
+    if (l.figureQuad) {
+      const fb = { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.rightFigure) };
+      placeBox(figureRoot, fb);
+      figureRoot.style.transform = quadMatrix(fb.w, fb.h, l.figureQuad);
+    }
+    if (l.ledgerQuad) {
+      const lb = { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.rightLedger) };
+      placeBox(ledgerRoot, lb);
+      ledgerRoot.style.transform = quadMatrix(lb.w, lb.h, l.ledgerQuad);
+      ledgerRoot.classList.add('is-printed');
+    } else {
+      placeBox(ledgerRoot, l.ledger);
+      ledgerRoot.style.transform = '';
+      ledgerRoot.classList.remove('is-printed');
+    }
+  }
+
   return {
     openLesson,
     openContents,
@@ -319,48 +421,7 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     interrupt() {
       beats.interrupt();
     },
-    /** Fit the text panel and ledger to the pages. Call after the camera moves. */
-    layout(rect) {
-      const l = computeLayout(stage.camera, rect, { wide: !state.lesson });
-      // Landscape: the text is printed on the left page, laid out at a fixed
-      // page size and mapped onto the page in perspective.
-      const printed = !!l.textQuad;
-      const box = printed ? { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.leftText) } : l.text;
-      const sizeChanged = panel.style.height !== `${Math.round(box.h)}px` || panel.style.width !== `${Math.round(box.w)}px`;
-      placeBox(panel, box);
-      panel.style.transform = printed ? quadMatrix(box.w, box.h, l.textQuad) : '';
-      panel.classList.toggle('is-printed', printed);
-      panel.classList.toggle('is-portrait', l.portrait);
-      // If the page does not fit, tighten the spacing (text stays at its
-      // minimum size). Re-check only when the panel or its page changes.
-      if (sizeChanged || panel.dataset.fitFor !== panel.dataset.pageKey) {
-        panel.dataset.fitFor = panel.dataset.pageKey;
-        panel.classList.remove('dense', 'denser');
-      }
-      // Content can grow after the page opens (feedback, a table of runs),
-      // so keep checking and step to denser spacing when needed.
-      if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('dense')) panel.classList.add('dense');
-      if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('denser')) panel.classList.add('denser');
-      // A page never scrolls (focus can nudge it), so keep it at its top.
-      if (panel.scrollTop) panel.scrollTop = 0;
-      // The caption is printed only in landscape, where the page is in view.
-      figureRoot.hidden = !l.figureQuad || !figureRoot.innerHTML;
-      if (l.figureQuad) {
-        const fb = { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.rightFigure) };
-        placeBox(figureRoot, fb);
-        figureRoot.style.transform = quadMatrix(fb.w, fb.h, l.figureQuad);
-      }
-      if (l.ledgerQuad) {
-        const lb = { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.rightLedger) };
-        placeBox(ledgerRoot, lb);
-        ledgerRoot.style.transform = quadMatrix(lb.w, lb.h, l.ledgerQuad);
-        ledgerRoot.classList.add('is-printed');
-      } else {
-        placeBox(ledgerRoot, l.ledger);
-        ledgerRoot.style.transform = '';
-        ledgerRoot.classList.remove('is-printed');
-      }
-    },
+    layout,
     get state() {
       return state;
     },
@@ -371,5 +432,6 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
       else state.scene?.setTime?.(0);
     },
     panel,
+    printer,
   };
 }
