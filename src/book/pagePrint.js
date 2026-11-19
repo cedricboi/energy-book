@@ -81,6 +81,7 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, onChan
   let enabled = false;
   let held = false; // during a turn the pages keep what they show
   let queued = 0;
+  const dirty = new Set();
 
   function show(on) {
     for (const m of [pages.left, pages.right, leaf]) uni(m).uPrintOn.value = on ? 1 : 0;
@@ -149,26 +150,29 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, onChan
 
   // Reprint when the page changes: new text, a step revealed, feedback
   // shown, classes changed, fonts or images arriving.
-  function schedule() {
+  /** Reprint on the next frame: one side, or both. */
+  function schedule(side) {
+    if (side === 'left' || side === 'right') dirty.add(side);
+    else dirty.add('left').add('right');
     if (!enabled || held || queued) return;
     queued = requestAnimationFrame(() => {
       queued = 0;
       if (!enabled || held) return;
-      print('left');
-      print('right');
+      for (const s of dirty) print(s);
+      dirty.clear();
       onChange?.();
     });
   }
+  const sideOf = (node) => (panel.contains(node) ? 'left' : 'right');
   const observer = new MutationObserver((records) => {
-    const relevant = records.some((r) => {
+    for (const r of records) {
       const t = r.target.nodeType === 1 ? r.target : r.target.parentElement;
       // The panel's own position changes every frame: not a change of content.
-      if (r.type === 'attributes' && roots.includes(t) && r.attributeName === 'style') return false;
+      if (r.type === 'attributes' && roots.includes(t) && r.attributeName === 'style') continue;
       // Changes inside a live control do not move the printed text.
-      if (r.type !== 'childList' && t?.closest?.(LIVE)) return false;
-      return true;
-    });
-    if (relevant) schedule();
+      if (r.type !== 'childList' && t?.closest?.(LIVE)) continue;
+      if (t) schedule(sideOf(t));
+    }
   });
   function watch() {
     if (!enabled) return;
@@ -179,12 +183,12 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, onChan
   for (const el of roots) {
     for (const ev of ['transitionend', 'animationend', 'load']) {
       el.addEventListener(ev, (e) => {
-        if (!e.target.closest?.(LIVE)) schedule();
+        if (!e.target.closest?.(LIVE)) schedule(sideOf(e.target));
       }, true);
     }
   }
-  document.fonts?.addEventListener?.('loadingdone', schedule);
-  document.fonts?.ready.then(schedule);
+  document.fonts?.addEventListener?.('loadingdone', () => schedule());
+  document.fonts?.ready.then(() => schedule());
 
   return {
     sheets,
