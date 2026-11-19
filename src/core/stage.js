@@ -13,10 +13,11 @@ import { setPageLightProvider } from '../ink/inkMaterial.js';
 
 /**
  * Below this width-to-height ratio the book uses the stacked layout (the
- * right page framed at the top, the text panel below). Near-square windows
- * stack too, because the open book is too short there for the text page.
+ * right page framed at the top, the text panel below). Any landscape window
+ * prints the text on the left page: the printed page has a fixed layout, so
+ * it fits whatever the window's shape.
  */
-export const STACK_BELOW_ASPECT = 1.3;
+export const STACK_BELOW_ASPECT = 1.0;
 // Height kept in frame above the head of the page (jars plus their labels), m.
 const JAR_ROOM = 0.085;
 export const isStacked = (aspect) => aspect < STACK_BELOW_ASPECT;
