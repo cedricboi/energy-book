@@ -13,7 +13,8 @@ import { createInkObject } from '../ink/inkObject.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
 import { createPerson, shotOf } from './helpers.js';
 import { createStand } from './stand.js';
-import { kettleGeometry } from '../objects/kettle.js';
+import { kettleGeometry, kettleInside } from '../objects/kettle.js';
+import { createCutaway } from '../objects/cutaway.js';
 import { gravitationalPotentialEnergy, energyFromPower, timeFromPower } from '../physics/equations.js';
 import { formatQuantity } from '../physics/format.js';
 import { iconSvg } from '../energy/palette.js';
@@ -89,6 +90,11 @@ export default function createPowerScene(ctx) {
         const x = cx + (i === 0 ? -0.045 : 0.045);
         k.group.position.set(x, pageSurfaceY(x, 0.04), 0.04);
         group.add(k.group);
+        // Starting the stopwatches cuts both kettles open, so the water can
+        // be seen warming (its internal store filling) while the element is on.
+        k.inside = kettleInside(0.052);
+        k.inside.set(0, false);
+        k.cutaway = createCutaway(k, { centre: new Vector3(0, 0.025, 0), depth: 0.028, inside: k.inside.meshes, clip: k.inside.clip });
         objects.push(k);
         ctx.overlay.add({ id: `kettle-${i}`, kind: 'part', anchor: () => k.group.position.clone().add(new Vector3(0, -0.004, 0.035)), html: `${formatQuantity(P, 'W')} kettle`, gap: 2, prefer: 'below' });
         return k;
@@ -121,6 +127,7 @@ export default function createPowerScene(ctx) {
       const j = parts.jars[i];
       const e = s.compare === 'stairs' ? total * f : energyFromPower(KETTLE.powers[i], Math.min(t, T));
       j.jar.setValue(e);
+      if (parts.kind === 'kettles') parts.kettles[i].inside.set(e / KETTLE.energy, running && t < T);
       j.jar.setGlowFade(Math.max(glow, first.includes(j.jar) ? glow : 1));
       ctx.overlay.setHtml(j.id, `<span class="card-name">${iconSvg(j.store, 24)} ${j.name}</span><span class="card-val">${formatQuantity(e, 'J', 3)}</span><span class="card-time">${formatQuantity(Math.min(t, T), 's', 2)}</span>`);
       if (parts.kind === 'stairs') {
@@ -169,6 +176,7 @@ export default function createPowerScene(ctx) {
     act(id) {
       t = 0;
       running = id === 'run';
+      if (parts.kind === 'kettles') for (const k of parts.kettles) k.cutaway.open(id === 'run');
       refresh();
     },
     setLocked() {},
@@ -178,6 +186,7 @@ export default function createPowerScene(ctx) {
         glow = Math.min(1, glow + dt / 0.5);
         moving = true;
       }
+      if (parts.kind === 'kettles') for (const k of parts.kettles) moving = k.cutaway.update(dt, ctx.reducedMotion) || moving;
       if (running) {
         t += dt * (s.compare === 'kettles' ? FAST : 1) * (ctx.reducedMotion ? 0.5 : 1);
         if (t >= Math.max(...times())) running = false;
@@ -189,6 +198,7 @@ export default function createPowerScene(ctx) {
     setTime(target) {
       glow = 1;
       t = target * (s.compare === 'kettles' ? FAST : 1);
+      if (parts.kind === 'kettles') for (const k of parts.kettles) k.cutaway.set(target > 0);
       refresh();
     },
     values: () => ({ compare: s.compare, timeA: s.timeA, timeB: s.timeB, bagEnergy }),

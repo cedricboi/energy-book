@@ -14,6 +14,7 @@ The largest gap from the technique study (TECHNIQUES.md C1) is closed. On landsc
 - **The drawing leaves with its page** (`src/book/figureSnapshot.js`, TECHNIQUES.md C2, the leaving half): once the diagram has folded flat, it is rendered from straight above into the right page's print, at the same line weight as on screen, and the live copy hides. Going on, the leaf carries the printed drawing away. Going back, the leaf covers it. Glows keep their hue in the print. The arriving drawing still rises and inks itself as before.
 - **Guided close-ups** no longer hide the text: it stays printed on the page while the camera moves in.
 - **Updates:** a change to the page (feedback, a revealed step, a new class, fonts or images arriving) reprints it on the next frame. A print takes about 2 ms of script time.
+- **Kettle cutaways** (`src/objects/cutaway.js`, `kettleInside` in `objects/kettle.js`): running the Lesson 2 kettle, or starting the Lesson 8 stopwatches, cuts the kettle open. The cut trims surfaces, ink lines (the ribbon shader now supports clipping planes) and what is inside. The element glows while it is on. The water is drawn like the energy in the jars, with the internal store's pattern, and warms from a pale tint to the store's glow as energy arrives, so the 2000 W kettle's water visibly gets there first.
 - **Unchanged:** the stacked (portrait) layout and the contents page keep the HTML panel. The ledger stays live HTML.
 
 ### Checks
@@ -23,7 +24,7 @@ The largest gap from the technique study (TECHNIQUES.md C1) is closed. On landsc
 
 ### Next
 - Print the ledger bar on the leaf too, and hand the arriving page over from a print (TECHNIQUES.md C2, the arriving half).
-- Cutaways for the kettle (Lessons 2 and 8).
+- The Lesson 1 battery could move onto the shared cutaway helper.
 - Part names (Kalam labels) could also be printed in the drawing.
 
 ---

@@ -37,6 +37,7 @@ varying float vHalf;
 varying float vArcFrac;
 varying vec2 vPen;
 varying float vFaint;
+#include <clipping_planes_pars_vertex>
 ${NOISE3_GLSL}
 vec2 toScreen(vec4 c) { return c.xy / c.w * uResolution * 0.5; }
 void main() {
@@ -75,6 +76,10 @@ void main() {
   gl_Position = c;
   vArcFrac = aLen > 0.0 ? aArc / aLen : 0.0;
   vPen = aPen;
+  // A cutaway's plane trims lines as well as surfaces.
+  #if NUM_CLIPPING_PLANES > 0
+  vClipPosition = -(modelViewMatrix * vec4(position, 1.0)).xyz;
+  #endif
 }
 `;
 
@@ -87,7 +92,9 @@ varying float vHalf;
 varying float vArcFrac;
 varying vec2 vPen;
 varying float vFaint;
+#include <clipping_planes_pars_fragment>
 void main() {
+  #include <clipping_planes_fragment>
   // The pen: this stroke is drawn as far as its share of the draw-in allows.
   float local = clamp((uPen - vPen.x) / max(vPen.y - vPen.x, 1e-5), 0.0, 1.0);
   if (vArcFrac > local + 1e-4) discard;
@@ -112,6 +119,7 @@ export function createInkLineMaterial({ widthScale = 1 } = {}) {
       uPen: { value: 1 },
       uOpacity: { value: 1 },
     },
+    clipping: true,
     vertexShader: VERT,
     fragmentShader: FRAG,
     transparent: true,

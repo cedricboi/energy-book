@@ -7,7 +7,8 @@
 import { Group, Vector3, BoxGeometry, CylinderGeometry, SphereGeometry, LatheGeometry, Vector2 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { shotOf } from './helpers.js';
-import { kettleGeometry } from '../objects/kettle.js';
+import { kettleGeometry, kettleInside } from '../objects/kettle.js';
+import { createCutaway } from '../objects/cutaway.js';
 import { createEnergyKit } from './energyKit.js';
 import { createFlowPath } from '../energy/flow.js';
 import { createInkObject } from '../ink/inkObject.js';
@@ -53,6 +54,10 @@ const DEVICES = {
     build(add) {
       const k = createInkObject(kettleGeometry(0.045), { color: '#EEE7DA', name: 'kettle', creaseDeg: 55 });
       k.group.position.copy(at(0.01));
+      // Running it cuts the kettle open: the element glows and the water warms.
+      k.inside = kettleInside(0.045);
+      k.inside.set(0, false);
+      k.cutaway = createCutaway(k, { centre: new Vector3(0, 0.022, 0), depth: 0.024, inside: k.inside.meshes, clip: k.inside.clip });
       add(k, 'kettle of water', at(0.01, 0.075));
       const plug = createInkObject(new BoxGeometry(0.018, 0.022, 0.006).translate(0, 0.011, 0), { color: '#E8E1D4', name: 'plug' });
       plug.group.position.copy(at(-0.07));
@@ -187,6 +192,7 @@ export default function createTransfersScene(ctx) {
       c.kit.set({ ...c.shown });
       c.running = id === 'run';
       c.emitting = id === 'run' ? 1 : 0;
+      for (const o of c.objects) o.cutaway?.open(id === 'run');
     },
     setLocked() {},
     setHideValues(on) {
@@ -196,6 +202,12 @@ export default function createTransfersScene(ctx) {
     update(dt, { formReady }) {
       const c = current;
       let moving = c.kit.fadeGlow(dt, formReady);
+      for (const o of c.objects) {
+        if (!o.cutaway) continue;
+        moving = o.cutaway.update(dt, ctx.reducedMotion) || moving;
+        const powered = c.running && (c.emitting > 1e-6 || c.edges[0].flow.active);
+        o.inside.set(c.shown.internal ?? 0, powered);
+      }
       if (!c.running) return moving;
       // The first edges take energy from their source over about 1.5 s.
       const take = Math.min(c.emitting, dt / 1.5);

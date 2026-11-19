@@ -12,7 +12,7 @@ const BASE_Y = BEAKER.base + 0.0004;
 const TOP_Y = BEAKER.H - 0.012; // leave room below the lip
 export const JAR_USABLE_HEIGHT = TOP_Y - BASE_Y;
 
-const PATTERN_GLSL = /* glsl */ `
+export const PATTERN_GLSL = /* glsl */ `
 // Pattern coordinates: u around the jar (0..1), v up the jar in metres.
 float elPattern(int kind, vec2 p) {
   // p is in millimetres around (x) and up (y).
