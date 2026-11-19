@@ -18,6 +18,8 @@ import { printElement } from './printer.js';
 const PX_PER_M = 6400;
 const W = Math.round(BOOK.pageW * PX_PER_M);
 const H = Math.round(BOOK.pageH * PX_PER_M);
+/** Size of a page's print sheet in pixels (it covers the whole page). */
+export const PRINT_SIZE = [W, H];
 
 /** Elements that stay live HTML and are left out of the print. */
 export const LIVE = 'button, input, textarea, select, output, canvas, video, .q-feedback, .stamp-slot';
@@ -123,6 +125,13 @@ export function createPagePrint({ scene, leaf, panel, figure, onChange }) {
     watch();
   }
 
+  /** Lay an image the size of a sheet over what is printed on it (the folded drawing). */
+  function overlay(target, image) {
+    target.ctx.drawImage(image, 0, 0);
+    target.texture.needsUpdate = true;
+    target.blank = false;
+  }
+
   function copy(from, to) {
     to.ctx.clearRect(0, 0, W, H);
     to.ctx.drawImage(from.canvas, 0, 0);
@@ -197,5 +206,6 @@ export function createPagePrint({ scene, leaf, panel, figure, onChange }) {
     print,
     copy,
     clear,
+    overlay,
   };
 }

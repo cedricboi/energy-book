@@ -11,6 +11,7 @@ The largest gap from the technique study (TECHNIQUES.md C1) is closed. On landsc
 - **How:** the browser still lays the page out in HTML. `src/book/printer.js` reads where each word, rule, box, list number and equation part landed and draws the same thing onto a canvas covering the whole sheet (6.4 px per mm). Type is drawn at its real size under a scale, so the variable font picks the same optical size as on screen. `src/book/pagePrint.js` makes each canvas the paper's texture (`ink/paper.js` gained print uniforms). The words take the window light, darken in the gutter and follow the page's curve.
 - **The HTML copy** stays in place, invisible (class `is-inked`), so screen readers and keyboard focus work as before. Live controls (buttons, sliders, tick boxes, typed answers, the feedback card, the stamp) stay visible as real HTML.
 - **Page turns:** the new page is made before the leaf moves (hidden, undrawn). The leaf carries the page it lifts from on its front and the arriving page on its back, and the page it uncovers is already printed. For the turn, a full print that also draws the controls is used, so nothing looks missing. The leaf now starts and lands flush with the curved page.
+- **The drawing leaves with its page** (`src/book/figureSnapshot.js`, TECHNIQUES.md C2, the leaving half): once the diagram has folded flat, it is rendered from straight above into the right page's print, at the same line weight as on screen, and the live copy hides. Going on, the leaf carries the printed drawing away. Going back, the leaf covers it. Glows keep their hue in the print. The arriving drawing still rises and inks itself as before.
 - **Guided close-ups** no longer hide the text: it stays printed on the page while the camera moves in.
 - **Updates:** a change to the page (feedback, a revealed step, a new class, fonts or images arriving) reprints it on the next frame. A print takes about 2 ms of script time.
 - **Unchanged:** the stacked (portrait) layout and the contents page keep the HTML panel. The ledger stays live HTML.
@@ -21,7 +22,7 @@ The largest gap from the technique study (TECHNIQUES.md C1) is closed. On landsc
 - Screenshots of every lesson's pages checked by eye, including forward and backward turns caught mid-curl.
 
 ### Next
-- Print the ledger bar and a flat copy of the diagram on the leaf, so the right page turns with its drawing (TECHNIQUES.md C2).
+- Print the ledger bar on the leaf too, and hand the arriving page over from a print (TECHNIQUES.md C2, the arriving half).
 - Cutaways for the kettle (Lessons 2 and 8).
 - Part names (Kalam labels) could also be printed in the drawing.
 

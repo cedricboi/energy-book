@@ -142,7 +142,7 @@ async function start() {
     demo = await (mod ?? (() => null))();
     hudRoot.hidden = true;
   } else {
-    book = createBook({ stage, overlay, overlayRoot, reducedMotion, hud, onChange: () => loop.request(), instant: params.get('drawin') === 'off' });
+    book = createBook({ stage, renderer, overlay, overlayRoot, reducedMotion, hud, onChange: () => loop.request(), instant: params.get('drawin') === 'off' });
   }
   resize();
 

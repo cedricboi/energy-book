@@ -9,6 +9,7 @@ import { renderPage } from './pages.js';
 import { createPageTurn } from './pageTurn.js';
 import { createBeats } from './beats.js';
 import { createPagePrint } from './pagePrint.js';
+import { createFigureSnapshot } from './figureSnapshot.js';
 import { computeLayout, placeBox, quadMatrix, PRINT_W, printHeight, AREAS } from './layout.js';
 import { createDrawIn } from '../ink/drawIn.js';
 import { inkStyle } from '../ink/inkMaterial.js';
@@ -25,7 +26,7 @@ function combine(list) {
   };
 }
 
-export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, onChange, instant = false }) {
+export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotion, hud, onChange, instant = false }) {
   const panel = document.createElement('section');
   panel.className = 'page-panel';
   panel.setAttribute('aria-live', 'polite');
@@ -64,6 +65,7 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
   // The page text is printed into the paper (landscape only).
   const printer = createPagePrint({ scene: stage.scene, leaf: turner.leaf, panel, figure: figureRoot, onChange: () => onChange?.() });
   let lastRect = null;
+  const snapshot = renderer ? createFigureSnapshot(renderer) : null;
   const state = {
     lesson: null,
     index: 0,
@@ -97,9 +99,10 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
    * Before the leaf turns, the diagram folds back onto the page: its
    * surfaces fade first, then the drawing lies down flat, and its labels
    * fade with it. (The new page's drawing rises, inks itself and fills in.)
+   * Returns true if the drawing folded.
    */
   async function foldDown() {
-    if (reducedMotion || instant || !state.objects.length) return;
+    if (reducedMotion || instant || !state.objects.length) return false;
     const objs = state.objects;
     const roots = objs.map((o) => o.rise).filter(Boolean);
     overlayRoot.classList.add('is-folding');
@@ -110,6 +113,7 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
       const s = 1 - k * k * (3 - 2 * k);
       for (const r of roots) r.scale.y = Math.max(0.001, s);
     });
+    return true;
   }
 
   function clearScene() {
@@ -241,11 +245,17 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     // Every turn folds the drawing down first, so the leaf never sweeps
     // through a standing diagram. The new page's drawing then rises and
     // inks itself again, as if printed on that page.
-    await foldDown();
+    printer.hold(true);
+    const folded = await foldDown();
+    // The flat drawing is printed onto its page, so the leaf carries it
+    // away (going on) or covers it (going back). The live copy hides.
+    const { sheets } = printer;
+    if (folded && printer.enabled && snapshot && state.group) {
+      printer.overlay(sheets.right, snapshot(state.group, stage.camera));
+      state.group.visible = false;
+    }
     // The leaf carries the page it lifts from: going on, the right page
     // (its front); going back, the left page (its back).
-    const { sheets } = printer;
-    printer.hold(true);
     // The page's controls are hidden from here on, so its print takes them
     // in too: nothing on the page looks missing while the leaf turns.
     if (printer.enabled) {
