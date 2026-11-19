@@ -257,7 +257,8 @@ export function createFlowPath({ from, to, pathway, fromStore, toStore, arc = 0.
   // The glowing tube: a child of the ink path, so it shows and hides with it.
   // It glows while energy moves along it, then fades out.
   const span = from.distanceTo(to);
-  const radius = Math.min(0.0014, Math.max(0.0007, span * 0.02));
+  // Bold, like the drawing (ink look C): a pipe you can see from across the room.
+  const radius = Math.min(0.0028, Math.max(0.0015, span * 0.035));
   const tube = new Mesh(
     new TubeGeometry(curve, 72, radius, 10, false),
     tubeMaterial(style, new Color(...glowColour(fromStore, 1.6)), new Color(...glowColour(toStore, 1.6)), radius),
