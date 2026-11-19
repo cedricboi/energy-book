@@ -157,6 +157,9 @@ export default function createTransfersScene(ctx) {
   build('catapult');
 
   const api = {
+    get figure() {
+      return { caption: `The ${current.dev.label.toLowerCase()} transfers energy from one store to others.`, hint: 'Tap the device to run it.' };
+    },
     get objects() {
       return allObjects;
     },

@@ -86,6 +86,10 @@ export default function createGpeScene(ctx) {
   api = {
     interactive,
     onParamChange: null,
+    figure: {
+      caption: `The shelves are drawn at 1 : ${Math.round(1 / S)} beside a metre rule.`,
+      hint: 'Drag the box up or down to another shelf.',
+    },
     objects: [...kit.objects, unit, box],
     cueTargets: { box: box.group },
     params,

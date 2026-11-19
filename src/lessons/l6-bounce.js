@@ -56,6 +56,7 @@ export default {
     },
     {
       type: 'explore',
+      equations: [{ html: 'E<sub>p</sub> = mgh', words: 'gravitational potential energy = mass × gravitational field strength × height' }],
       scene: 'bounce',
       title: 'Follow one bounce',
       text: ['Try each ball. Use "Step" to move through one squash slowly.'],

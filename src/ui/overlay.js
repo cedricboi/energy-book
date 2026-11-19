@@ -33,6 +33,9 @@ export function createOverlay(root, camera) {
   // the text panel in the stacked layout). Null means the whole root.
   let safeArea = null;
   const glowSources = new Set();
+  // Printed things labels must keep clear of (the figure caption). Not
+  // cleared with the scene's labels.
+  const blockers = new Set();
   const v = new Vector3();
 
   function project(world) {
@@ -92,6 +95,10 @@ export function createOverlay(root, camera) {
     setSafeArea(r) {
       safeArea = r;
     },
+    /** A function returning a screen rectangle (CSS px) that labels keep clear of, or null. */
+    addBlocker(fn) {
+      blockers.add(fn);
+    },
     /** A function returning world points that bound a glow. */
     addGlow(fn) {
       glowSources.add(fn);
@@ -102,6 +109,10 @@ export function createOverlay(root, camera) {
       for (const fn of glowSources) {
         const pts = fn();
         if (pts.length) blocked.push(rectOf(pts));
+      }
+      for (const fn of blockers) {
+        const r = fn();
+        if (r) blocked.push(r);
       }
       const r = root.getBoundingClientRect();
       const area = safeArea ?? { x: 0, y: 0, w: r.width, h: r.height };
@@ -148,7 +159,8 @@ export function createOverlay(root, camera) {
       const glows = [...glowSources].map((fn) => fn()).filter((p) => p.length).map(rectOf);
       const r = root.getBoundingClientRect();
       const area = safeArea ?? { x: 0, y: 0, w: r.width, h: r.height };
-      return { labels: [...labels.values()].filter((l) => l.visible && l.rect).map((l) => l.rect), glows, area };
+      const printed = [...blockers].map((fn) => fn()).filter(Boolean);
+      return { labels: [...labels.values()].filter((l) => l.visible && l.rect).map((l) => l.rect), glows, area, printed };
     },
   };
 }

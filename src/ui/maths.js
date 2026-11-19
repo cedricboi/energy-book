@@ -8,6 +8,11 @@ export function tex(expr) {
   return katex.renderToString(expr, { throwOnError: false, output: 'html' });
 }
 
+/** A word equation written as a fraction: wordFrac('power', 'energy transferred', 'time taken'). */
+export function wordFrac(lhs, top, bottom) {
+  return tex(String.raw`\text{${lhs}} = \dfrac{\text{${top}}}{\text{${bottom}}}`);
+}
+
 /** "P = E/t" written as a fraction: frac('P', 'E', 't'). */
 export function fracEq(lhs, top, bottom) {
   return tex(String.raw`${lhs} = \dfrac{${top}}{${bottom}}`);

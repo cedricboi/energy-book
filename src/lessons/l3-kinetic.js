@@ -56,6 +56,7 @@ export default {
     },
     {
       type: 'use',
+      equations: [{ html: 'E<sub>k</sub> = ½mv²', words: 'kinetic energy = ½ × mass × speed²' }],
       scene: 'kinetic',
       title: 'A cyclist',
       question: {

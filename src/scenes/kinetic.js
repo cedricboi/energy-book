@@ -38,7 +38,7 @@ export default function createKineticScene(ctx) {
   });
 
   // Track along x, at real size. The clay block sits at the far end.
-  const z = 0.04;
+  const z = 0.028; // clear of the printed caption at the front of the page
   const x0 = BOOK.gutter + 0.02;
   const clayFront = BOOK.gutter + 0.15;
   const y = (x) => pageSurfaceY(x, z);
@@ -89,6 +89,10 @@ export default function createKineticScene(ctx) {
   reset();
 
   api = {
+    figure: {
+      caption: 'The car and the clay are drawn at real size and shown ten times slower.',
+      hint: 'Tap the car to roll it.',
+    },
     objects: [...kit.objects, car, clay],
     cueTargets: { car: car.group },
     params,

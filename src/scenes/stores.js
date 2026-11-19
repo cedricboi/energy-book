@@ -106,6 +106,10 @@ export default function createStoresScene(ctx) {
   actions.reset = { label: 'Empty the jars' };
 
   return {
+    figure: {
+      caption: 'Each object keeps energy in one of the six stores.',
+      hint: 'Tap an object to send its energy to its jar.',
+    },
     objects: [...kit.objects, ...Object.values(objects)],
     values: () => ({ ...shown }),
     cueTargets: Object.fromEntries(Object.entries(objects).map(([k, o]) => [k, o.group])),

@@ -130,6 +130,11 @@ export default function createPowerScene(ctx) {
   build();
 
   const api = {
+    get figure() {
+      return parts.kind === 'stairs'
+        ? { caption: `The staircase is drawn at 1 : ${Math.round(1 / S)}. It is ${formatQuantity(STAIRS.height, 'm', 2)} high.`, hint: 'Tap a person to start the stopwatches.' }
+        : { caption: 'The two kettles heat the same mass of water.', hint: 'Tap a kettle to start the stopwatches.' };
+    },
     get objects() {
       return first;
     },

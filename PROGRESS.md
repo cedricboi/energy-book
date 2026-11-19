@@ -4,6 +4,19 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 19 Nov 2026. Textbook page design (approved from the Lesson 5 sample)
+
+From the strict comparison with Every Joule: the left page now reads as a designed textbook page rather than a form.
+- **Typesetting:** running head ("The Energy Ledger · Lesson N") with a rule, red kicker, lighter and larger title, regular-weight body, page number in the corner. Printed text is 22 px on the fixed page.
+- **Boxed equations** with the word equation underneath (`page.equations`), on the first use page after each term is named (L3 Ek, L4 Ep, L7 W = F × d, L8 P = E/t), the L5 explore page and the L6 explore page. The L8 word equation is a KaTeX fraction (`wordFrac`). **Key words** in small type (`page.keyWords`), and name pages list the terms they name.
+- **Ink controls:** slider line and knob, round − and +, pill buttons, square tick-boxes, ruled answer lines, a thin printed work frame.
+- **Lift the flap:** after a check, a paper card shows the verdict ("Right" or "Not yet") and the reason sits under a flap the student lifts. Saved answers come back lifted.
+- **Figure captions** printed under each diagram (`scene.figure`): what it shows and its scale, plus the handling hint on explore pages (and on predict pages once the prediction is in). Labels keep clear of the caption, and the page check fails if one covers it. The L3 and L7 scenes moved back so their rulers clear the caption.
+- **Left out:** handwritten working in the margin, because CLAUDE.md keeps the handwritten font for part names only.
+- Tests: 196 unit tests. Every page passes at five sizes. The handling tests now wait for results rather than a fixed time, because software rendering is slow under load.
+
+---
+
 ## 19 Nov 2026. Presentation rework (approved from the Lesson 5 sample)
 
 Learned from Every Joule (no code, text or assets taken): the diagram should be the main thing on screen, the text should read as printed, and students should handle the objects.

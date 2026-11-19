@@ -36,6 +36,13 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
   figureRoot.className = 'figure-slot';
   figureRoot.hidden = true;
   overlayRoot.append(figureRoot);
+  // Labels keep clear of the printed caption.
+  overlay.addBlocker(() => {
+    if (figureRoot.hidden || !figureRoot.innerHTML) return null;
+    const root = overlayRoot.getBoundingClientRect();
+    const r = figureRoot.getBoundingClientRect();
+    return { x: r.left - root.left, y: r.top - root.top, w: r.width, h: r.height };
+  });
 
   // Instant turns are for screenshots only. Reduced motion also skips the turn.
   const turner = createPageTurn(stage.scene, { reducedMotion: reducedMotion || instant });

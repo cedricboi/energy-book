@@ -148,7 +148,7 @@ export default function createRampScene(ctx) {
 
   const api = {
     figure: {
-      caption: `A half-pipe at 1 : ${Math.round(1 / S)}. Heights from the bottom of the pipe.`,
+      caption: `The half-pipe is drawn at 1 : ${Math.round(1 / S)}. Heights are measured from its bottom.`,
       hint: 'Drag the skateboarder up either wall, then let go.',
     },
     interactive: [{

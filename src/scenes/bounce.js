@@ -155,6 +155,10 @@ export default function createBounceScene(ctx) {
       },
     }],
     onParamChange: null,
+    figure: {
+      caption: `The ball is drawn at 1 : ${Math.round(1 / S)} and shown four times slower.`,
+      hint: 'Drag the ball up to a drop height, then let go.',
+    },
     get objects() {
       return [...kit.objects, ball];
     },

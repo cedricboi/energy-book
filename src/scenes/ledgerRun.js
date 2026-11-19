@@ -184,6 +184,7 @@ export default function createLedgerRunScene(ctx) {
   setLevel(1);
 
   return {
+    figure: { caption: `The marble machine is drawn at 1 : ${Math.round(1 / S)}.` },
     objects: [...kit.objects, marble],
     cueTargets: { marble: marble.group },
     params,

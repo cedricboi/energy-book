@@ -51,6 +51,7 @@ export default {
     },
     {
       type: 'use',
+      equations: [{ html: 'E<sub>p</sub> = mgh', words: 'gravitational potential energy = mass × gravitational field strength × height' }],
       scene: 'gpe',
       title: 'Climbing the stairs',
       question: {

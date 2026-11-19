@@ -3,7 +3,7 @@
 // written P = E/t as a fraction. P = VI belongs to Topic 12 and is not used.
 import { power, energyFromPower, gravitationalPotentialEnergy, timeFromPower } from '../physics/equations.js';
 import { formatQuantity } from '../physics/format.js';
-import { fracEq } from '../ui/maths.js';
+import { fracEq, wordFrac } from '../ui/maths.js';
 import { STAIRS } from '../scenes/power.js';
 
 const fq = formatQuantity;
@@ -66,6 +66,7 @@ export default {
     },
     {
       type: 'use',
+      equations: [{ html: fracEq('P', 'E', 't'), words: wordFrac('power', 'energy transferred', 'time taken') }],
       scene: 'power',
       title: 'A lift motor',
       question: {

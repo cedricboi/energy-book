@@ -23,7 +23,7 @@ const SMALL_SCALE = 100; // J for a full jar, for small amounts
 export default function createWorkScene(ctx) {
   const S = DRAW_SCALE;
   const x0 = BOOK.gutter + 0.04;
-  const z = 0.05;
+  const z = 0.035; // clear of the printed caption at the front of the page
   const W = (x, y = 0, dz = 0) => new Vector3(x0 + x * S, pageSurfaceY(x0 + x * S, z + dz) + y * S, z + dz);
 
   const params = {
@@ -113,6 +113,10 @@ export default function createWorkScene(ctx) {
   reset();
 
   return {
+    figure: {
+      caption: `The person, the crate and the wall are drawn at 1 : ${Math.round(1 / S)}.`,
+      hint: 'Tap the person to push.',
+    },
     objects: [...kit.objects, person, crate, wall],
     cueTargets: { person: person.group },
     params,

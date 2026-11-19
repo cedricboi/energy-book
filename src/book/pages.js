@@ -110,6 +110,7 @@ export function renderPage(panel, page, c) {
     case 'check':
     case 'notes': {
       body.insertAdjacentHTML('beforeend', paras(text));
+      textbookParts(body, page);
       if (page.question) renderQuestion(body, page.question, { saved: c.saved?.answers?.[page.question.id], onCommit: c.onAnswer });
       if (page.controls?.length || page.actions?.length) workBox(body, page, c);
       break;

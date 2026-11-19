@@ -54,6 +54,7 @@ export default {
     },
     {
       type: 'use',
+      equations: [{ html: 'W = F × d', words: 'work done = force × distance moved in the direction of the force' }],
       scene: 'work',
       title: 'A shopping trolley',
       question: {

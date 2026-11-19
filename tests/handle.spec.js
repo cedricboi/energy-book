@@ -7,6 +7,8 @@ import { openBook } from './helpers.js';
 
 test.beforeEach(({}, info) => {
   test.skip(info.project.name !== 'laptop-1366x768', 'handling is checked at one size');
+  // Software rendering is slow when other tests run alongside.
+  test.setTimeout(120_000);
 });
 
 async function dragFirst(tab, dy) {
@@ -60,8 +62,7 @@ test('drag the ball higher, then it drops', async ({ page: tab }) => {
   await dragFirst(tab, 20);
   const after = await tab.evaluate(() => window.__book.values());
   expect(after.height).toBeGreaterThan(before.height);
-  await tab.waitForTimeout(800);
-  expect((await tab.evaluate(() => window.__book.values())).kinetic).toBeGreaterThan(0);
+  await tab.waitForFunction(() => window.__book.values().kinetic > 0, null, { timeout: 60_000 });
 });
 
 test('tap the toy car to send its energy to the kinetic jar', async ({ page: tab }) => {
@@ -70,7 +71,7 @@ test('tap the toy car to send its energy to the kinetic jar', async ({ page: tab
   const car = (await tab.evaluate(() => window.__book.touchables())).find((t) => t.label === 'car');
   await tab.mouse.click(car.x, car.y);
   // Software rendering is slow, so wait for the energy to arrive.
-  await tab.waitForFunction(() => window.__book.values().kinetic > 0, null, { timeout: 30_000 });
+  await tab.waitForFunction(() => window.__book.values().kinetic > 0, null, { timeout: 60_000 });
   const v = await tab.evaluate(() => window.__book.values());
   expect(v.gravitational + v.elastic + v.chemical + v.internal + v.nuclear).toBe(0);
 });
