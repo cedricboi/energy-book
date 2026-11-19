@@ -4,6 +4,39 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 19 Nov 2026. Drawing pass (approved from the sample)
+
+### House ink style is now D (approved by the teacher)
+`INK_PRESETS.D` in `src/ink/inkMaterial.js`, `HOUSE_INK = 'D'`. It keeps look C's bold outline but shades lightly:
+
+| Setting | C (old) | D (house) |
+|---|---|---|
+| Outline | 3.0 px | 2.8 px |
+| Lines (creases) | 2.0 px | 1.7 px |
+| Hatch spacing | 6.5 px | 5.2 px |
+| Hatch line width | 1.35 px | 0.8 px |
+| Thresholds | 0.75, 0.5, 0.25 | 0.52, 0.24, 0.08 |
+| Light reference | 0.75 | 0.72 |
+| Flatten shading | 0.85 | 0.985 |
+| Shaded-side tint | warm (1.13, 0.98, 0.78) | near paper (1.04, 1.0, 0.93) |
+| Body colour lift towards paper white | none | 0.5 |
+
+Hatching now starts only in real shadow, and shaded faces stay paper-coloured. Objects read as white paper forms with ink.
+
+### Also
+- **Brighter page:** softer vignette (offset 0.45, darkness 0.25) and more cool fill (hemisphere 0.5). Checked with `?debug=hot`: only the energy glow is above the bloom threshold.
+- **People:** `src/objects/figure.js` builds people on a jointed skeleton (stand, push, carry, skate). The L7 person leans into the push, and the L8 people hold their bags.
+- **Skateboarder:** the skate pose on a kicked board with wheels.
+- **Kettles:** `src/objects/kettle.js` gives a real kettle (body, lid, knob, handle, spout) in L2 (smaller, so it no longer dwarfs its jar) and L8.
+- **Test screenshots:** `settle()` skips the text page's fade back in, so screenshots of pages with guided steps show the finished page.
+- **Checks:** the full suite passed, except one development-demo check that timed out under load and passes alone.
+
+### Next
+- Jar label cards and jars built into each apparatus.
+- The kettles may read as teapots. Taller, with a flat lid, if the teacher wants.
+
+---
+
 ## 19 Nov 2026. Guided camera steps (approved from the Lesson 5 sample)
 
 - **What it is:** a page can play short narrated steps before the student takes over (`page.beats: [{ say, shot, action, seconds }]`, played by `book/beats.js`). The camera glides to close-ups the scene names (`scene.shots`), the text page fades aside while it is close in, and the last step returns to the page and hands over ("Your turn ...").

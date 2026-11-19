@@ -206,6 +206,12 @@ async function start() {
       // handed over, camera at the reading view.
       book.beats.interrupt();
       stage.setShot(null, 0);
+      // Skip the fade back in, so the screenshot shows the finished page.
+      for (const el of document.querySelectorAll('.page-panel, .ledger-slot, .figure-slot')) {
+        el.style.transition = 'none';
+        void el.offsetHeight;
+        el.style.transition = '';
+      }
       book.settle(t);
       drawFrame();
       return book.state.scene?.values?.();
