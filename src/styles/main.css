@@ -513,3 +513,39 @@ html, body {
 /* The text page steps aside while a guided shot is close up. */
 .page-panel, .ledger-slot, .figure-slot { transition: opacity 0.35s ease; }
 .is-away { opacity: 0 !important; pointer-events: none !important; }
+
+/* Text printed onto surfaces in the scene: paper cards on the jars, ruler marks. */
+.printed { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; color: var(--ink); font-family: var(--font-book); }
+.jar-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.05; padding: 4px 6px; }
+.jar-card .card-name { font-size: 25px; line-height: 1; }
+.jar-card .card-name .store-icon { vertical-align: -4px; }
+.jar-card .card-val { font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.ruler-marks { font-size: 30px; }
+.ruler-marks span { position: absolute; right: 8px; transform: translateY(-50%); white-space: nowrap; }
+
+/* With jar cards, the ledger is a slim bar: the cards already carry each store's joules. */
+.ledger-bar.with-cards .ledger-key { display: none; }
+.ledger-slot.is-printed .ledger-bar.with-cards .ledger-svg { height: 18px; }
+
+/* The bottom bar as a small floating bar, not a full-width strip. */
+.hud {
+  left: 50%;
+  right: auto;
+  bottom: 10px;
+  height: 48px;
+  transform: translateX(-50%);
+  width: min(980px, calc(100% - 24px));
+  border-radius: 999px;
+  padding: 0 10px;
+  background: rgba(16, 20, 44, 0.86);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+}
+.hud-btn { border: none; min-height: 36px; border-radius: 999px; }
+.hud-btn:hover { background: rgba(244, 238, 223, 0.12); }
+.hud-btn.primary:hover { background: var(--lamp); filter: brightness(1.05); }
+html[data-look=day] .hud { background: rgba(250, 247, 240, 0.92); color: var(--ink); box-shadow: 0 6px 22px rgba(40, 30, 20, 0.18); }
+html[data-look=day] .hud-btn, html[data-look=day] .hud-quality select { color: var(--ink); }
+html[data-look=day] .hud-btn:hover { background: rgba(30, 27, 36, 0.07); }
+html[data-look=day] .hud-dots i { border-color: rgba(30, 27, 36, 0.5); }
+html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }

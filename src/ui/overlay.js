@@ -4,6 +4,7 @@
 // top of an energy glow or another label: each label tries a few positions
 // around its anchor and takes the first one that is clear.
 import { Vector3 } from 'three';
+import { quadMatrix } from '../book/layout.js';
 
 const NEAR = [
   [0, -1], // above
@@ -71,6 +72,26 @@ export function createOverlay(root, camera) {
       labels.set(id, { el, anchor, gap, visible: true, prefer });
       return el;
     },
+    /**
+     * Text printed onto a surface in the scene (a paper card, a ruler strip):
+     * laid out at a fixed size, then mapped onto four world points in
+     * perspective. It moves with the drawing and never floats.
+     * @param {object} o
+     * @param {string} o.id
+     * @param {() => Vector3[]} o.quad  world corners: top-left, top-right, bottom-right, bottom-left
+     * @param {[number, number]} o.size  layout size in CSS px
+     * @param {string} [o.className]
+     */
+    addPrinted({ id, quad, size, html = '', className = '' }) {
+      const el = document.createElement('div');
+      el.className = `printed ${className}`;
+      el.style.width = `${size[0]}px`;
+      el.style.height = `${size[1]}px`;
+      el.innerHTML = html;
+      root.append(el);
+      labels.set(id, { el, quad, size, printed: true, visible: true });
+      return el;
+    },
     setHtml(id, html) {
       const l = labels.get(id);
       if (l && l.el.innerHTML !== html) l.el.innerHTML = html;
@@ -118,6 +139,14 @@ export function createOverlay(root, camera) {
       const area = safeArea ?? { x: 0, y: 0, w: r.width, h: r.height };
       for (const l of labels.values()) {
         if (!l.visible) continue;
+        if (l.printed) {
+          const pts = l.quad().map((w) => project(w));
+          const off = pts.some((p) => p.behind);
+          l.el.style.visibility = off ? 'hidden' : '';
+          if (!off) l.el.style.transform = quadMatrix(l.size[0], l.size[1], pts);
+          l.rect = null;
+          continue;
+        }
         const a = project(l.anchor());
         // An object outside the visible stage keeps its label hidden.
         const offStage = a.behind || a.x < area.x || a.x > area.x + area.w || a.y < area.y || a.y > area.y + area.h;

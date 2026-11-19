@@ -69,16 +69,29 @@ function contactShadow() {
 
 /** Camera poses. `reading` is the working view, `intro` shows the window. */
 const POSES = {
-  reading: { elevationDeg: 38, fovDeg: 30 },
+  reading: { elevationDeg: 46, fovDeg: 30 },
   intro: { fovDeg: 34, position: new Vector3(0, 0.2, 0.92), target: new Vector3(0, 0.2, -0.3) },
 };
 
-export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.05, z: 0 } }) {
-  const scene = new Scene();
-  scene.background = new Color(NIGHT_HEX);
+/**
+ * Two looks. Night (the default): a lamp-lit desk at night. Day: the same
+ * desk in soft daylight, light oak and a pale wall, for comparison.
+ */
+const LOOKS = {
+  night: { background: NIGHT_HEX, desk: undefined, wall: '#4A4038' },
+  day: { background: '#DCD6CB', desk: '#C4A988', wall: '#CFC8BA' },
+};
 
-  scene.add(createDesk({ backZ: WALL_Z }));
-  scene.add(createNightWindow({ wallZ: WALL_Z }));
+export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.05, z: 0 }, look = 'night' }) {
+  const L = LOOKS[look] ?? LOOKS.night;
+  const scene = new Scene();
+  scene.background = new Color(L.background);
+
+  scene.add(createDesk({ backZ: WALL_Z, color: L.desk }));
+  const windowGroup = createNightWindow({ wallZ: WALL_Z, wallColor: L.wall });
+  // By day the wall and night window are left out: a plain pale background.
+  windowGroup.visible = look !== 'day';
+  scene.add(windowGroup);
   const book = createBook();
   scene.add(book);
   scene.add(contactShadow());
@@ -110,6 +123,24 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
   scene.add(moon);
   const hemi = new HemisphereLight(new Color('#2A3458'), new Color('#2E2116'), 0.5);
   scene.add(hemi);
+
+  if (look === 'day') {
+    // Soft daylight from a high window at the upper left, a bright sky fill
+    // and light bounced off the desk. No lamp spill.
+    lamp.color.set('#FFF7EC');
+    lamp.intensity = 3.1;
+    lamp.angle = 0.75;
+    lamp.penumbra = 1;
+    lamp.position.set(-0.7, 1.1, 0.35);
+    lampTarget.position.set(0, 0, 0);
+    lamp.shadow.radius = 10;
+    spill.intensity = 0;
+    moon.color.set('#E3EAF6');
+    moon.intensity = 0.7;
+    hemi.color.set('#F3F1EC');
+    hemi.groundColor.set('#A8927A');
+    hemi.intensity = 1.25;
+  }
 
   // Light falling on an upward-facing page at a point, in the shader's units
   // (irradiance / pi, as luminance). The ink uses it to decide where to hatch.

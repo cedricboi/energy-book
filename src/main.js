@@ -50,9 +50,12 @@ async function start() {
   if (!renderer) return showFallback();
 
   const view = ['intro', 'closeup'].includes(params.get('view')) ? params.get('view') : 'reading';
-  const stage = createStage({ tier, view, focus: { x: 0.1057, y: 0.058, z: 0.06 } });
+  // ?look=day shows the daylight version (for comparison); night is the default.
+  const look = params.get('look') === 'day' ? 'day' : 'night';
+  document.documentElement.dataset.look = look;
+  const stage = createStage({ tier, view, focus: { x: 0.1057, y: 0.058, z: 0.06 }, look });
   usePreset(INK_PRESETS[params.get('ink')] ? params.get('ink') : HOUSE_INK);
-  const post = createPost(renderer, stage.scene, stage.camera, { tier, toneMapping: params.get('tm') ?? 'aces' });
+  const post = createPost(renderer, stage.scene, stage.camera, { tier, look, toneMapping: params.get('tm') ?? (look === 'day' ? 'neutral' : 'aces') });
   if (params.get('debug') === 'hot') post.setDebugHot(true);
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;

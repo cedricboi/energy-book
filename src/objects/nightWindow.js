@@ -60,7 +60,7 @@ function skyMaterial() {
  * @param {object} o
  * @param {number} o.wallZ z of the wall surface
  */
-export function createNightWindow({ wallZ }) {
+export function createNightWindow({ wallZ, wallColor = '#4A4038' }) {
   const group = new Group();
   group.name = 'night-window';
 
@@ -78,7 +78,7 @@ export function createNightWindow({ wallZ }) {
   hole.lineTo(OPENING.x1, OPENING.y0);
   hole.closePath();
   wall.holes.push(hole);
-  const wallMesh = new Mesh(new ShapeGeometry(wall), new MeshLambertMaterial({ color: new Color('#4A4038') }));
+  const wallMesh = new Mesh(new ShapeGeometry(wall), new MeshLambertMaterial({ color: new Color(wallColor) }));
   wallMesh.position.z = wallZ;
   wallMesh.receiveShadow = true;
   group.add(wallMesh);

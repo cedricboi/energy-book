@@ -2,7 +2,9 @@
 // Lesson 5 scene: a skateboarder on a half-pipe, drawn to scale (1 : 40)
 // beside a height ruler, with gravitational potential, kinetic and internal
 // jars and the ledger bar.
-import { Group, Vector3, Mesh, SphereGeometry, MeshBasicMaterial, Color, CircleGeometry, AdditiveBlending, Matrix4 } from 'three';
+import { Group, Vector3, Mesh, SphereGeometry, MeshBasicMaterial, Color, CircleGeometry, AdditiveBlending, Matrix4, BoxGeometry } from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { createInkObject } from '../ink/inkObject.js';
 import { scenePlanePoint } from '../core/pick.js';
 import { STORES } from '../energy/palette.js';
 import { createEnergyKit } from './energyKit.js';
@@ -33,13 +35,49 @@ export default function createRampScene(ctx) {
   const settings = { height: 2.0, mass: 50, friction: false, side: -1 };
 
   let model = createRampModel({ mass: settings.mass, startHeight: settings.height, friction: settings.friction });
+
+  // The store stand: a low shelf behind the half-pipe for the three jars, and
+  // a backboard with a paper card pinned above each jar. The jars belong to
+  // the drawing, and their names and joules are printed on the cards.
+  const STAND = { z: -0.075, depth: 0.036, width: 0.16, shelf: 0.01, board: 0.072, boardT: 0.003 };
+  const jarXs = [cx - 0.05, cx, cx + 0.05];
+  const standY = pageSurfaceY(cx, STAND.z);
+  const backZ = STAND.z - STAND.depth / 2;
+  const standGeo = mergeGeometries([
+    new BoxGeometry(STAND.width, STAND.shelf, STAND.depth).translate(0, STAND.shelf / 2, 0),
+    new BoxGeometry(STAND.width, STAND.board, STAND.boardT).translate(0, STAND.board / 2, -STAND.depth / 2 + STAND.boardT / 2),
+  ].map((g) => g.toNonIndexed()));
+  const stand = createInkObject(standGeo, { color: '#E2D2B6', name: 'store-stand', maxLayers: 1 });
+  stand.group.position.set(cx, standY, STAND.z);
+  ctx.scene.add(stand.group);
+  const CARD = { w: 0.046, h: 0.024, top: 0.07 };
+  const cardZ = backZ + STAND.boardT + 0.0006;
+  const cards = jarXs.map((x, i) => {
+    const c = createInkObject(new BoxGeometry(CARD.w, CARD.h, 0.0006).translate(0, -CARD.h / 2, 0), { color: '#FBF7EE', name: `card-${i}`, maxLayers: 1 });
+    c.group.position.set(x, standY + CARD.top, cardZ);
+    ctx.scene.add(c.group);
+    return c;
+  });
+  const cardQuad = (i) => () => {
+    const x = jarXs[i];
+    const y0 = standY + CARD.top - 0.0012;
+    const y1 = y0 - CARD.h + 0.0024;
+    const z = cardZ + 0.0004;
+    const v = (px, py) => ctx.scene.localToWorld(new Vector3(px, py, z));
+    return [v(x - CARD.w / 2 + 0.0012, y0), v(x + CARD.w / 2 - 0.0012, y0), v(x + CARD.w / 2 - 0.0012, y1), v(x - CARD.w / 2 + 0.0012, y1)];
+  };
+  const STORE_ORDER = ['gravitational', 'kinetic', 'internal'];
+
   const kit = createEnergyKit(ctx, {
     stores: ['gravitational', 'kinetic', 'internal'],
     scale: JAR_SCALE,
     start: { gravitational: model.total, kinetic: 0, internal: 0 },
     travel: 0.2,
-    jarSize: 0.5,
-    rowZ: -0.085,
+    jarSize: 0.42,
+    rowZ: STAND.z,
+    xs: jarXs,
+    jarY: STAND.shelf,
+    card: (s) => cardQuad(STORE_ORDER.indexOf(s)),
     caption: 'Energy ledger. The dark line marks the total.',
     transfers: [
       { from: 'gravitational', to: 'kinetic', pathway: 'mechanical', moved: (p, c) => Math.max(0, p.gravitational - c.gravitational), bulge: new Vector3(0, 0.8, 1) },
@@ -74,9 +112,6 @@ export default function createRampScene(ctx) {
   }
   const ruler = createInkLines(rulerSegs, { widthScale: 0.7, chain: false });
   ctx.scene.add(ruler);
-  for (const h of [1, 2, 3]) {
-    ctx.overlay.add({ id: `ruler-${h}`, anchor: () => toWorld(rulerX, h, front), html: formatQuantity(h, 'm'), gap: 4, prefer: 'left' });
-  }
 
   // A dashed line at the start height, across the ramp, to compare heights.
   const startLine = new Group();
@@ -93,8 +128,16 @@ export default function createRampScene(ctx) {
     startLine.add(startLineObj);
   }
   drawStartLine();
-  ctx.overlay.add({ id: 'start-height', anchor: () => toWorld(RAMP.HALF + 0.5, settings.height, front), html: 'start height', kind: 'part', gap: 4 });
-  ctx.overlay.add({ id: 'part-rider', kind: 'part', anchor: () => rider.group.position.clone().add(new Vector3(0, 1.9 * S, 0)), html: 'skateboarder', gap: 2 });
+  // The ruler's numbers, printed beside it in the drawing (not floating).
+  const marks = { left: rulerX - 0.95, right: rulerX - 0.12, top: 3.3, bottom: -0.3 };
+  const marksPx = [90, Math.round((90 * (marks.top - marks.bottom)) / (marks.right - marks.left))];
+  ctx.overlay.addPrinted({
+    id: 'ruler-marks',
+    className: 'ruler-marks',
+    size: marksPx,
+    quad: () => [toWorld(marks.left, marks.top, front), toWorld(marks.right, marks.top, front), toWorld(marks.right, marks.bottom, front), toWorld(marks.left, marks.bottom, front)].map((v) => ctx.scene.localToWorld(v)),
+    html: [1, 2, 3].map((h) => `<span style="top:${((marks.top - h) / (marks.top - marks.bottom)) * 100}%">${formatQuantity(h, 'm')}</span>`).join(''),
+  });
   const speedLabel = ctx.overlay.add({ id: 'speed', anchor: () => rider.group.position.clone().add(new Vector3(0, -0.012, 0.02)), html: '' });
   ctx.overlay.setVisible('speed', false);
 
@@ -184,7 +227,7 @@ export default function createRampScene(ctx) {
       pipe: () => ({ target: world(toWorld(0, 1.2)), dist: 0.34, elevationDeg: 26 }),
     },
     figure: {
-      caption: `The half-pipe is drawn at 1 : ${Math.round(1 / S)}. Heights are measured from its bottom.`,
+      caption: `The half-pipe is drawn at 1 : ${Math.round(1 / S)}. The dashed line marks her start height.`,
       hint: 'Drag the skateboarder up either wall, then let go.',
     },
     interactive: [{
@@ -202,7 +245,7 @@ export default function createRampScene(ctx) {
       },
     }],
     onParamChange: null,
-    objects: [...kit.objects, pipe, rider],
+    objects: [...kit.objects, stand, ...cards, pipe, rider],
     cueTargets: { rider: rider.group },
     params,
     setParam(id, value) {

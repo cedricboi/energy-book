@@ -53,9 +53,10 @@ class HotPixelEffect extends Effect {
 export const TONE_MAPPINGS = {
   agx: ToneMappingMode.AGX,
   aces: ToneMappingMode.ACES_FILMIC,
+  neutral: ToneMappingMode.NEUTRAL,
 };
 
-export function createPost(renderer, scene, camera, { tier, toneMapping = 'aces' }) {
+export function createPost(renderer, scene, camera, { tier, toneMapping = 'aces', look = 'night' }) {
   const composer = new EffectComposer(renderer, { frameBufferType: HalfFloatType });
   composer.addPass(new RenderPass(scene, camera));
 
@@ -76,7 +77,7 @@ export function createPost(renderer, scene, camera, { tier, toneMapping = 'aces'
   }
 
   const toneMappingEffect = new ToneMappingEffect({ mode: TONE_MAPPINGS[toneMapping] ?? ToneMappingMode.AGX });
-  const vignette = new VignetteEffect({ offset: 0.45, darkness: 0.25 });
+  const vignette = new VignetteEffect(look === 'day' ? { offset: 0.5, darkness: 0.12 } : { offset: 0.45, darkness: 0.25 });
   const grain = new StillGrainEffect({ amount: 0.007 });
   // Bloom on the HDR image, before tone mapping. Only energy is above a
   // luminance of 1, so only energy blooms (CLAUDE.md section 4). Lower tiers

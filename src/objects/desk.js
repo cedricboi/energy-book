@@ -5,8 +5,8 @@ import { injectVaryings } from '../ink/paper.js';
 
 export const DESK_HEX = '#3A2A20';
 
-function woodMaterial() {
-  const m = new MeshStandardMaterial({ color: new Color(DESK_HEX), roughness: 0.62, metalness: 0 });
+function woodMaterial(hex = DESK_HEX) {
+  const m = new MeshStandardMaterial({ color: new Color(hex), roughness: 0.62, metalness: 0 });
   m.onBeforeCompile = (shader) => {
     injectVaryings(shader);
     shader.fragmentShader = shader.fragmentShader.replace(
@@ -38,11 +38,11 @@ function woodMaterial() {
  * @param {object} o
  * @param {number} o.backZ z of the desk's back edge (against the wall)
  */
-export function createDesk({ backZ }) {
+export function createDesk({ backZ, color }) {
   const width = 2.0;
   const depth = 1.1;
   const thickness = 0.035;
-  const desk = new Mesh(new BoxGeometry(width, thickness, depth), woodMaterial());
+  const desk = new Mesh(new BoxGeometry(width, thickness, depth), woodMaterial(color));
   desk.position.set(0, -thickness / 2, backZ + depth / 2);
   desk.receiveShadow = true;
   desk.name = 'desk';

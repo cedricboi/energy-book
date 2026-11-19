@@ -51,7 +51,7 @@ export const INK_PRESETS = {
   // that only starts in real shadow, so objects read as white paper forms.
   D: {
     label: 'D. Bold outline, light shading',
-    outlinePx: 2.8, creasePx: 1.7, wobblePx: 0.3, wobbleFreq: 25,
+    outlinePx: 2.1, creasePx: 1.25, wobblePx: 0.3, wobbleFreq: 25,
     hatchSpacing: 5.2, hatchWidth: 0.8, hatchJitter: 0.25,
     t1: 0.52, t2: 0.24, t3: 0.08, lightRef: 0.72, flatten: 0.985, widthJitter: 0.25,
     // Body colours are lifted this far towards white paper, so objects read
