@@ -334,15 +334,20 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
   async function openLesson(id, page) {
     // The pages keep what they show (the contents) until the leaf turns.
     printer.hold(true);
-    clearScene();
-    state.lesson = await importLesson(id);
-    state.progress = loadLesson(id);
-    state.progress.answers ??= {};
-    state.progress.named ??= [];
-    const start = Number.isInteger(page) ? page : state.progress.page ?? 0;
-    state.index = -1;
-    state.busy = false;
-    await goTo(Math.min(Math.max(0, start), state.lesson.pages.length - 1), 1);
+    try {
+      clearScene();
+      state.lesson = await importLesson(id);
+      state.progress = loadLesson(id);
+      state.progress.answers ??= {};
+      state.progress.named ??= [];
+      const start = Number.isInteger(page) ? page : state.progress.page ?? 0;
+      state.index = -1;
+      state.busy = false;
+      await goTo(Math.min(Math.max(0, start), state.lesson.pages.length - 1), 1);
+    } finally {
+      // Whatever happened, the pages print again.
+      if (!state.busy) printer.hold(false);
+    }
   }
 
   const NUMBER_WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];

@@ -26,7 +26,7 @@ test('touching the model stops the steps and returns the camera', async ({ page:
   await openBook(tab);
   await tab.evaluate(() => window.__book.open('l5-ramp', 2));
   await tab.waitForFunction(() => window.__book.beats().index === 0, null, { timeout: 20_000 });
-  await tab.locator('.page-panel').dispatchEvent('pointerdown');
+  await tab.locator('.page-panel:not(.page-panel-right)').dispatchEvent('pointerdown');
   const b = await tab.evaluate(() => window.__book.beats());
   expect(b.text).toBe(lastStep);
   expect(b.playing).toBe(false);

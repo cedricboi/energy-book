@@ -670,6 +670,8 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
   box-shadow: none !important;
 }
 .is-inked img, .is-inked svg:not(button svg) { visibility: hidden; }
+/* While a page is being printed its transitions are frozen (pagePrint.js). */
+.is-printing, .is-printing * { transition: none !important; }
 /* Forced colours would make the invisible copy show over the print. */
 @media (forced-colors: active) { .is-inked * { forced-color-adjust: none; } }
 

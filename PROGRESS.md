@@ -19,6 +19,9 @@ The largest gap from the technique study (TECHNIQUES.md C1) is closed. On landsc
 - **The contents is a printed spread:** a title page on the left (the motto, the six stores with their icons in their colours, how to use the book) and a ruled list of lessons on the right (`rightPanel`, `AREAS.rightText`). Each contents line is a real button, printed too (class `ink-row`), so only its focus ring shows as HTML. Opening a lesson turns the contents away on the leaf. Back from a lesson's first page turns back to the contents. The printer now also draws SVG rectangles, circles, ellipses, lines and polylines.
 - **Stamps are printed too:** the printer now draws 2D transforms and design outlines, so the exit page's "Balanced" stamp (once it has pressed in) and the contents marks are printed into the paper at their angle. The press itself still plays as HTML.
 - **The ledger turns with its page:** at the fold it is printed onto the right page (the printer draws stretched SVG and pattern fills as the store colour), its live copy hides, and the leaf carries it away. The arriving page's ledger is printed under the leaf. Once the leaf lands, the live ledger is back.
+- **House ink is now C, bold** (the teacher's choice, 20 Nov 2026): `HOUSE_INK = 'C'`, a 3 px outline, 2 px lines and fuller hatching. D stays available as `?ink=D`.
+- **The turning leaf shows through:** the far side's print shows faintly and mirrored, softened, most while the leaf stands up and not at all when it lies flat.
+- **Fixes:** a print no longer sets off CSS transitions (which had asked for endless reprints and kept the render loop from going idle). A lesson that fails to load no longer freezes the printer.
 - **Unchanged:** the stacked (portrait) layout keeps the HTML panel (the contents list follows the title page there). The ledger stays live HTML.
 
 ### Checks

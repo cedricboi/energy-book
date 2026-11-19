@@ -87,6 +87,8 @@ export function createPaperMaterial({ width, height, spineU, seed = 0 }) {
     uPrintBack: { value: BLANK },
     uPrintOn: { value: 0 },
     uPrintFlip: { value: new Vector2(0, 1) },
+    // How much of the other side's print shows through (the turning leaf).
+    uShowThrough: { value: 0 },
   };
   material.userData.print = uniforms;
   material.onBeforeCompile = (shader) => {
@@ -95,7 +97,7 @@ export function createPaperMaterial({ width, height, spineU, seed = 0 }) {
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
-        '#include <common>\nuniform vec2 uPageSize;\nuniform float uSpineU;\nuniform float uSeed;\nuniform vec3 uShadowTone;\nuniform sampler2D uPrint;\nuniform sampler2D uPrintBack;\nuniform float uPrintOn;\nuniform vec2 uPrintFlip;',
+        '#include <common>\nuniform vec2 uPageSize;\nuniform float uSpineU;\nuniform float uSeed;\nuniform vec3 uShadowTone;\nuniform sampler2D uPrint;\nuniform sampler2D uPrintBack;\nuniform float uPrintOn;\nuniform vec2 uPrintFlip;\nuniform float uShowThrough;',
       )
       .replace(
         '#include <color_fragment>',
@@ -142,6 +144,15 @@ export function createPaperMaterial({ width, height, spineU, seed = 0 }) {
             vec3 f = vec3(1.0 - ink.a) + ink.rgb;
             f = pow(max(f, vec3(0.0)), vec3(2.2));
             c *= mix(vec3(1.0), f, uPrintOn);
+            // Thin paper: the far side's print shows through, soft and faint.
+            // It is the same point of the sheet, so it reads mirrored.
+            if (uShowThrough > 0.0) {
+              float flipO = gl_FrontFacing ? uPrintFlip.y : uPrintFlip.x;
+              vec2 po = vec2(mix(vElUv.x, 1.0 - vElUv.x, flipO), vElUv.y);
+              vec4 back = gl_FrontFacing ? texture2D(uPrintBack, po, 2.0) : texture2D(uPrint, po, 2.0);
+              vec3 fb = pow(max(vec3(1.0 - back.a) + back.rgb, vec3(0.0)), vec3(2.2));
+              c *= mix(vec3(1.0), fb, uShowThrough * uPrintOn);
+            }
           }
 
           diffuseColor.rgb = c;

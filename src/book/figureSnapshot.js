@@ -5,7 +5,7 @@
 // the flattened drawing from straight above, at the page print's own scale,
 // and returns it as a canvas laid out like the right page's print sheet.
 import {
-  OrthographicCamera, WebGLRenderTarget, Vector3, Color, HalfFloatType,
+  OrthographicCamera, WebGLRenderTarget, Vector2, Vector3, Color, HalfFloatType,
   Mesh, PlaneGeometry, ShaderMaterial, Scene,
 } from 'three';
 import { BOOK } from '../objects/book.js';
@@ -71,7 +71,7 @@ export function createFigureSnapshot(renderer) {
     print ??= new WebGLRenderTarget(W, H, { depthBuffer: false });
     // Lines keep the weight they have on screen: scale their pixel width by
     // how many print pixels one screen pixel covers across the page.
-    const size = renderer.getDrawingBufferSize(new Vector3());
+    const size = renderer.getDrawingBufferSize(new Vector2());
     const y = BOOK.boardT + 0.012;
     a.set(gutter, y, 0).project(view);
     b.set(gutter + pageW, y, 0).project(view);

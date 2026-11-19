@@ -55,6 +55,9 @@ export function createPageTurn(scene, { reducedMotion = false } = {}) {
     }
     pos.needsUpdate = true;
     geo.computeVertexNormals();
+    // The far side's print shows through most while the leaf stands up
+    // against the light, and not at all once it lies flat.
+    mat.userData.print.uShowThrough.value = 0.14 * Math.sin(Math.PI * Math.min(1, Math.max(0, p)));
   }
 
   return {

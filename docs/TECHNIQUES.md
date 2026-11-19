@@ -67,7 +67,7 @@ The headline: Every Joule is built the same way as our book (three.js, everythin
 
 ### A8. Cutaways
 - **What it is:** a plane facing the camera cuts objects open. The paper is double-sided, so the inside shows, and a glowing core (the battery's chemicals, a muscle) sits inside, ringed in ink.
-- **Ours:** useful for the battery and food stores in Lesson 1, and the kettle in Lesson 2.
+- **Ours (built):** `objects/cutaway.js` cuts surfaces, ink lines and what is inside with one plane. Used for the Lesson 1 battery (a glowing chemical core) and the kettles in Lessons 2 and 8 (a glowing element and water that warms through the internal store's colour, with its pattern).
 
 ---
 
@@ -120,6 +120,7 @@ The headline: Every Joule is built the same way as our book (three.js, everythin
 - **When the page lands:** the print hands over to a flat line copy. The pen redraws stroke by stroke, and each stroke stands up into 3D as the pen reaches it. Then the shading and shadows fade in, and the diagram is live.
 - **When leaving:** the shading fades, and the drawing folds flat onto the page before the leaf turns.
 - **Why it works:** every handover matches exactly, so the drawing seems to peel off the paper.
+- **Ours (built 20 Nov 2026), the leaving half:** the drawing folds flat, then `book/figureSnapshot.js` renders it from straight above into the right page's print at its on-screen line weight, with the ledger bar, and the live copies hide. The leaf carries that print away, or covers it when going back. The arriving page's caption and ledger are already printed under the leaf. The arriving drawing still rises from flat and inks itself, rather than handing over from a print.
 
 ### C3. The page turn
 - **The bend:** a curve built along the width of the leaf, rising out of the gutter, with a curl that leads at the top corner. The spine bulges slightly.

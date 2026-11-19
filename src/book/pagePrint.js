@@ -95,6 +95,9 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, ledger
     // Print it as it really looks: not inked out, not hidden for a turn.
     const states = ['is-inked', 'is-turning'].filter((c) => el.classList.contains(c));
     el.style.transform = 'none';
+    // Transitions are frozen while the page is shown as it really looks,
+    // or putting the ink back would animate (and ask for another print).
+    el.classList.add('is-printing');
     el.classList.remove(...states);
     // A printed part that is fading or sliding in is printed as it ends up
     // (its HTML is invisible, so finishing the motion costs nothing).
@@ -110,6 +113,9 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, ledger
     printElement(el, target.ctx, { ...placeOf(area, side), skip: full ? isUnprintable : isLive });
     el.style.transform = transform;
     el.classList.add(...states);
+    void getComputedStyle(el).color; // settle the inked style while still frozen
+    for (const d of el.querySelectorAll('*')) void getComputedStyle(d).color;
+    el.classList.remove('is-printing');
   }
 
   function clear(target) {
