@@ -128,6 +128,8 @@ export function renderPage(panel, page, c) {
         if (fresh && !stampSlot.dataset.pressed) {
           stampSlot.dataset.pressed = '1';
           stampSlot.classList.add('is-pressing');
+          // Once pressed, the stamp is printed into the paper with the page.
+          setTimeout(() => stampSlot.classList.remove('is-pressing'), 500);
         }
         prior?.(fresh);
       };

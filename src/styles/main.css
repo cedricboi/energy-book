@@ -660,7 +660,7 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 /* Printed into the paper (book/pagePrint.js). The HTML copy keeps its place
    for screen readers and keyboard focus, but only its live controls show:
    the words, rules and boxes are in the page's own texture. */
-.is-inked :not(:is(button:not(.ink-row), input, textarea, select, output, canvas, video, .q-feedback, .stamp-slot), :is(button:not(.ink-row), .q-feedback, .stamp-slot) *) {
+.is-inked :not(:is(button:not(.ink-row), input, textarea, select, output, canvas, video, .q-feedback, .stamp-slot.is-pressing), :is(button:not(.ink-row), .q-feedback, .stamp-slot.is-pressing) *) {
   color: transparent !important;
   border-color: transparent !important;
   background-color: transparent !important;

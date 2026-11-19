@@ -132,6 +132,17 @@ export function printElement(root, ctx, { x = 0, y = 0, scale = 1, skip = () => 
         roundRect(r, radius);
         ctx.fill();
       }
+      // An outline that is part of the design (the stamp's second ring), not a focus ring.
+      const ow = px(cs.outlineWidth);
+      const oc = colour(cs.outlineColor);
+      if (ow > 0 && oc.a > 0 && cs.outlineStyle !== 'none' && !el.matches(':focus-visible')) {
+        const off = px(cs.outlineOffset) + ow / 2;
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = oc.css;
+        ctx.lineWidth = ow;
+        roundRect({ x: r.x - off, y: r.y - off, w: r.w + 2 * off, h: r.h + 2 * off }, radius > 0 ? radius + off : 0);
+        ctx.stroke();
+      }
       const drawn = sides.filter((d) => d.w > 0 && d.c.a > 0 && d.style !== 'none' && d.style !== 'hidden');
       if (!drawn.length) continue;
       ctx.globalAlpha = alpha;
@@ -361,6 +372,24 @@ export function printElement(root, ctx, { x = 0, y = 0, scale = 1, skip = () => 
     const a = isRoot ? alpha : alpha * px(cs.opacity === '' ? '1' : cs.opacity);
     if (a < 0.01) return;
     const shown = cs.visibility === 'visible';
+    // A 2D transform (a stamp pressed in at an angle): lay the element
+    // upright for a moment and draw it through the same transform.
+    let inline = null;
+    if (!isRoot && cs.transform && cs.transform !== 'none' && !(el instanceof SVGElement)) {
+      const m = new DOMMatrix(cs.transform);
+      if (m.is2D) {
+        const [ox, oy] = cs.transformOrigin.split(' ').map(parseFloat);
+        inline = el.style.transform;
+        el.style.transform = 'none';
+        const b = el.getBoundingClientRect();
+        const cx = X(b.left) + ox;
+        const cy = Y(b.top) + oy;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f);
+        ctx.translate(-cx, -cy);
+      }
+    }
     if (el instanceof SVGSVGElement) {
       if (shown) svg(el, a);
       return;
@@ -397,6 +426,10 @@ export function printElement(root, ctx, { x = 0, y = 0, scale = 1, skip = () => 
       }
     }
     if (clips) ctx.restore();
+    if (inline !== null) {
+      ctx.restore();
+      el.style.transform = inline;
+    }
   }
 
   visit(root, 1, true);

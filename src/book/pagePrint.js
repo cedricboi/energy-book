@@ -25,11 +25,11 @@ export const PRINT_SIZE = [W, H];
  * Elements that stay live HTML and are left out of the print. A button
  * marked ink-row (a contents line) is printed, and its HTML only takes taps.
  */
-export const LIVE = 'button:not(.ink-row), input, textarea, select, output, canvas, video, .q-feedback, .stamp-slot';
+export const LIVE = 'button:not(.ink-row), input, textarea, select, output, canvas, video, .q-feedback, .stamp-slot.is-pressing';
 const isLive = (el) => el.matches?.(LIVE);
 // A full print (for the turning leaf) draws the controls too, all but the
 // stamp, which is pressed in at an angle.
-const isUnprintable = (el) => el.matches?.('.stamp-slot, canvas, video');
+const isUnprintable = (el) => el.matches?.('canvas, video');
 
 function sheet() {
   const canvas = document.createElement('canvas');
