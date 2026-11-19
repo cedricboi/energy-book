@@ -11,7 +11,7 @@ import { createCrate } from '../objects/crate.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { createInkLines, polylineToSegments } from '../ink/creases.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
-import { createPerson, arrowSegments, addRuler } from './helpers.js';
+import { createPerson, arrowSegments, addRuler, shotOf, shotOfJars } from './helpers.js';
 import { workDone } from '../physics/equations.js';
 import { formatQuantity } from '../physics/format.js';
 
@@ -113,6 +113,10 @@ export default function createWorkScene(ctx) {
   reset();
 
   return {
+    shots: {
+      person: shotOf(() => [person.group, crate.group], { fill: 2.6 }),
+      jars: shotOfJars(kit),
+    },
     figure: {
       caption: `The person, the crate and the wall are drawn at 1 : ${Math.round(1 / S)}.`,
       hint: 'Tap the person to push.',

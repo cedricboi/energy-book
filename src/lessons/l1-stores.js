@@ -31,6 +31,11 @@ export default {
       type: 'explore',
       scene: 'stores',
       title: 'Where is the energy?',
+      beats: [
+        { say: 'Each jar at the back of the page holds energy of one kind.', shot: 'jars', seconds: 3.5 },
+        { say: 'Six everyday objects sit in front of the jars.', shot: 'objects', seconds: 3.5 },
+        { say: 'Your turn. Tap the toy car, the raised book and the catapult, one at a time.' },
+      ],
       text: ['Each jar at the back of the page holds energy of one kind. Each object on the page has energy kept in one of them.'],
       goal: 'Tap the three objects below, one at a time. Watch which jar each one fills.',
       actions: ['car', 'book', 'catapult', 'reset'],
@@ -52,6 +57,10 @@ export default {
       type: 'explore',
       scene: 'stores',
       title: 'Three more stores',
+      beats: [
+        { say: 'Three objects are still waiting.', shot: 'objects', seconds: 3 },
+        { say: 'Your turn. Tap the battery, the cup of hot kopi and the Sun.' },
+      ],
       goal: 'Tap the battery, the cup of hot kopi and the Sun. Watch which jar each one fills.',
       actions: ['battery', 'kopi', 'sun', 'reset'],
       cue: 'battery',

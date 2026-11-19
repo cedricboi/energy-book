@@ -10,7 +10,7 @@ import { createInkObject } from '../ink/inkObject.js';
 import { createInkLines, polylineToSegments } from '../ink/creases.js';
 import { createSpring } from '../objects/spring.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
-import { carGeometry, cupGeometry, batteryGeometry } from './helpers.js';
+import { carGeometry, cupGeometry, batteryGeometry, shotOf, shotOfJars } from './helpers.js';
 import { STORE_IDS } from '../energy/palette.js';
 
 const FULL = 1; // jars are on a plain "some energy" scale here
@@ -106,6 +106,11 @@ export default function createStoresScene(ctx) {
   actions.reset = { label: 'Empty the jars' };
 
   return {
+    shots: {
+      jars: shotOfJars(kit),
+      objects: shotOf(() => Object.values(objects).map((o) => o.group), { fill: 2.2 }),
+      car: shotOf(() => objects.car.group, { fill: 4 }),
+    },
     figure: {
       caption: 'Each object keeps energy in one of the six stores.',
       hint: 'Tap an object to send its energy to its jar.',

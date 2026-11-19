@@ -11,7 +11,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createStoreJar } from '../energy/storeJar.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
-import { createPerson } from './helpers.js';
+import { createPerson, shotOf } from './helpers.js';
 import { gravitationalPotentialEnergy, energyFromPower, timeFromPower } from '../physics/equations.js';
 import { formatQuantity } from '../physics/format.js';
 import { iconSvg } from '../energy/palette.js';
@@ -70,7 +70,7 @@ export default function createPowerScene(ctx) {
         return { p, dz: i === 0 ? -0.012 : 0.012 };
       });
       const jars = [jarAt('gravitational', cx - 0.03, -0.09, bagEnergy * 1.2, 'jarA', 'bag A'), jarAt('gravitational', cx + 0.03, -0.09, bagEnergy * 1.2, 'jarB', 'bag B')];
-      parts = { kind: 'stairs', people, jars, base: stairs.group.position.clone() };
+      parts = { kind: 'stairs', stairs, people, jars, base: stairs.group.position.clone() };
     } else {
       const kettleGeo = () => {
         const body = new LatheGeometry([[0, 0], [0.03, 0], [0.032, 0.05], [0.026, 0.06], [0, 0.06]].map(([r, y]) => new Vector2(r, y)), 32).toNonIndexed();
@@ -130,6 +130,11 @@ export default function createPowerScene(ctx) {
   build();
 
   const api = {
+    shots: {
+      stairs: shotOf(() => (parts.kind === 'stairs' ? [parts.stairs.group, ...parts.people.map((x) => x.p.group)] : []), { fill: 2 }),
+      kettles: shotOf(() => (parts.kind === 'kettles' ? parts.kettles.map((k) => k.group) : []), { fill: 2.2 }),
+      jars: shotOf(() => parts.jars.map((j) => j.jar.group), { fill: 2.2, elevationDeg: 22 }),
+    },
     get figure() {
       return parts.kind === 'stairs'
         ? { caption: `The staircase is drawn at 1 : ${Math.round(1 / S)}. It is ${formatQuantity(STAIRS.height, 'm', 2)} high.`, hint: 'Tap a person to start the stopwatches.' }

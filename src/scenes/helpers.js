@@ -1,7 +1,7 @@
 // src/scenes/helpers.js
 // Small pieces several lesson scenes share: rulers drawn to scale, arrows,
 // a simple ink person and quick primitive objects.
-import { Vector3, BoxGeometry, CylinderGeometry, SphereGeometry, CapsuleGeometry, LatheGeometry, Vector2 } from 'three';
+import { Vector3, BoxGeometry, CylinderGeometry, SphereGeometry, CapsuleGeometry, LatheGeometry, Vector2, Box3, Sphere } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createInkLines, polylineToSegments } from '../ink/creases.js';
 import { createInkObject } from '../ink/inkObject.js';
@@ -94,4 +94,38 @@ export function batteryGeometry() {
   g.translate(0, 0.012, 0);
   g.computeVertexNormals();
   return g;
+}
+
+// ---------- Shots for the guided steps (book/beats.js) ----------
+// A shot is a function returning { target, dist, elevationDeg?, azimuthDeg? }
+// in world space, so it can follow an object that moves.
+const shotBox = new Box3();
+const shotSphere = new Sphere();
+
+/** Frame one or more objects (Object3D, or a function returning them). The distance fits their size. */
+export function shotOf(objects, { fill = 2.6, minDist = 0.06, elevationDeg = 26, azimuthDeg = 0, lift = 0 } = {}) {
+  return () => {
+    const list = [].concat(typeof objects === 'function' ? objects() : objects).filter(Boolean);
+    shotBox.makeEmpty();
+    for (const o of list) {
+      // Skip the invisible touch targets, so they do not widen the frame.
+      o.updateMatrixWorld(true);
+      o.traverseVisible((c) => {
+        if (c.isMesh && c.name !== 'grab-target' && c.geometry) {
+          c.geometry.computeBoundingBox?.();
+          if (c.geometry.boundingBox) shotBox.union(c.geometry.boundingBox.clone().applyMatrix4(c.matrixWorld));
+        }
+      });
+    }
+    if (shotBox.isEmpty()) return null;
+    shotBox.getBoundingSphere(shotSphere);
+    const target = shotSphere.center.clone();
+    target.y += lift;
+    return { target, dist: Math.max(minDist, shotSphere.radius * fill), elevationDeg, azimuthDeg };
+  };
+}
+
+/** Frame the energy jars of a kit (all of them, or the named stores). */
+export function shotOfJars(kit, stores, opts = {}) {
+  return shotOf(() => (stores ?? Object.keys(kit.jars)).map((s) => kit.jars[s]?.group), { fill: 2.2, elevationDeg: 22, ...opts });
 }

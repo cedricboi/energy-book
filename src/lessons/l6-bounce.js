@@ -59,6 +59,11 @@ export default {
       equations: [{ html: 'E<sub>p</sub> = mgh', words: 'gravitational potential energy = mass × gravitational field strength × height' }],
       scene: 'bounce',
       title: 'Follow one bounce',
+      beats: [
+        { say: 'The ball starts at rest, high above the floor.', shot: 'ball', seconds: 3 },
+        { say: 'Watch the floor closely as the ball lands.', shot: 'floor', action: 'drop', seconds: 4 },
+        { say: 'Your turn. Drop each ball, then step through one squash.' },
+      ],
       text: ['Try each ball. Use "Step" to move through one squash slowly.'],
       goal: 'Drop each ball. Then step through one squash. Watch the elastic potential jar and the internal jar.',
       controls: ['ball', 'height'],

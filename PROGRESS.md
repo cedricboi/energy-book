@@ -4,6 +4,20 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 19 Nov 2026. Guided camera steps (approved from the Lesson 5 sample)
+
+- **What it is:** a page can play short narrated steps before the student takes over (`page.beats: [{ say, shot, action, seconds }]`, played by `book/beats.js`). The camera glides to close-ups the scene names (`scene.shots`), the text page fades aside while it is close in, and the last step returns to the page and hands over ("Your turn ...").
+- **Bottom bar:** the step sentence, progress dots, pause or replay, and skip.
+- **Stopping:** touching the model, the controls or the view stops the steps, returns the camera and shows the last step. A predict page plays its steps only after the prediction is in. With reduced motion the camera never moves, but the sentences still step through. Steps and camera blends follow the clock, so slow devices keep pace.
+- **Pages with steps:** the explore pages of every lesson (L1 two, L2, L3, L4, L5 two, L6, L7, L8 two). Steps point out the parts and hand over. They only run an action where it was already the point of the page (L2 runs one device, L5 rolls her once after the prediction, L6 drops the ball once). The students still do the investigating.
+- **Shots:** `shotOf` and `shotOfJars` in `scenes/helpers.js` frame any objects by their size. The L5 friction page has a glow of the internal store's colour along the ramp under the board while she moves.
+- **Tests:** `tests/beats.spec.js` (steps play and hand over, touching stops them, reduced motion keeps the camera still). Page screenshots call `settle()`, which hands the steps over first. Full suite: 196 unit tests, 150 passed with 69 intended skips. One handling test timed out under load and passes alone. It now waits for its result.
+
+### Known limits
+- The close-ups expose the blocky skateboarder and people. Better figures would help these shots most.
+
+---
+
 ## 19 Nov 2026. Textbook page design (approved from the Lesson 5 sample)
 
 From the strict comparison with Every Joule: the left page now reads as a designed textbook page rather than a form.

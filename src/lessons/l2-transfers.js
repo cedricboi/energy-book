@@ -36,6 +36,11 @@ export default {
       type: 'explore',
       scene: 'transfers',
       title: 'Watch energy move',
+      beats: [
+        { say: 'This device starts with its energy in one store.', shot: 'device', seconds: 3.5 },
+        { say: 'Watch the paths. Each way energy moves has its own kind of path.', shot: 'jars', action: 'run', seconds: 5 },
+        { say: 'Your turn. Choose another device and run it.' },
+      ],
       text: ['Each scene shows energy leaving one jar and arriving somewhere else. Each path has its own look.'],
       goal: 'Choose a device and press "Run it". Try all four. Look closely at how each path looks.',
       controls: ['device'],

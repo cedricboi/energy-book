@@ -33,8 +33,7 @@ test('drag the skateboarder up the wall, then she rolls', async ({ page: tab }) 
   const after = await tab.evaluate(() => window.__book.values());
   expect(after.height).toBeGreaterThan(before.height);
   await expect(tab.locator('.ctl-value').first()).toHaveText(`${after.height} m`);
-  await tab.waitForTimeout(800);
-  expect((await tab.evaluate(() => window.__book.values())).kinetic).toBeGreaterThan(0);
+  await tab.waitForFunction(() => window.__book.values().kinetic > 0, null, { timeout: 60_000 });
 });
 
 test('the skateboarder stays put on the predict page until the prediction is in', async ({ page: tab }) => {

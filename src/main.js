@@ -202,6 +202,10 @@ async function start() {
     },
     /** Finish the draw-in and put the scene at model time t, then draw. */
     settle(t) {
+      // Screenshots show the page as the student gets it: guided steps
+      // handed over, camera at the reading view.
+      book.beats.interrupt();
+      stage.setShot(null, 0);
       book.settle(t);
       drawFrame();
       return book.state.scene?.values?.();
@@ -231,6 +235,16 @@ async function start() {
       return { fits: p.scrollHeight <= p.clientHeight + 1, scrollHeight: p.scrollHeight, clientHeight: p.clientHeight };
     },
     labelRects: () => overlay.debugRects(),
+    /** The guided steps: { index, playing, text, away, inShot }. */
+    beats() {
+      return {
+        index: book.beats.index,
+        playing: book.beats.playing,
+        text: document.querySelector('.hud-beat:not([hidden]) .hud-beat-text')?.textContent ?? null,
+        away: book.panel.classList.contains('is-away'),
+        inShot: stage.inShot,
+      };
+    },
   };
 
   window.__energy = {

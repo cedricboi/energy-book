@@ -9,7 +9,7 @@ import { createEnergyKit } from './energyKit.js';
 import { createBall } from '../objects/ball.js';
 import { createInkLines, polylineToSegments } from '../ink/creases.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
-import { addRuler } from './helpers.js';
+import { addRuler, shotOf, shotOfJars } from './helpers.js';
 import { createBounceModel, BALLS, SOUND_SHARE } from '../physics/models/bounce.js';
 import { gravitationalPotentialEnergy } from '../physics/equations.js';
 import { play } from '../core/sound.js';
@@ -155,6 +155,11 @@ export default function createBounceScene(ctx) {
       },
     }],
     onParamChange: null,
+    shots: {
+      ball: shotOf(() => ball.group, { fill: 7, minDist: 0.08 }),
+      floor: () => ({ target: ctx.scene.localToWorld(W(0, 0.25)), dist: 0.17, elevationDeg: 16 }),
+      jars: shotOfJars(kit),
+    },
     figure: {
       caption: `The ball is drawn at 1 : ${Math.round(1 / S)} and shown four times slower.`,
       hint: 'Drag the ball up to a drop height, then let go.',

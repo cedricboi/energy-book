@@ -36,6 +36,11 @@ export default {
       type: 'explore',
       scene: 'kinetic',
       title: 'What does it depend on?',
+      beats: [
+        { say: 'A toy car is about to roll into a block of soft clay.', shot: 'car', seconds: 3 },
+        { say: 'The deeper the dent in the clay, the more energy the car had.', shot: 'clay', seconds: 3.5 },
+        { say: 'Your turn. Tap the car to roll it, then change its mass or its speed.' },
+      ],
       text: ['The car rolls into soft clay. A bigger dent means more energy was in its kinetic store.'],
       goal: 'Roll the car. Double the mass and roll it again. Then double the speed instead. Compare the energy.',
       controls: ['mass', 'speed'],
