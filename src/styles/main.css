@@ -650,3 +650,7 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 
 .ruler-mark { display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 500; white-space: nowrap; color: var(--ink); }
 .ruler-mark.is-vertical { justify-content: flex-end; padding-right: 4px; }
+
+.jar-card.is-three .card-name { font-size: 22px; }
+.jar-card.is-three .card-val { font-size: 34px; margin-top: 0; }
+.jar-card .card-time { font-size: 24px; font-variant-numeric: tabular-nums; color: var(--soft-ink); }

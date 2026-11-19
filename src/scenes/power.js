@@ -12,6 +12,7 @@ import { createStoreJar } from '../energy/storeJar.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
 import { createPerson, shotOf } from './helpers.js';
+import { createStand } from './stand.js';
 import { kettleGeometry } from '../objects/kettle.js';
 import { gravitationalPotentialEnergy, energyFromPower, timeFromPower } from '../physics/equations.js';
 import { formatQuantity } from '../physics/format.js';
@@ -35,11 +36,19 @@ export default function createPowerScene(ctx) {
   let parts = null;
   let first = [];
 
-  function jarAt(store, x, z, scale, id, name) {
+  // The two jars stand on a store stand, with a printed card above each
+  // (what it measures, its joules and its stopwatch time).
+  let stand = null;
+  function standFor(xs, z) {
+    stand = createStand({ ...ctx, scene: group }, { xs, z, jarSize: 0.5 });
+    return stand;
+  }
+  function jarAt(store, x, z, scale, id, name, i) {
     const jar = createStoreJar({ store, scale, value: 0, size: 0.5 });
-    jar.group.position.set(x, pageSurfaceY(x, z), z);
+    jar.group.position.set(x, pageSurfaceY(x, z) + (stand?.shelf ?? 0), z);
     group.add(jar.group);
-    ctx.overlay.add({ id, anchor: () => jar.labelPoint(), html: '', gap: 3 });
+    if (stand) ctx.overlay.addPrinted({ id, quad: stand.cardQuad(i), size: [220, 115], className: 'jar-card is-three' });
+    else ctx.overlay.add({ id, anchor: () => jar.labelPoint(), html: '', gap: 3 });
     ctx.overlay.addGlow(() => jar.glowCorners());
     return { jar, id, name, store };
   }
@@ -70,7 +79,8 @@ export default function createPowerScene(ctx) {
         ctx.overlay.add({ id: `who-${k}`, kind: 'part', anchor: () => p.group.position.clone().add(new Vector3(0, 1.9 * S, 0)), html: `person ${k}`, gap: 2 });
         return { p, dz: i === 0 ? -0.012 : 0.012 };
       });
-      const jars = [jarAt('gravitational', cx - 0.03, -0.09, bagEnergy * 1.2, 'jarA', 'bag A'), jarAt('gravitational', cx + 0.03, -0.09, bagEnergy * 1.2, 'jarB', 'bag B')];
+      standFor([cx - 0.03, cx + 0.03], -0.09);
+      const jars = [jarAt('gravitational', cx - 0.03, -0.09, bagEnergy * 1.2, 'jarA', 'bag A', 0), jarAt('gravitational', cx + 0.03, -0.09, bagEnergy * 1.2, 'jarB', 'bag B', 1)];
       parts = { kind: 'stairs', stairs, people, jars, base: stairs.group.position.clone() };
     } else {
       const kettleGeo = () => kettleGeometry(0.052);
@@ -83,10 +93,12 @@ export default function createPowerScene(ctx) {
         ctx.overlay.add({ id: `kettle-${i}`, kind: 'part', anchor: () => k.group.position.clone().add(new Vector3(0, -0.004, 0.035)), html: `${formatQuantity(P, 'W')} kettle`, gap: 2, prefer: 'below' });
         return k;
       });
-      const jars = KETTLE.powers.map((P, i) => jarAt('internal', cx + (i === 0 ? -0.045 : 0.045), -0.09, KETTLE.energy * 1.2, i === 0 ? 'jarA' : 'jarB', `${formatQuantity(P, 'W')} kettle`));
+      standFor([cx - 0.045, cx + 0.045], -0.09);
+      const jars = KETTLE.powers.map((P, i) => jarAt('internal', cx + (i === 0 ? -0.045 : 0.045), -0.09, KETTLE.energy * 1.2, i === 0 ? 'jarA' : 'jarB', `${formatQuantity(P, 'W')} kettle`, i));
       parts = { kind: 'kettles', kettles, jars };
     }
     for (const j of parts.jars) objects.push(j.jar);
+    if (stand) objects.unshift(...stand.objects);
     if (!first.length) first = objects;
     else for (const j of parts.jars) j.jar.setGlowFade(1);
     t = 0;
@@ -110,7 +122,7 @@ export default function createPowerScene(ctx) {
       const e = s.compare === 'stairs' ? total * f : energyFromPower(KETTLE.powers[i], Math.min(t, T));
       j.jar.setValue(e);
       j.jar.setGlowFade(Math.max(glow, first.includes(j.jar) ? glow : 1));
-      ctx.overlay.setHtml(j.id, `<span class="jar-name">${iconSvg(j.store, 16)} ${j.name}</span><span class="jar-val">${formatQuantity(e, 'J', 3)}</span><span class="jar-val">${formatQuantity(Math.min(t, T), 's', 2)}</span>`);
+      ctx.overlay.setHtml(j.id, `<span class="card-name">${iconSvg(j.store, 24)} ${j.name}</span><span class="card-val">${formatQuantity(e, 'J', 3)}</span><span class="card-time">${formatQuantity(Math.min(t, T), 's', 2)}</span>`);
       if (parts.kind === 'stairs') {
         const { p, dz } = parts.people[i];
         const along = 0.28 * 15 * f;
