@@ -6,12 +6,12 @@ Working title: **The Energy Ledger**. The teacher may rename it.
 
 ## 1. What we are building
 
-An interactive 3D "physics book" about energy, which runs in the browser. It covers the energy chapter of the Singapore–Cambridge O-Level **Science (Physics) 5086** syllabus. Students open a hand-inked notebook lying on a desk. The diagrams rise off the page as 3D ink drawings. Energy appears as glowing colour that moves between labelled stores. Students handle every model themselves, then explain what they saw.
+An interactive 3D "physics book" about energy, which runs in the browser. It covers Topic 5 (Energy) of the **K223/K224/K225 G2 Science SEC syllabus** (first exam 2027), the syllabus in `docs/syllabus.pdf`. Phase 1 mapped every outcome in `docs/SYLLABUS_COVERAGE.md`. Students open a hand-inked notebook lying on a desk. The diagrams rise off the page as 3D ink drawings. Energy appears as glowing colour that moves between labelled stores. Students handle every model themselves, then explain what they saw.
 
 - **Teacher:** Mr Cedric, Assumption English School (AES), Singapore.
 - **Students:** Sec 3 and Sec 4 G2 Science (Physics), aged 15 to 16.
 - **Devices:** each student uses their own iPad (Safari). The teacher's laptop drives a classroom projector at 1920x1080.
-- **Lesson length:** about 1 hour per lesson. The book has 9 lessons and 1 chapter game.
+- **Lesson length:** about 1 hour per lesson. The book has 8 lessons and 1 chapter game.
 
 The big idea that runs through the whole book is **the ledger**. Every energy store is an account. Every transfer is a transaction. The total always balances. Students should leave able to "do the accounts" for any everyday situation.
 
@@ -47,7 +47,7 @@ energy-book/
     energy/    palette.js  storeJar.js  flow.js  ledgerBar.js
     objects/   lathe.js  primitives.js  (one file per object: car.js, ball.js, crate.js ...)
     physics/   constants.js  equations.js  format.js  units.js
-    lessons/   index.js  l1-stores.js ... l9-efficiency.js  game.js
+    lessons/   index.js  l1-stores.js ... l8-power.js  game.js
     book/      book.js  pageTurn.js  layout.js
     ui/        hud.js  controls.js  checks.js  glossary.js  overlay.js
     hub/       report.js   (Teacher Hub reporting, Phase 7)
@@ -84,8 +84,9 @@ Each store has one colour, one pattern and one icon. **Colour is never the only 
 | Elastic potential | `#B45CFF` | zigzag | spring |
 | Chemical potential | `#22C47A` | small dots | battery |
 | Internal (thermal) | `#FFA62B` | wavy lines | thermometer |
-| Electrostatic potential | `#FFE13C` | sparks | plus and minus |
-| Nuclear potential | `#FF4FA8` | rings | atom |
+| Nuclear | `#FF4FA8` | rings | atom |
+
+There are six stores, matching the G2 syllabus. Electrostatic is not in the syllabus and is not used.
 
 Run a colour-blind simulation (deuteranopia and protanopia) on the palette in Phase 3. Adjust it if two stores cannot be told apart by both pattern and label.
 
@@ -111,7 +112,7 @@ Run a colour-blind simulation (deuteranopia and protanopia) on the palette in Ph
 
 1. **Every number on screen comes from `physics/equations.js`.** Never type a result into a lesson file.
 2. Constants live in `physics/constants.js`. Use `g = 10 N/kg` (the value used in O-Level papers). Check it against the syllabus PDF in `docs/`.
-3. Use only the equations and terms in the 5086 syllabus. Phase 0 makes the coverage table. Nothing outside the syllabus goes in, even as an alternative method.
+3. Use only the equations and terms in the G2 SEC syllabus (`docs/SYLLABUS_COVERAGE.md`). Efficiency is not in it and never appears. Nothing outside the syllabus goes in, even as an alternative method.
 4. **Energy is conserved in every simulation.** Each model keeps a running ledger. The sum of all stores, including internal energy and energy carried away by sound, must equal the starting total to within 0.1%. A unit test checks this for every lesson model.
 5. **Drawings agree with their values.** A jar's fill height is proportional to its energy, with one scale per page. If the scale changes between pages, the figure says so. Heights, speeds, masses and lengths in a scene match the numbers shown (for example, a 2 m drop is drawn as 2 m against a ruler or a known object).
 6. **No answer on screen before students commit.** Values that a question asks for are hidden until the student has answered.
@@ -147,7 +148,7 @@ These come from the teacher. Follow all of them.
 - Full sentences throughout.
 - **No semicolons. No em dashes. No colon-opened fragments** such as "Check:" or "Remember:".
 - No Singlish or spoken-register markers. No exhortation ("don't throw away marks"). No punchy two-beat slogans. No jokes that cost clarity.
-- Use the exact syllabus terms (for example "gravitational potential store", "internal store", "mechanical work", "electrical work", "heating", "propagation of waves"). Confirm the wording against the syllabus PDF.
+- Use the exact syllabus terms (for example "gravitational potential store", "internal store", "transferred mechanically", "transferred electrically", "transferred by heating", "transferred by propagation of waves"). Confirm the wording against the syllabus PDF.
 - In equations, show divisions as fractions (render with KaTeX if needed, which is fine to add as a dependency).
 
 ## 8. Lesson data format
@@ -160,7 +161,7 @@ Each lesson is a data module. Lessons describe pages. The engine renders them. D
 export default {
   id: 'l5-ramp',
   title: 'Energy on a ramp',
-  syllabus: ['5086 Energy: conservation of energy', 'Ek = ½mv²', 'Ep = mgh'], // from the coverage table
+  syllabus: ['5(b)', '5(c)'], // outcome refs from docs/SYLLABUS_COVERAGE.md
   questions: ['Where does the energy go as a skateboarder rolls down a ramp?',
               'How fast is the skateboarder at the bottom?'],
   hook: { ... },

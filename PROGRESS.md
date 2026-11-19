@@ -26,6 +26,8 @@ The teacher replaced `CLAUDE.md` wholesale with the original pre-Phase-1 version
 - The house ink table (look C) is no longer in the spec. The values are still the defaults in `src/ink/inkMaterial.js`.
 Nothing in the code has been changed to match yet. Waiting for the teacher to confirm which of these to act on.
 
+**Resolved the same day.** The teacher chose to keep the G2 SEC syllabus and the book as built. The syllabus-dependent lines in the new `CLAUDE.md` were brought into line: G2 SEC syllabus, 8 lessons, six stores (no electrostatic, "nuclear" not "nuclear potential"), the "transferred mechanically/electrically/by heating/by propagation of waves" terms, no efficiency, and the lesson data example. Everything else in the teacher's file stands as written, including the instruction to reference and learn from Every Joule.
+
 ---
 
 ## 20 Nov 2026. Phase 7 (game, sound, teachers' page, accessibility, deployment)
