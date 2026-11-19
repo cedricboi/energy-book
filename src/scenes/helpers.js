@@ -21,10 +21,31 @@ export function addRuler(ctx, { at, length, tick, labelEvery, tickDir = new Vect
   }
   const lines = createInkLines(segs, { widthScale: 0.7, chain: false });
   ctx.scene.add(lines);
+  // The numbers are printed beside the ticks, in the drawing (not floating).
+  // A vertical ruler reads across, with its numbers to the left. A ruler
+  // lying along the page reads along its length, numbers on the far side.
+  const rd = at(length).sub(at(0)).normalize();
+  const tn = tickDir.clone().normalize();
+  const vertical = Math.abs(rd.y) > 0.7;
+  const u = vertical ? tn.clone() : rd.clone(); // the direction the text runs
+  const v = vertical ? rd.clone() : tn.clone().negate(); // up the text
+  const h = 0.0075;
+  const w = h * 3.2;
   for (let m = labelEvery; m <= length + 1e-9; m += labelEvery) {
     const reading = Math.round(m * 1000) / 1000;
-    ctx.overlay.add({ id: `${id}-${reading}`, anchor: () => at(reading), html: formatQuantity(reading, 'm'), gap: 3, prefer });
+    const c = vertical
+      ? at(reading).addScaledVector(u, -(w / 2 + 0.0015))
+      : at(reading).addScaledVector(tn, -(h / 2 + 0.0012));
+    const corner = (a, b) => ctx.scene.localToWorld(c.clone().addScaledVector(u, a * w / 2).addScaledVector(v, b * h / 2));
+    ctx.overlay.addPrinted({
+      id: `${id}-${reading}`,
+      className: `ruler-mark${vertical ? ' is-vertical' : ''}`,
+      size: [128, 40],
+      html: formatQuantity(reading, 'm'),
+      quad: () => [corner(-1, 1), corner(1, 1), corner(1, -1), corner(-1, -1)],
+    });
   }
+  void prefer;
   return lines;
 }
 
