@@ -147,6 +147,12 @@ html, body {
   font-optical-sizing: auto;
 }
 .page-panel.is-leaving { opacity: 0; }
+/* Printed on the page: a fixed page size, mapped onto the page in perspective. */
+.page-panel.is-printed, .ledger-slot.is-printed { transform-origin: 0 0; }
+.page-panel.is-printed { font-size: 24px; line-height: 1.36; }
+.page-panel.is-printed .page-title { font-size: 1.55em; }
+.ledger-slot.is-printed .ledger-bar { font-size: 17px; background: transparent; box-shadow: none; padding: 0; }
+.ledger-slot.is-printed .ledger-svg { height: 30px; }
 .page-panel.is-portrait {
   background: var(--paper);
   border-radius: 8px;

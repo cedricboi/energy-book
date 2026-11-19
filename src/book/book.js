@@ -7,7 +7,7 @@ import { LESSONS, loadLesson as importLesson } from '../lessons/index.js';
 import { loadScene } from '../scenes/index.js';
 import { renderPage } from './pages.js';
 import { createPageTurn } from './pageTurn.js';
-import { computeLayout, placeBox } from './layout.js';
+import { computeLayout, placeBox, quadMatrix, PRINT_W, printHeight, AREAS } from './layout.js';
 import { createDrawIn } from '../ink/drawIn.js';
 import { inkStyle } from '../ink/inkMaterial.js';
 import { loadLesson, saveLesson, allNamedTerms } from '../ui/progress.js';
@@ -216,8 +216,14 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     /** Fit the text panel and ledger to the pages. Call after the camera moves. */
     layout(rect) {
       const l = computeLayout(stage.camera, rect, { wide: !state.lesson });
-      const sizeChanged = panel.style.height !== `${Math.round(l.text.h)}px` || panel.style.width !== `${Math.round(l.text.w)}px`;
-      placeBox(panel, l.text);
+      // Landscape: the text is printed on the left page, laid out at a fixed
+      // page size and mapped onto the page in perspective.
+      const printed = !!l.textQuad;
+      const box = printed ? { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.leftText) } : l.text;
+      const sizeChanged = panel.style.height !== `${Math.round(box.h)}px` || panel.style.width !== `${Math.round(box.w)}px`;
+      placeBox(panel, box);
+      panel.style.transform = printed ? quadMatrix(box.w, box.h, l.textQuad) : '';
+      panel.classList.toggle('is-printed', printed);
       panel.classList.toggle('is-portrait', l.portrait);
       // If the page does not fit, tighten the spacing (text stays at its
       // minimum size). Re-check only when the panel or its page changes.
@@ -229,7 +235,16 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
       // so keep checking and step to denser spacing when needed.
       if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('dense')) panel.classList.add('dense');
       if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('denser')) panel.classList.add('denser');
-      placeBox(ledgerRoot, l.ledger);
+      if (l.ledgerQuad) {
+        const lb = { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.rightLedger) };
+        placeBox(ledgerRoot, lb);
+        ledgerRoot.style.transform = quadMatrix(lb.w, lb.h, l.ledgerQuad);
+        ledgerRoot.classList.add('is-printed');
+      } else {
+        placeBox(ledgerRoot, l.ledger);
+        ledgerRoot.style.transform = '';
+        ledgerRoot.classList.remove('is-printed');
+      }
     },
     get state() {
       return state;

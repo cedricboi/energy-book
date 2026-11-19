@@ -2,7 +2,7 @@
 // Lesson 5 scene: a skateboarder on a half-pipe, drawn to scale (1 : 40)
 // beside a height ruler, with gravitational potential, kinetic and internal
 // jars and the ledger bar.
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, Plane, Mesh, SphereGeometry, MeshBasicMaterial, Matrix4 } from 'three';
 import { createEnergyKit } from './energyKit.js';
 import { createRampModel, rampHeight, RAMP } from '../physics/models/ramp.js';
 import { createHalfPipe, HALF_PIPE_DEPTH } from '../objects/halfPipe.js';
@@ -28,7 +28,7 @@ export default function createRampScene(ctx) {
     mass: { type: 'slider', label: 'Mass of the skateboarder', min: 30, max: MAX.mass, step: 5, value: 50, unit: 'kg', sigFigs: 2 },
     friction: { type: 'switch', label: 'Friction on', value: false },
   };
-  const settings = { height: 2.0, mass: 50, friction: false };
+  const settings = { height: 2.0, mass: 50, friction: false, side: -1 };
 
   let model = createRampModel({ mass: settings.mass, startHeight: settings.height, friction: settings.friction });
   const kit = createEnergyKit(ctx, {
@@ -53,10 +53,17 @@ export default function createRampScene(ctx) {
   const rider = createSkater();
   rider.group.scale.setScalar(S);
   ctx.scene.add(pipe.group, rider.group);
+  // A larger, invisible target around the rider, so a finger can grab her.
+  const grab = new Mesh(new SphereGeometry(1.5, 12, 8), new MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+  grab.position.y = 0.9;
+  grab.name = 'rider-grab';
+  rider.group.add(grab);
 
   // Height ruler beside the left deck: a tick every 0.5 m, a label every 1 m.
+  // The ruler and the start-height line stand at the rider's depth (the middle
+  // of the pipe), so her height reads true against them from any angle.
   const rulerX = -RAMP.HALF - 0.4 - 0.9;
-  const front = (HALF_PIPE_DEPTH / 2);
+  const front = 0;
   const rulerSegs = polylineToSegments([toWorld(rulerX, 0, front), toWorld(rulerX, 3.0, front)]);
   for (let h = 0; h <= 3.0001; h += 0.5) {
     const len = Math.abs(h % 1) < 1e-6 ? 0.22 : 0.12;
@@ -102,7 +109,7 @@ export default function createRampScene(ctx) {
   const storesOf = (v) => ({ gravitational: v.gravitational, kinetic: v.kinetic, internal: v.internal });
 
   function rebuild() {
-    model = createRampModel({ mass: settings.mass, startHeight: settings.height, friction: settings.friction });
+    model = createRampModel({ mass: settings.mass, startHeight: settings.height, friction: settings.friction, side: settings.side });
     running = false;
     pauseAtBottom = false;
     ctx.overlay.setVisible('speed', false);
@@ -120,7 +127,45 @@ export default function createRampScene(ctx) {
     speedLabel.classList.add('label-reading');
   }
 
-  return {
+  // Drag the rider up or down the wall to choose the start height. Let go
+  // and she rolls (unless a prediction has to be made first).
+  const dragPlane = new Plane(new Vector3(0, 0, 1), -cz);
+  const hitPoint = new Vector3();
+  const toLocal = new Matrix4();
+  function dragTo(worldRay) {
+    // The scene group may be lifted or scaled (the pop-up), so work in its space.
+    ctx.scene.updateMatrixWorld();
+    toLocal.copy(ctx.scene.matrixWorld).invert();
+    const ray = worldRay.clone().applyMatrix4(toLocal);
+    if (!ray.intersectPlane(dragPlane, hitPoint)) return;
+    const raw = (hitPoint.y - base) / S;
+    const h = Math.round(Math.min(MAX.height, Math.max(0.5, raw)) * 10) / 10;
+    // She starts on whichever wall she is dragged up.
+    const side = hitPoint.x < cx ? -1 : 1;
+    if (h === settings.height && side === settings.side && !running) return;
+    settings.height = h;
+    settings.side = side;
+    params.height.value = h;
+    rebuild();
+    api.onParamChange?.('height', h);
+  }
+
+  const api = {
+    interactive: [{
+      object: rider.group,
+      label: 'skateboarder',
+      onDrag(ray, phase) {
+        if (phase === 'start') running = false;
+        dragTo(ray);
+        if (phase === 'end') {
+          if (!locked) {
+            rebuild();
+            running = true;
+          }
+        }
+      },
+    }],
+    onParamChange: null,
     objects: [...kit.objects, pipe, rider],
     cueTargets: { rider: rider.group },
     params,
@@ -197,4 +242,5 @@ export default function createRampScene(ctx) {
       kit.destroy();
     },
   };
+  return api;
 }

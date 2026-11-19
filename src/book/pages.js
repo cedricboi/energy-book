@@ -154,14 +154,17 @@ function workBox(parent, page, c) {
   const controls = document.createElement('div');
   controls.className = 'work-controls';
   box.append(controls);
+  const handles = {};
   for (const id of page.controls ?? []) {
     const p = c.scene.params[id];
     if (!p) continue;
     const onChange = (v) => c.scene.setParam(id, v);
     if (p.type === 'switch') createSwitch(controls, p, onChange);
     else if (p.type === 'choice') createChoice(controls, p, onChange);
-    else createSlider(controls, p, onChange);
+    else handles[id] = createSlider(controls, p, onChange);
   }
+  // A value changed by handling the object in the scene shows on its slider too.
+  c.scene.onParamChange = (id, v) => handles[id]?.update?.(v);
   const actions = document.createElement('div');
   actions.className = 'work-actions';
   box.append(actions);

@@ -45,6 +45,11 @@ export function createSlider(parent, p, onChange) {
   return {
     el: row,
     set,
+    /** Show a value set elsewhere (by dragging in the scene), without reporting it back. */
+    update(v) {
+      input.value = v;
+      show(v);
+    },
     get value() {
       return Number(input.value);
     },

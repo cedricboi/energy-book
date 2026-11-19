@@ -187,17 +187,18 @@ export function createBook() {
   const footZ = pageH / 2;
   const onPage = (x, z) => new Vector3(x, pageSurfaceY(x, z) + lift, z);
   const pts = [
+    // It runs down beside the gutter, clear of the printed text and ledger.
     onPage(0.0032, -footZ + 0.003),
-    onPage(0.008, -footZ * 0.6),
-    onPage(0.013, -footZ * 0.2),
-    onPage(0.018, footZ * 0.2),
-    onPage(0.023, footZ * 0.6),
-    onPage(0.027, footZ - 0.002),
-    new Vector3(0.0278, pageSurfaceY(0.0278, footZ) - 0.003, footZ + 0.0012),
-    new Vector3(0.029, boardT + 0.0012, footZ + overhang + 0.0015),
-    new Vector3(0.031, 0.0018, footZ + overhang + 0.008),
-    new Vector3(0.036, 0.0006, footZ + 0.05),
-    new Vector3(0.047, 0.0006, footZ + 0.085),
+    onPage(0.0036, -footZ * 0.6),
+    onPage(0.004, -footZ * 0.2),
+    onPage(0.0045, footZ * 0.2),
+    onPage(0.005, footZ * 0.6),
+    onPage(0.0055, footZ - 0.002),
+    new Vector3(0.0058, pageSurfaceY(0.0058, footZ) - 0.003, footZ + 0.0012),
+    new Vector3(0.0065, boardT + 0.0012, footZ + overhang + 0.0015),
+    new Vector3(0.008, 0.0018, footZ + overhang + 0.008),
+    new Vector3(0.013, 0.0006, footZ + 0.05),
+    new Vector3(0.024, 0.0006, footZ + 0.085),
   ];
   const ribbon = new Mesh(
     ribbonGeometry(pts, 0.0055, new Vector3(1, 0, -0.08)),

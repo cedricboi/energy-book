@@ -68,7 +68,7 @@ function contactShadow() {
 
 /** Camera poses. `reading` is the working view, `intro` shows the window. */
 const POSES = {
-  reading: { elevationDeg: 50, fovDeg: 30 },
+  reading: { elevationDeg: 38, fovDeg: 30 },
   intro: { fovDeg: 34, position: new Vector3(0, 0.2, 0.92), target: new Vector3(0, 0.2, -0.3) },
 };
 
@@ -195,7 +195,7 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
     const pts = corners(portrait);
     const elevation = MathUtils.degToRad(pose.elevationDeg);
     // Landscape: about 80% of the width (85%, which gives the text page more room).
-    const widthFill = portrait ? 0.9 : 0.85;
+    const widthFill = portrait ? 0.9 : 0.97;
     const heightFill = 0.84;
     const target = new Vector3(portrait ? BOOK_EXTENT.width / 4 : 0, 0.008, 0);
     let dist = 0.6;

@@ -53,3 +53,14 @@ describe('ramp model', () => {
     expect(rampHeight(-RAMP.HALF)).toBeCloseTo(3.2, 12);
   });
 });
+
+describe('ramp model, starting on the right wall', () => {
+  it('starts at the right wall, rolls left and keeps its ledger', () => {
+    const m = createRampModel({ mass: 50, startHeight: 2, side: 1 });
+    expect(m.values().x).toBeGreaterThan(0);
+    for (let i = 0; i < 200; i++) m.step(1 / 60);
+    const v = m.values();
+    expect(v.gravitational + v.kinetic + v.internal).toBeCloseTo(m.total, 6);
+    expect(v.x).toBeLessThan(Math.sqrt(2 / RAMP.K));
+  });
+});

@@ -35,13 +35,14 @@ export const xAtHeight = (h) => -Math.sqrt(h / RAMP.K);
  * @param {number} o.mass         kg
  * @param {number} o.startHeight  m (0.5 to 3.0)
  * @param {boolean} o.friction
+ * @param {number} [o.side]  -1 to start on the left wall, 1 on the right
  * @param {number} [o.frictionFraction]  friction force as a fraction of the weight
  */
-export function createRampModel({ mass = 50, startHeight = 2, friction = false, frictionFraction = 0.035 } = {}) {
+export function createRampModel({ mass = 50, startHeight = 2, friction = false, frictionFraction = 0.035, side = -1 } = {}) {
   if (startHeight > RAMP.TOP) throw new RangeError('The start height is above the top of the ramp');
   const total = gravitationalPotentialEnergy(mass, startHeight);
   const f = friction ? frictionFraction * mass * G : 0;
-  const s = { x: xAtHeight(startHeight), dir: 1, travelled: 0, t: 0, stopped: false, passes: 0 };
+  const s = { x: side > 0 ? -xAtHeight(startHeight) : xAtHeight(startHeight), dir: side > 0 ? -1 : 1, travelled: 0, t: 0, stopped: false, passes: 0 };
 
   function energyAt(x, travelled) {
     const ep = gravitationalPotentialEnergy(mass, rampHeight(x));

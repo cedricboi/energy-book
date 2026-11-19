@@ -18,7 +18,9 @@ import { createRenderer, hasWebGL } from './core/renderer.js';
 import { createStage } from './core/stage.js';
 import { createPost } from './core/post.js';
 import { createLoop } from './core/loop.js';
+import { Vector3 } from 'three';
 import { createDragOrbit } from './core/input.js';
+import { createPicker } from './core/pick.js';
 import { forcedTier, tierSettings, tierFromFrameTime, probeFrameTime, saveTier } from './core/quality.js';
 import { setInkResolution, usePreset, setInkStyle, inkStyle, INK_PRESETS, HOUSE_INK } from './ink/inkMaterial.js';
 import { createOverlay } from './ui/overlay.js';
@@ -65,6 +67,13 @@ async function start() {
     reducedMotion,
     onStart: () => loop.hold('drag'),
     onEnd: () => loop.release('drag'),
+  });
+
+  // Tap and drag objects in the scene. Registered after the orbit, but it
+  // listens in the capture phase, so a press on an object never orbits.
+  createPicker(canvas, stage.camera, {
+    getTargets: () => book?.state.scene?.interactive ?? [],
+    onChange: () => loop.request(),
   });
 
   // ---------- the book, or a development demo ----------
@@ -196,6 +205,13 @@ async function start() {
       loop.request();
     },
     values: () => book?.state.scene?.values?.(),
+    /** Screen positions of the objects students can handle (for tests). */
+    touchables() {
+      return (book?.state.scene?.interactive ?? []).map((t) => {
+        const p = t.object.getWorldPosition(new Vector3()).project(stage.camera);
+        return { label: t.label, x: (p.x * 0.5 + 0.5) * innerWidth, y: (-p.y * 0.5 + 0.5) * innerHeight };
+      });
+    },
     /** True once every diagram on the page has finished drawing in. */
     drawInDone() {
       return (book?.state.objects ?? []).every((o) => o.formUniforms[0].value >= 1);

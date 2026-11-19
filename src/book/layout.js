@@ -46,13 +46,53 @@ const G = BOOK.gutter;
 
 /** Areas of the two pages, in page coordinates. */
 export const AREAS = {
-  leftText: { x0: -(G + W) + 0.01, x1: -G - 0.008, z0: -H + 0.006, z1: H - 0.004 },
-  rightLedger: { x0: G + 0.012, x1: G + W - 0.01, z0: H - 0.05, z1: H - 0.006 },
+  leftText: { x0: -(G + W) + 0.018, x1: -G - 0.014, z0: -H + 0.016, z1: H - 0.014 },
+  rightLedger: { x0: G + 0.016, x1: G + W - 0.016, z0: H - 0.052, z1: H - 0.01 },
   spread: { x0: -(G + W) + 0.012, x1: G + W - 0.012, z0: -H + 0.012, z1: H - 0.01 },
 };
 
+/** Projected corners of a page area: top-left, top-right, bottom-right, bottom-left. */
+export function pageQuad(camera, rect, { x0, x1, z0, z1 }) {
+  return [project(camera, x0, z0, rect), project(camera, x1, z0, rect), project(camera, x1, z1, rect), project(camera, x0, z1, rect)].map((p) => ({ ...p }));
+}
+
+// The text page is laid out at a fixed size, like a printed page, then
+// mapped onto the page in perspective. Width in CSS px; the height keeps the
+// page's shape. Text fits the same way on every screen.
+export const PRINT_W = 430;
+export const printHeight = (area) => Math.round((PRINT_W * (area.z1 - area.z0)) / (area.x1 - area.x0));
+
+// 3x3 helpers for the four-point (projective) transform.
+const adj = (m) => [
+  m[4] * m[8] - m[5] * m[7], m[2] * m[7] - m[1] * m[8], m[1] * m[5] - m[2] * m[4],
+  m[5] * m[6] - m[3] * m[8], m[0] * m[8] - m[2] * m[6], m[2] * m[3] - m[0] * m[5],
+  m[3] * m[7] - m[4] * m[6], m[1] * m[6] - m[0] * m[7], m[0] * m[4] - m[1] * m[3],
+];
+const mul = (a, b) => {
+  const c = new Array(9).fill(0);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) for (let k = 0; k < 3; k++) c[3 * i + j] += a[3 * i + k] * b[3 * k + j];
+  return c;
+};
+const mulv = (m, v) => [m[0] * v[0] + m[1] * v[1] + m[2] * v[2], m[3] * v[0] + m[4] * v[1] + m[5] * v[2], m[6] * v[0] + m[7] * v[1] + m[8] * v[2]];
+function basis(p) {
+  const m = [p[0].x, p[1].x, p[2].x, p[0].y, p[1].y, p[2].y, 1, 1, 1];
+  const v = mulv(adj(m), [p[3].x, p[3].y, 1]);
+  return mul(m, [v[0], 0, 0, 0, v[1], 0, 0, 0, v[2]]);
+}
+
 /**
- * @returns {{ portrait: boolean, text: object, ledger: object }} rectangles in CSS px
+ * CSS matrix3d that maps a w x h box (transform-origin at its top-left) onto
+ * a quad of screen points [top-left, top-right, bottom-right, bottom-left].
+ */
+export function quadMatrix(w, h, quad) {
+  const src = basis([{ x: 0, y: 0 }, { x: w, y: 0 }, { x: 0, y: h }, { x: w, y: h }]);
+  const dst = basis([quad[0], quad[1], quad[3], quad[2]]);
+  const t = mul(dst, adj(src)).map((x, _, a) => x / a[8]);
+  return `matrix3d(${[t[0], t[3], 0, t[6], t[1], t[4], 0, t[7], 0, 0, 1, 0, t[2], t[5], 0, t[8]].map((x) => +x.toFixed(9)).join(',')})`;
+}
+
+/**
+ * @returns {{ portrait: boolean, text: object, ledger: object, textQuad?: object[], ledgerQuad?: object[] }} rectangles in CSS px
  */
 export function computeLayout(camera, rect, { wide = false } = {}) {
   const portrait = isStacked(rect.width / rect.height);
@@ -78,6 +118,9 @@ export function computeLayout(camera, rect, { wide = false } = {}) {
     portrait,
     text: pageRect(camera, rect, AREAS.leftText, 8),
     ledger: pageRect(camera, rect, AREAS.rightLedger, 4),
+    // Landscape prints the text and the ledger onto the pages in perspective.
+    textQuad: pageQuad(camera, rect, AREAS.leftText),
+    ledgerQuad: pageQuad(camera, rect, AREAS.rightLedger),
   };
 }
 
