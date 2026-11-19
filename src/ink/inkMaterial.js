@@ -61,6 +61,18 @@ export const INK_PRESETS = {
     flatTint: [1.04, 1.0, 0.93],
     drawInSeconds: 1.0,
   },
+  // E: C's bold line on white paper. The outline and lines keep C's weight;
+  // the fill is lifted most of the way to paper white and stays that colour
+  // in shade, and hatching starts only in real shadow, a touch bolder than D.
+  E: {
+    label: 'E. Bold line, white paper',
+    outlinePx: 3.0, creasePx: 2.0, wobblePx: 0.3, wobbleFreq: 25,
+    hatchSpacing: 5.6, hatchWidth: 1.0, hatchJitter: 0.25,
+    t1: 0.5, t2: 0.22, t3: 0.07, lightRef: 0.72, flatten: 0.985, widthJitter: 0.25,
+    bodyLift: 0.75,
+    flatTint: [1.02, 1.0, 0.97],
+    drawInSeconds: 1.0,
+  },
 };
 
 const LUMA = new Vector3(0.2126, 0.7152, 0.0722);
