@@ -48,6 +48,7 @@ const G = BOOK.gutter;
 export const AREAS = {
   leftText: { x0: -(G + W) + 0.018, x1: -G - 0.014, z0: -H + 0.016, z1: H - 0.014 },
   rightLedger: { x0: G + 0.016, x1: G + W - 0.016, z0: H - 0.052, z1: H - 0.01 },
+  rightFigure: { x0: G + 0.016, x1: G + W - 0.016, z0: H - 0.072, z1: H - 0.0535 },
   spread: { x0: -(G + W) + 0.012, x1: G + W - 0.012, z0: -H + 0.012, z1: H - 0.01 },
 };
 
@@ -121,6 +122,7 @@ export function computeLayout(camera, rect, { wide = false } = {}) {
     // Landscape prints the text and the ledger onto the pages in perspective.
     textQuad: pageQuad(camera, rect, AREAS.leftText),
     ledgerQuad: pageQuad(camera, rect, AREAS.rightLedger),
+    figureQuad: pageQuad(camera, rect, AREAS.rightFigure),
   };
 }
 

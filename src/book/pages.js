@@ -5,6 +5,7 @@
 import { renderQuestion } from '../ui/checks.js';
 import { createSlider, createSwitch, createChoice, createActionButton } from '../ui/controls.js';
 import { gamePage, winPage } from './gamePage.js';
+import { GLOSSARY } from '../lessons/glossaryTerms.js';
 
 const KICKER = {
   hook: 'Starting point', predict: 'Predict', explore: 'Explore', name: 'New term', use: 'Use it',
@@ -23,11 +24,22 @@ export function renderPage(panel, page, c) {
   panel.innerHTML = '';
   panel.dataset.type = page.type;
   panel.dataset.pageKey = `${c.lesson.id}-${c.index}`;
+  // Like a printed book: a running head, then the kicker and the title.
+  const running = document.createElement('p');
+  running.className = 'page-running';
+  running.setAttribute('aria-hidden', 'true');
+  running.textContent = `The Energy Ledger${c.number ? ` · Lesson ${c.number}` : ''}`;
+  panel.append(running);
   const head = document.createElement('header');
   head.className = 'page-head';
   const kicker = KICKER[page.type] ?? '';
   head.innerHTML = `${kicker ? `<p class="page-kicker">${kicker}</p>` : ''}<h2 class="page-title">${page.title ?? ''}</h2>`;
   panel.append(head);
+  const folio = document.createElement('p');
+  folio.className = 'page-folio';
+  folio.setAttribute('aria-hidden', 'true');
+  folio.textContent = String(c.index * 2 + 2);
+  panel.append(folio);
   const body = document.createElement('div');
   body.className = 'page-body';
   panel.append(body);
@@ -55,11 +67,13 @@ export function renderPage(panel, page, c) {
     case 'name': {
       body.insertAdjacentHTML('beforeend', paras(text));
       steps(body, (page.steps ?? []).map(fill), c.saved?.stepsSeen);
+      textbookParts(body, page);
       for (const id of [].concat(page.term ?? [])) c.onNamed(id);
       break;
     }
     case 'explore': {
       body.insertAdjacentHTML('beforeend', paras(text));
+      textbookParts(body, page);
       workBox(body, page, c);
       break;
     }
@@ -118,6 +132,22 @@ export function renderPage(panel, page, c) {
 
   if (page.note) body.insertAdjacentHTML('beforeend', `<p class="page-note">${fill(page.note)}</p>`);
   return { destroy() { panel.innerHTML = ''; } };
+}
+
+/**
+ * The boxed equations and the key words for a page, set like a textbook.
+ * page.equations: [{ html, words }]. page.keyWords: glossary ids. A name page
+ * also lists the terms it names.
+ */
+function textbookParts(parent, page) {
+  if (page.equations?.length) {
+    parent.insertAdjacentHTML('beforeend', `<div class="eq-box">${page.equations.map((e) => `<p class="eq">${e.html}</p>${e.words ? `<p class="eq-words">${e.words}</p>` : ''}`).join('')}</div>`);
+  }
+  const ids = [...(page.keyWords ?? []), ...(page.type === 'name' ? [].concat(page.term ?? []) : [])];
+  const words = [...new Set(ids)].map((id) => GLOSSARY[id]).filter(Boolean);
+  if (words.length) {
+    parent.insertAdjacentHTML('beforeend', `<dl class="key-words"><dt class="key-words-head">Key words</dt>${words.map((w) => `<div><dt>${w.term}</dt><dd>${w.meaning}</dd></div>`).join('')}</dl>`);
+  }
 }
 
 /** Reveal steps one at a time, like a build (CLAUDE.md section 6, rule 5). */

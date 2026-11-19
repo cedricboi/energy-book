@@ -77,6 +77,10 @@ export default {
       scene: 'ramp',
       title: 'Explore the ramp',
       text: ['Friction is still off. Change the start height and the mass, then run each one.'],
+      equations: [
+        { html: 'E<sub>p</sub> = mgh', words: 'gravitational potential energy = mass × gravitational field strength × height' },
+        { html: 'E<sub>k</sub> = ½mv²', words: 'kinetic energy = ½ × mass × speed²' },
+      ],
       goal: 'Try three different start heights. For each one, use "Pause at the bottom" and read her speed.',
       controls: ['height', 'mass'],
       actions: ['run', 'pauseBottom', 'reset'],

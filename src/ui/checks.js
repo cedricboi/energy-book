@@ -83,10 +83,21 @@ export function renderQuestion(parent, q, { saved, onCommit, checkLabel = 'Check
   let attempts = saved?.attempts ?? 0;
   let firstCorrect = saved?.firstCorrect;
 
-  function show(result) {
+  // Feedback is a paper card. The verdict shows at once. The explanation sits
+  // under a flap the student lifts, so they read why, not just whether.
+  function show(result, { lifted = false } = {}) {
     fb.hidden = false;
-    fb.className = `q-feedback ${q.neutral ? 'is-neutral' : result.correct ? 'is-right' : 'is-wrong'}`;
-    fb.textContent = result.feedback;
+    const kind = q.neutral ? 'is-neutral' : result.correct ? 'is-right' : 'is-wrong';
+    fb.className = `q-feedback ${kind}`;
+    const verdict = q.neutral ? 'Saved' : result.correct ? 'Right' : 'Not yet';
+    const flap = !q.neutral && !lifted && !result.needsReason && !result.detail?.tooShort;
+    fb.innerHTML = `<p class="q-fb-head">${verdict}</p><p class="q-fb-text"></p>${flap ? '<button type="button" class="q-flap">Lift the flap to see why</button>' : ''}`;
+    fb.querySelector('.q-fb-text').textContent = result.feedback;
+    fb.querySelector('.q-flap')?.addEventListener('click', (e) => {
+      e.currentTarget.classList.add('is-lifted');
+      e.currentTarget.setAttribute('aria-hidden', 'true');
+      e.currentTarget.tabIndex = -1;
+    });
     if (model && (result.correct || attempts >= 2 || q.type === 'short')) model.hidden = false;
   }
 
@@ -107,7 +118,7 @@ export function renderQuestion(parent, q, { saved, onCommit, checkLabel = 'Check
   // Restore a saved answer (and its feedback) when the student comes back.
   if (saved?.response) {
     restore(box, q, id, saved.response);
-    show(mark(q, saved.response));
+    show(mark(q, saved.response), { lifted: true });
   }
 
   return { el: box, read };

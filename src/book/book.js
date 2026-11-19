@@ -31,6 +31,11 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
   const ledgerRoot = document.createElement('div');
   ledgerRoot.className = 'ledger-slot';
   overlayRoot.append(ledgerRoot);
+  // The figure caption, printed under the diagram on the right page.
+  const figureRoot = document.createElement('div');
+  figureRoot.className = 'figure-slot';
+  figureRoot.hidden = true;
+  overlayRoot.append(figureRoot);
 
   // Instant turns are for screenshots only. Reduced motion also skips the turn.
   const turner = createPageTurn(stage.scene, { reducedMotion: reducedMotion || instant });
@@ -97,8 +102,17 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     // A page can set the scene up (data only), for example friction off.
     // This runs before the controls are drawn, so they show the right values.
     for (const [k, v] of Object.entries(page.sceneState ?? {})) state.scene?.setParam?.(k, v);
+    // Caption the figure: what it shows and its scale, and how to handle it.
+    const fig = state.scene?.figure;
+    const number = LESSONS.find((l) => l.id === lesson.id)?.number;
+    // The handling hint shows where students may handle the model: explore
+    // pages, and predict pages once the prediction is in.
+    const canHandle = page.type === 'explore' || (page.type === 'predict' && state.progress.answers[page.question?.id]);
+    const hint = page.figureHint ?? (canHandle && state.scene?.interactive?.length ? fig?.hint : null);
+    figureRoot.innerHTML = fig ? `<p class="fig-caption"><b>Fig. ${number ? `${number}.` : ''}${state.index + 1}</b>${fig.caption}</p>${hint ? `<p class="fig-hint">${hint}</p>` : ''}` : '';
     renderPage(panel, page, {
       lesson,
+      number: LESSONS.find((l) => l.id === lesson.id)?.number,
       index: state.index,
       scene: state.scene,
       saved: state.progress,
@@ -245,6 +259,15 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
       // so keep checking and step to denser spacing when needed.
       if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('dense')) panel.classList.add('dense');
       if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('denser')) panel.classList.add('denser');
+      // A page never scrolls (focus can nudge it), so keep it at its top.
+      if (panel.scrollTop) panel.scrollTop = 0;
+      // The caption is printed only in landscape, where the page is in view.
+      figureRoot.hidden = !l.figureQuad || !figureRoot.innerHTML;
+      if (l.figureQuad) {
+        const fb = { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.rightFigure) };
+        placeBox(figureRoot, fb);
+        figureRoot.style.transform = quadMatrix(fb.w, fb.h, l.figureQuad);
+      }
       if (l.ledgerQuad) {
         const lb = { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.rightLedger) };
         placeBox(ledgerRoot, lb);

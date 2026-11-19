@@ -149,7 +149,7 @@ html, body {
 .page-panel.is-leaving { opacity: 0; }
 /* Printed on the page: a fixed page size, mapped onto the page in perspective. */
 .page-panel.is-printed, .ledger-slot.is-printed { transform-origin: 0 0; }
-.page-panel.is-printed { font-size: 24px; line-height: 1.36; }
+.page-panel.is-printed { font-size: 22px; line-height: 1.36; }
 .page-panel.is-printed .page-title { font-size: 1.55em; }
 .ledger-slot.is-printed .ledger-bar { font-size: 17px; background: transparent; box-shadow: none; padding: 0; }
 .ledger-slot.is-printed .ledger-svg { height: 30px; }
@@ -369,3 +369,134 @@ html, body {
 .game-story { margin-bottom: 0.3em !important; }
 .game-parts { margin: 0 0 0.3em; font-size: 0.82em; line-height: 1.25; }
 .game-total { font-size: 1.2em; font-weight: 600; }
+
+/* ---------- Textbook page design ----------
+   Set like a printed book: a running head, a red kicker, a light title,
+   body text in regular weight, boxed equations, key words in small type,
+   and controls drawn in ink rather than as web buttons. */
+:root { --red-ink: #9B2D20; --soft-ink: #3B3540; --rule: rgba(30, 27, 36, 0.35); }
+.page-panel { font-weight: 400; color: var(--soft-ink); }
+.page-running {
+  margin: 0 0 0.9em;
+  font-size: 0.56em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(30, 27, 36, 0.55);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.25em;
+}
+.page-folio { position: absolute; left: 0; bottom: 0; margin: 0; font-size: 0.6em; color: rgba(30, 27, 36, 0.6); font-variant-numeric: oldstyle-nums; }
+.is-portrait .page-folio, .is-portrait .page-running { display: none; }
+.page-kicker { color: var(--red-ink); font-weight: 600; font-size: 0.62em; letter-spacing: 0.16em; }
+.page-title { font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
+.page-panel.is-printed .page-title { font-size: 1.75em; line-height: 1.05; margin-bottom: 0.25em; }
+.page-body p { line-height: 1.42; }
+.q-prompt, .work-goal { font-weight: 560; color: var(--ink); }
+
+/* Today's questions: a ruled box, no tint. */
+.todays-questions { background: none; border: 1px solid var(--rule); border-radius: 2px; }
+.todays-questions h3 { color: var(--red-ink); font-size: 0.62em; letter-spacing: 0.14em; }
+
+/* Boxed equations with the word equation underneath. */
+.eq-box { border: 1px solid var(--rule); border-radius: 2px; padding: 0.45em 0.8em 0.5em; margin: 0.4em 0 0.6em; }
+.eq { margin: 0 !important; font-size: 1.35em; font-style: italic; color: var(--ink); letter-spacing: 0.02em; }
+.eq sub { font-size: 0.6em; font-style: normal; }
+.eq-words { margin: 0 0 0.3em !important; font-size: 0.62em; font-style: italic; color: rgba(30, 27, 36, 0.65); }
+.eq-words:last-child { margin-bottom: 0 !important; }
+
+/* Key words, in small type. */
+.key-words { margin: 0.2em 0 0.6em; font-size: 0.66em; line-height: 1.3; }
+.key-words-head { color: var(--red-ink); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.9em; margin-bottom: 0.15em; }
+.key-words div { margin-bottom: 0.15em; }
+.key-words div dt { display: inline; font-weight: 600; color: var(--ink); }
+.key-words div dd { display: inline; margin: 0 0 0 0.35em; }
+
+/* The work box: a thin printed frame, no tint. */
+.work-box { border: 1px solid var(--rule); border-radius: 2px; background: none; padding: 0.5em 0.75em 0.6em; }
+
+/* Ink controls. */
+.page-panel button { border-radius: 999px; border-width: 1.2px; background: transparent; box-shadow: none; padding: 0.15em 1em; }
+.page-panel button.primary { background: var(--ink); color: var(--paper); }
+.page-panel .ctl-step { border-radius: 50%; width: 40px; min-width: 40px; height: 40px; min-height: 40px !important; justify-self: center; }
+.ctl-line input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; height: 32px; }
+.ctl-line input[type=range]::-webkit-slider-runnable-track { height: 1.5px; background: var(--ink); }
+.ctl-line input[type=range]::-moz-range-track { height: 1.5px; background: var(--ink); }
+.ctl-line input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -8.25px; border-radius: 50%; background: var(--ink); border: 3px solid var(--paper); box-shadow: 0 0 0 1.2px var(--ink); }
+.ctl-line input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--ink); border: 3px solid var(--paper); box-shadow: 0 0 0 1.2px var(--ink); }
+.ctl-label, .ctl-choice legend { font-style: italic; color: rgba(30, 27, 36, 0.75); }
+.ctl-value { font-weight: 500; color: var(--ink); }
+
+/* Tick-boxes for choices: a square drawn in ink, ticked when chosen. */
+.q-option input, .ctl-choice input, .ctl-switch input {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; flex: none;
+  border: 1.3px solid var(--ink); border-radius: 2px; background: transparent;
+  display: inline-grid; place-content: center; margin-top: 0.25em; cursor: pointer;
+}
+.q-option input:checked::after, .ctl-choice input:checked::after, .ctl-switch input:checked::after {
+  content: ''; width: 10px; height: 5px; border-left: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+  transform: translateY(-2px) rotate(-45deg);
+}
+.q-option:hover { background: none; }
+.q-option:hover input { box-shadow: 0 0 0 3px rgba(30, 27, 36, 0.08); }
+.page-panel textarea, .page-panel select, .page-panel input:not([type=range]):not([type=radio]):not([type=checkbox]) {
+  background: transparent; border: none; border-bottom: 1.2px solid var(--ink); border-radius: 0;
+}
+.page-panel textarea { border: 1px solid var(--rule); border-radius: 2px; }
+
+/* Feedback: a paper card with the verdict, and the reason under a flap. */
+.q-feedback {
+  position: relative;
+  margin-top: 0.6em;
+  padding: 0.45em 0.75em 0.55em;
+  border: 1px solid rgba(30, 27, 36, 0.25);
+  border-left: 1px solid rgba(30, 27, 36, 0.25);
+  border-radius: 2px;
+  background: #F8F1DE;
+  box-shadow: 0 1px 0 rgba(30, 27, 36, 0.12), 0 6px 10px -6px rgba(30, 27, 36, 0.35);
+  transform: rotate(-0.6deg);
+  overflow: hidden;
+}
+.q-fb-head { margin: 0 0 0.1em !important; font-size: 0.62em; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red-ink); }
+.q-feedback.is-right .q-fb-head { color: #2f6b45; }
+.q-fb-text { margin: 0 !important; }
+.q-flap {
+  position: absolute !important; left: 0; right: 0; bottom: 0; top: 1.5em;
+  min-height: 0 !important; border-radius: 0 !important; border: none !important;
+  border-top: 1px dashed var(--rule) !important;
+  background: #EFE4C7 !important; color: var(--ink) !important;
+  font-style: italic; text-align: left; padding: 0.2em 0.75em !important;
+  transform-origin: top; transition: transform 0.45s cubic-bezier(.2, .8, .2, 1), opacity 0.45s;
+}
+.q-flap.is-lifted { transform: perspective(500px) rotateX(-85deg); opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .q-flap { transition: none; } }
+
+/* Figure caption printed under the diagram on the right page. */
+.figure-slot { position: absolute; pointer-events: none; transform-origin: 0 0; color: var(--soft-ink); font-family: var(--font-book); }
+.figure-slot p { margin: 0; }
+.fig-caption { font-size: 15px; }
+.fig-caption b { font-weight: 600; color: var(--ink); margin-right: 0.4em; }
+.fig-hint { font-size: 19px; font-style: italic; color: var(--ink); margin-top: 0.15em !important; }
+
+/* Printed page: tighter rhythm so a page of text, equations and controls fits. */
+.page-panel.is-printed { padding-bottom: 1.3em; }
+.page-panel.is-printed .page-title { font-size: 1.5em; }
+.page-panel.is-printed .page-running { margin-bottom: 0.6em; }
+.page-panel.is-printed .eq { font-size: 1.15em; line-height: 1.2; }
+.page-panel.is-printed .eq-box { padding: 0.3em 0.7em 0.35em; margin: 0.3em 0 0.45em; }
+.page-panel.is-printed .work-box { padding: 0.4em 0.65em 0.45em; }
+/* Each slider: its label above, then − slider + and the value. */
+.page-panel.is-printed .ctl-label { font-size: 0.8em; line-height: 1.1; margin-bottom: -0.1em; }
+.page-panel.is-printed .ctl-line { grid-template-columns: 40px minmax(80px, 1fr) 40px 3.4em; gap: 6px; }
+.page-panel.is-printed .ctl { margin: 0.05em 0; }
+.page-panel.is-printed .work-actions { gap: 0.35em; }
+.page-panel.is-printed .work-actions button { padding: 0.1em 0.8em; font-size: 0.84em; min-height: 40px; }
+.fig-caption { font-size: 14px; line-height: 1.2; }
+.fig-hint { font-size: 17px; line-height: 1.2; }
+
+.page-panel.is-printed.dense .page-kicker { display: block; }
+
+.page-panel.is-printed .ctl-value { min-width: 0; white-space: nowrap; }
+
+.q-fb-text { font-size: 0.84em; line-height: 1.32; font-style: normal; }
+.page-panel.is-printed .q-feedback { margin-top: 0.45em; padding: 0.35em 0.65em 0.45em; }
