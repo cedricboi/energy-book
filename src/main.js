@@ -65,7 +65,10 @@ async function start() {
   const orbit = createDragOrbit(canvas, {
     maxDeg: 15,
     reducedMotion,
-    onStart: () => loop.hold('drag'),
+    onStart: () => {
+      book?.interrupt();
+      loop.hold('drag');
+    },
     onEnd: () => loop.release('drag'),
   });
 
@@ -73,6 +76,7 @@ async function start() {
   // listens in the capture phase, so a press on an object never orbits.
   createPicker(canvas, stage.camera, {
     getTargets: () => book?.state.scene?.interactive ?? [],
+    onStart: () => book?.interrupt(),
     onChange: () => loop.request(),
   });
 
@@ -89,6 +93,8 @@ async function start() {
       saveTier(q === 'auto' ? null : q);
       location.reload();
     },
+    onBeatToggle: () => book?.beats.toggle(),
+    onBeatSkip: () => book?.beats.skip(),
     quality: forcedTier() ?? 'auto',
     muted: isMuted(),
   });
@@ -106,7 +112,7 @@ async function start() {
   }
 
   loop = createLoop((dt) => {
-    const orbiting = orbit.update(dt);
+    const orbiting = orbit.update(dt) || stage.updateShot(dt);
     const a = book ? book.update(dt) : false;
     const b = demo ? demo.drawIn.update(dt) || (demo.update ? demo.update(dt) : false) : false;
     drawFrame(dt);

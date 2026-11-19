@@ -2,8 +2,9 @@
 // Lesson 5 scene: a skateboarder on a half-pipe, drawn to scale (1 : 40)
 // beside a height ruler, with gravitational potential, kinetic and internal
 // jars and the ledger bar.
-import { Group, Vector3, Mesh, SphereGeometry, MeshBasicMaterial } from 'three';
+import { Group, Vector3, Mesh, SphereGeometry, MeshBasicMaterial, Color, CircleGeometry, AdditiveBlending, Matrix4 } from 'three';
 import { scenePlanePoint } from '../core/pick.js';
+import { STORES } from '../energy/palette.js';
 import { createEnergyKit } from './energyKit.js';
 import { createRampModel, rampHeight, RAMP } from '../physics/models/ramp.js';
 import { createHalfPipe, HALF_PIPE_DEPTH } from '../objects/halfPipe.js';
@@ -97,11 +98,37 @@ export default function createRampScene(ctx) {
   const speedLabel = ctx.overlay.add({ id: 'speed', anchor: () => rider.group.position.clone().add(new Vector3(0, -0.012, 0.02)), html: '' });
   ctx.overlay.setVisible('speed', false);
 
+  // Where friction warms the wheels and the ramp: a small glow of the
+  // internal store's colour at the wheels, while she moves with friction on.
+  // It is energy, so it glows (CLAUDE.md section 4).
+  const warmth = new Mesh(
+    new CircleGeometry(0.0035, 24),
+    new MeshBasicMaterial({ color: new Color(STORES.internal.hex).multiplyScalar(2.6), transparent: true, opacity: 0, depthWrite: false, blending: AdditiveBlending, toneMapped: false }),
+  );
+  warmth.name = 'friction-warmth';
+  const surfaceNormal = new Vector3();
+  const tangent = new Vector3();
+  const ACROSS = new Vector3(0, 0, -1); // tangent x across = surface normal
+  const basis = new Matrix4();
+  warmth.visible = false;
+  ctx.scene.add(warmth);
+
   function placeRider(v) {
     const p = toWorld(v.x, v.y);
     rider.group.position.copy(p);
     rider.group.rotation.z = Math.atan(2 * RAMP.K * v.x);
     rider.group.rotation.y = v.dir > 0 ? 0 : Math.PI;
+    const glow = settings.friction && running ? Math.min(1, (v.v ?? 0) / 4) : 0;
+    warmth.visible = glow > 0.02;
+    warmth.material.opacity = glow;
+    // Lie on the ramp's surface under the board, stretched along it.
+    const slope = Math.atan(2 * RAMP.K * v.x);
+    surfaceNormal.set(-Math.sin(slope), Math.cos(slope), 0);
+    tangent.set(Math.cos(slope), Math.sin(slope), 0);
+    basis.makeBasis(tangent, ACROSS, surfaceNormal);
+    warmth.quaternion.setFromRotationMatrix(basis);
+    warmth.scale.set(2.2, 1, 1);
+    warmth.position.copy(p).addScaledVector(surfaceNormal, 0.0003);
   }
 
   let running = false;
@@ -146,7 +173,16 @@ export default function createRampScene(ctx) {
     api.onParamChange?.('height', h);
   }
 
+  // Named shots for the guided steps: where the camera can look.
+  const world = (v) => ctx.scene.localToWorld(v.clone());
+  const jarsCentre = () => kit.jars.kinetic.group.getWorldPosition(new Vector3()).add(new Vector3(0, 0.02, 0));
   const api = {
+    shots: {
+      rider: () => ({ target: rider.group.getWorldPosition(new Vector3()).add(new Vector3(0, 0.012, 0)), dist: 0.2, elevationDeg: 24, azimuthDeg: 8 }),
+      wheels: () => ({ target: rider.group.getWorldPosition(new Vector3()), dist: 0.085, elevationDeg: 16, azimuthDeg: -12 }),
+      jars: () => ({ target: jarsCentre(), dist: 0.24, elevationDeg: 22 }),
+      pipe: () => ({ target: world(toWorld(0, 1.2)), dist: 0.34, elevationDeg: 26 }),
+    },
     figure: {
       caption: `The half-pipe is drawn at 1 : ${Math.round(1 / S)}. Heights are measured from its bottom.`,
       hint: 'Drag the skateboarder up either wall, then let go.',

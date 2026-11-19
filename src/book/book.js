@@ -7,6 +7,7 @@ import { LESSONS, loadLesson as importLesson } from '../lessons/index.js';
 import { loadScene } from '../scenes/index.js';
 import { renderPage } from './pages.js';
 import { createPageTurn } from './pageTurn.js';
+import { createBeats } from './beats.js';
 import { computeLayout, placeBox, quadMatrix, PRINT_W, printHeight, AREAS } from './layout.js';
 import { createDrawIn } from '../ink/drawIn.js';
 import { inkStyle } from '../ink/inkMaterial.js';
@@ -36,6 +37,19 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
   figureRoot.className = 'figure-slot';
   figureRoot.hidden = true;
   overlayRoot.append(figureRoot);
+  // Guided steps: narrated shots before the student takes over.
+  const beats = createBeats({
+    stage,
+    hud,
+    getScene: () => state.scene,
+    reducedMotion,
+    onAway: (away) => [panel, ledgerRoot, figureRoot].forEach((el) => el.classList.toggle('is-away', away)),
+    onChange: () => onChange?.(),
+  });
+  // Touching the controls hands the page to the student.
+  panel.addEventListener('pointerdown', () => beats.interrupt());
+  panel.addEventListener('keydown', () => beats.interrupt());
+
   // Labels keep clear of the printed caption.
   overlay.addBlocker(() => {
     if (figureRoot.hidden || !figureRoot.innerHTML) return null;
@@ -168,6 +182,7 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     state.busy = true;
     const page = lesson.pages[index];
     panel.classList.add('is-leaving');
+    beats.clear();
     if (state.cue) {
       state.cue.position.y -= 0.006;
       state.cue = null;
@@ -184,6 +199,8 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     if (sceneChanges && page.scene) await makeScene(page.scene);
     showPanel(page);
     state.busy = false;
+    // A predict page plays its steps only once the prediction is in.
+    if (!(page.type === 'predict' && !state.progress.answers[page.question?.id])) beats.start(page.beats);
     onChange?.();
   }
 
@@ -242,7 +259,14 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
       const turning = turner.update(dt);
       const drawing = state.drawIn ? state.drawIn.update(dt) : false;
       const moving = state.scene ? state.scene.update(dt, { formReady: formReady() }) : false;
-      return turning || drawing || moving;
+      // Steps wait for the diagram to finish drawing in.
+      const guiding = formReady() && !turning ? beats.update() : beats.playing;
+      return turning || drawing || moving || guiding;
+    },
+    beats,
+    /** The student touched the model or the view: stop the guided steps. */
+    interrupt() {
+      beats.interrupt();
     },
     /** Fit the text panel and ledger to the pages. Call after the camera moves. */
     layout(rect) {

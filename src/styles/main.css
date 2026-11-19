@@ -500,3 +500,16 @@ html, body {
 
 .q-fb-text { font-size: 0.84em; line-height: 1.32; font-style: normal; }
 .page-panel.is-printed .q-feedback { margin-top: 0.45em; padding: 0.35em 0.65em 0.45em; }
+
+/* Guided steps in the bottom bar: the sentence, progress dots, pause and skip. */
+.hud-beat { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; justify-content: center; }
+.hud-beat[hidden] { display: none; }
+.hud-beat-text { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; }
+.hud-dots { display: inline-flex; gap: 5px; flex: none; }
+.hud-dots i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid rgba(244, 238, 223, 0.6); }
+.hud-dots i.done { background: rgba(244, 238, 223, 0.6); }
+.hud-dots i.on { background: var(--lamp); border-color: var(--lamp); }
+.hud-beat-play, .hud-beat-skip { min-width: 42px; padding: 0 !important; }
+/* The text page steps aside while a guided shot is close up. */
+.page-panel, .ledger-slot, .figure-slot { transition: opacity 0.35s ease; }
+.is-away { opacity: 0 !important; pointer-events: none !important; }

@@ -76,6 +76,12 @@ export default {
       type: 'explore',
       scene: 'ramp',
       title: 'Explore the ramp',
+      beats: [
+        { say: 'She waits at the top of the left wall.', shot: 'rider', seconds: 3 },
+        { say: 'All of her energy is in the gravitational potential store.', shot: 'jars', seconds: 3.5 },
+        { say: 'She rolls. Watch the energy move into the kinetic store and back.', shot: 'pipe', action: 'run', seconds: 6 },
+        { say: 'Your turn. Drag her up either wall, then let go.' },
+      ],
       text: ['Friction is still off. Change the start height and the mass, then run each one.'],
       equations: [
         { html: 'E<sub>p</sub> = mgh', words: 'gravitational potential energy = mass × gravitational field strength × height' },
@@ -103,6 +109,13 @@ export default {
       type: 'explore',
       scene: 'ramp',
       title: 'Turn friction on',
+      beats: [
+        { say: 'This time there is friction between the wheels and the ramp.', shot: 'rider', seconds: 3 },
+        { say: 'She rolls down the left wall.', shot: 'pipe', action: 'run', seconds: 2.5 },
+        { say: 'Look closely. The wheels rub on the ramp and warm it.', shot: 'wheels', seconds: 3.5 },
+        { say: 'The internal store grows on every pass. The total stays the same.', shot: 'jars', seconds: 4 },
+        { say: 'Your turn. Try a greater start height and compare.' },
+      ],
       text: ['Real ramps are not perfectly smooth. There is friction between the wheels, the board and the ramp.'],
       goal: 'Turn friction on and run it. Watch the internal store and the dark line on the ledger.',
       controls: ['friction', 'height'],

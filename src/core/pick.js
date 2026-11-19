@@ -51,7 +51,7 @@ export function scenePlanePoint(group, worldRay, z, out = new Vector3()) {
   return ray.intersectPlane(plane, out);
 }
 
-export function createPicker(element, camera, { getTargets, onChange }) {
+export function createPicker(element, camera, { getTargets, onChange, onStart }) {
   const ray = new Raycaster();
   const ndc = new Vector2();
   let active = null; // { target, id, x, y, moved }
@@ -86,6 +86,7 @@ export function createPicker(element, camera, { getTargets, onChange }) {
     e.preventDefault();
     element.setPointerCapture?.(e.pointerId);
     active = { target, id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
+    onStart?.();
     element.style.cursor = 'grabbing';
     target.onDrag?.(rayAt(e), 'start');
     onChange?.();

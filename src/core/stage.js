@@ -264,13 +264,57 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
     }
     const { target, dist } = framing(regionAspect, isStacked(aspect));
     const elevation = MathUtils.degToRad(pose.elevationDeg) + pitch;
-    camera.position.set(
+    basePos.set(
       target.x + dist * Math.cos(elevation) * Math.sin(yaw),
       target.y + dist * Math.sin(elevation),
       target.z + dist * Math.cos(elevation) * Math.cos(yaw),
     );
-    camera.lookAt(target);
+    baseTgt.copy(target);
+    // A guided shot: blend from where the camera was to the shot's pose.
+    let toPos = basePos;
+    let toTgt = baseTgt;
+    const f = shot.to?.();
+    if (f) {
+      const e = MathUtils.degToRad(f.elevationDeg ?? pose.elevationDeg);
+      const az = MathUtils.degToRad(f.azimuthDeg ?? 0);
+      focusTgt.copy(f.target);
+      focusPos.set(f.target.x + f.dist * Math.cos(e) * Math.sin(az), f.target.y + f.dist * Math.sin(e), f.target.z + f.dist * Math.cos(e) * Math.cos(az));
+      toPos = focusPos;
+      toTgt = focusTgt;
+    }
+    if (shot.from && shot.t < 1) {
+      const k = shot.t * shot.t * (3 - 2 * shot.t); // ease in and out
+      camera.position.lerpVectors(shot.from.pos, toPos, k);
+      lookTgt.lerpVectors(shot.from.tgt, toTgt, k);
+    } else {
+      camera.position.copy(toPos);
+      lookTgt.copy(toTgt);
+    }
+    camera.lookAt(lookTgt);
     camera.updateProjectionMatrix();
+  }
+
+  // Guided shots (CLAUDE.md section 11: never with reduced motion; the book
+  // checks that). shot.to returns { target, dist, elevationDeg?, azimuthDeg? }
+  // each frame, so a shot can follow a moving object. Null is the reading view.
+  const basePos = new Vector3();
+  const baseTgt = new Vector3();
+  const focusPos = new Vector3();
+  const focusTgt = new Vector3();
+  const lookTgt = new Vector3();
+  const shot = { from: null, to: null, t: 1, seconds: 1, start: 0 };
+  function setShot(to, seconds = 1.4) {
+    shot.from = { pos: camera.position.clone(), tgt: lookTgt.clone() };
+    shot.to = to;
+    shot.t = seconds > 0 ? 0 : 1;
+    shot.seconds = Math.max(0.01, seconds);
+    shot.start = performance.now();
+  }
+  /** Step a shot's blend (by the clock). Returns true while the camera is still moving. */
+  function updateShot() {
+    if (shot.t >= 1) return false;
+    shot.t = Math.min(1, (performance.now() - shot.start) / 1000 / shot.seconds);
+    return true;
   }
 
   return {
@@ -289,6 +333,12 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
       reserveBottom = Math.min(0.7, Math.max(0, reserve));
     },
     placeCamera,
+    setShot,
+    updateShot,
+    /** True while a guided shot holds the camera away from the reading view. */
+    get inShot() {
+      return !!shot.to || shot.t < 1;
+    },
     setTier(t) {
       if (lamp.shadow.mapSize.x !== t.shadowMapSize) {
         lamp.shadow.mapSize.set(t.shadowMapSize, t.shadowMapSize);
