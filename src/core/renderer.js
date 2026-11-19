@@ -18,6 +18,8 @@ export function createRenderer(canvas, tier) {
     console.warn('WebGL is not available:', err);
     return null;
   }
+  // Cutaways clip one object open with a plane (Lesson 1's battery).
+  renderer.localClippingEnabled = true;
   renderer.setPixelRatio(tier.dpr); // already capped at 2 or lower (CLAUDE.md section 9)
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = NoToneMapping;

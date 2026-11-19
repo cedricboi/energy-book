@@ -21,10 +21,15 @@ The teacher chose **daylight** as the house look (CLAUDE.md section 4 updated; n
 
 **Checks:** 196 unit tests pass. In the full suite, 149 passed. Two tests timed out under load and pass when run alone.
 
+### Later the same day
+- **Store stands in every lesson** (`scenes/stand.js`, `energyKit` `stand: true`). Lesson 8 builds its own stand. Each jar's name and joules (and time in Lesson 8) are printed on a card.
+- **Printed readings:** rulers print their numbers beside the ticks (`addRuler`). `helpers.addNote` prints the dent depth on the clay block (Lesson 3), and the push force and jar scale in Lesson 7.
+- **Cutaway:** tapping Lesson 1's battery cuts its front half away with a clipping plane, showing a glowing chemical core inside (`renderer.localClippingEnabled`).
+
 ### Next
-- Print the page text into the page texture, so it turns with the leaf.
-- Store stands with printed cards for the other lessons (only Lesson 5 has them).
-- Cutaways where a lesson needs them (the battery, the kettle).
+- Print the page text into the page texture, so it turns with the leaf. This is the largest remaining gap. Today the text is HTML laid onto the page in perspective.
+- Cutaways for the kettle (Lessons 2 and 8).
+- Part names (Kalam labels) could also be printed in the drawing.
 
 ---
 

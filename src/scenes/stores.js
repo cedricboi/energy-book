@@ -3,7 +3,8 @@
 // object (or its button) sends its energy, as glowing colour, into the jar of
 // the matching store. No joules are shown: this lesson comes before any
 // equation, so the jars only show which store holds energy.
-import { Vector3, SphereGeometry, BoxGeometry } from 'three';
+import { Vector3, SphereGeometry, BoxGeometry, CylinderGeometry, Mesh, MeshBasicMaterial, Plane, Color, DoubleSide } from 'three';
+import { glowColour } from '../energy/palette.js';
 import { createEnergyKit } from './energyKit.js';
 import { createFlowPath } from '../energy/flow.js';
 import { createInkObject } from '../ink/inkObject.js';
@@ -96,7 +97,40 @@ export default function createStoresScene(ctx) {
   const shown = Object.fromEntries(STORE_IDS.map((s) => [s, 0]));
   const sending = new Map(); // id -> remaining amount to emit
 
+  // The battery opens in a cutaway when tapped: its front half is cut away
+  // by a plane, showing a glowing core, its chemical potential store, inside.
+  const bat = objects.battery;
+  const batBody = bat.body;
+  batBody.material.side = DoubleSide;
+  const cutPlane = new Plane(new Vector3(0, 0, -1), 0);
+  const core = new Mesh(
+    new CylinderGeometry(0.0075, 0.0075, 0.044, 20).rotateZ(Math.PI / 2).translate(-0.025, 0.012, 0),
+    new MeshBasicMaterial({ color: new Color(...glowColour('chemical', 1.4)), toneMapped: false }),
+  );
+  core.name = 'battery-core';
+  core.visible = false;
+  bat.rise.add(core);
+  let cut = 0; // 0 closed, 1 cut open
+  let cutTarget = 0;
+  const batCentre = new Vector3();
+  function applyCut() {
+    if (cut <= 0.001) {
+      batBody.material.clippingPlanes = null;
+      core.visible = false;
+      return;
+    }
+    bat.group.updateMatrixWorld();
+    batCentre.set(-0.025, 0.012, 0);
+    bat.rise.localToWorld(batCentre);
+    // The plane sweeps in from the front of the battery to its middle.
+    const radius = 0.012 * bat.group.scale.x;
+    cutPlane.constant = batCentre.z + radius * (1 - cut);
+    batBody.material.clippingPlanes = [cutPlane];
+    core.visible = true;
+  }
+
   function reveal(id) {
+    if (id === 'battery') cutTarget = 1;
     if (!objects[id] || sending.has(id) || shown[STORE_OF[id]] >= 0.7) return;
     sending.set(id, 0.7);
     flows[id].pathLine.visible = true;
@@ -123,6 +157,7 @@ export default function createStoresScene(ctx) {
     actions,
     act(id) {
       if (id === 'reset') {
+        cutTarget = 0;
         for (const s of STORE_IDS) shown[s] = 0;
         sending.clear();
         for (const f of Object.values(flows)) {
@@ -141,6 +176,11 @@ export default function createStoresScene(ctx) {
     setLocked() {},
     update(dt, { formReady }) {
       let moving = kit.fadeGlow(dt, formReady);
+      if (Math.abs(cut - cutTarget) > 0.001) {
+        cut += Math.sign(cutTarget - cut) * Math.min(Math.abs(cutTarget - cut), dt / 0.6);
+        applyCut();
+        moving = true;
+      }
       for (const [id, left] of sending) {
         const amt = Math.min(left, dt * 0.9);
         flows[id].emit(amt);
