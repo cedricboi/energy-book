@@ -22,7 +22,7 @@ export const INK_HEX = '#1E1B24';
 
 /**
  * The three looks shown to the teacher in Phase 3. Values in ink pixels.
- * The teacher chose C, bold (20 Nov 2026). HOUSE_INK is the default for the book.
+ * The teacher chose E, C's bold line on white paper (20 Nov 2026). HOUSE_INK is the default for the book.
  */
 export const INK_PRESETS = {
   A: {
@@ -115,7 +115,7 @@ export const inkUniforms = {
 };
 
 /** The live style, including values that are not uniforms. */
-export const HOUSE_INK = 'C';
+export const HOUSE_INK = 'E';
 export const inkStyle = { ...INK_PRESETS[HOUSE_INK], preset: HOUSE_INK };
 
 const lineMaterials = new Set();
