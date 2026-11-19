@@ -21,8 +21,11 @@ const H = Math.round(BOOK.pageH * PX_PER_M);
 /** Size of a page's print sheet in pixels (it covers the whole page). */
 export const PRINT_SIZE = [W, H];
 
-/** Elements that stay live HTML and are left out of the print. */
-export const LIVE = 'button, input, textarea, select, output, canvas, video, .q-feedback, .stamp-slot';
+/**
+ * Elements that stay live HTML and are left out of the print. A button
+ * marked ink-row (a contents line) is printed, and its HTML only takes taps.
+ */
+export const LIVE = 'button:not(.ink-row), input, textarea, select, output, canvas, video, .q-feedback, .stamp-slot';
 const isLive = (el) => el.matches?.(LIVE);
 // A full print (for the turning leaf) draws the controls too, all but the
 // stamp, which is pressed in at an angle.
@@ -57,9 +60,11 @@ function placeOf(area, side) {
  * @param {import('three').Mesh} o.leaf       the turning leaf
  * @param {HTMLElement} o.panel               the text panel (left page)
  * @param {HTMLElement} o.figure              the figure caption (right page)
+ * @param {HTMLElement} o.rightPanel          the right page's text (the contents list)
  * @param {() => void} o.onChange             request a frame
  */
-export function createPagePrint({ scene, leaf, panel, figure, onChange }) {
+export function createPagePrint({ scene, leaf, panel, figure, rightPanel, onChange }) {
+  const roots = [panel, figure, rightPanel];
   const sheets = { left: sheet(), right: sheet(), leafFront: sheet(), leafBack: sheet() };
   const pages = { left: scene.getObjectByName('page-left'), right: scene.getObjectByName('page-right') };
   const uni = (mesh) => mesh.material.userData.print;
@@ -119,7 +124,10 @@ export function createPagePrint({ scene, leaf, panel, figure, onChange }) {
     observer.disconnect();
     clear(target);
     if (side === 'left') printInto(target, panel, AREAS.leftText, 'left', full);
-    else printInto(target, figure, AREAS.rightFigure, 'right', full);
+    else {
+      printInto(target, figure, AREAS.rightFigure, 'right', full);
+      printInto(target, rightPanel, AREAS.rightText, 'right', full);
+    }
     target.blank = false;
     target.texture.needsUpdate = true;
     watch();
@@ -155,7 +163,7 @@ export function createPagePrint({ scene, leaf, panel, figure, onChange }) {
     const relevant = records.some((r) => {
       const t = r.target.nodeType === 1 ? r.target : r.target.parentElement;
       // The panel's own position changes every frame: not a change of content.
-      if (r.type === 'attributes' && (t === panel || t === figure) && r.attributeName === 'style') return false;
+      if (r.type === 'attributes' && roots.includes(t) && r.attributeName === 'style') return false;
       // Changes inside a live control do not move the printed text.
       if (r.type !== 'childList' && t?.closest?.(LIVE)) return false;
       return true;
@@ -164,11 +172,11 @@ export function createPagePrint({ scene, leaf, panel, figure, onChange }) {
   });
   function watch() {
     if (!enabled) return;
-    for (const el of [panel, figure]) {
+    for (const el of roots) {
       observer.observe(el, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'hidden', 'style', 'open', 'src'] });
     }
   }
-  for (const el of [panel, figure]) {
+  for (const el of roots) {
     for (const ev of ['transitionend', 'animationend', 'load']) {
       el.addEventListener(ev, (e) => {
         if (!e.target.closest?.(LIVE)) schedule();
@@ -187,7 +195,7 @@ export function createPagePrint({ scene, leaf, panel, figure, onChange }) {
     setEnabled(on) {
       if (on === enabled) return;
       enabled = on;
-      for (const el of [panel, figure]) el.classList.toggle('is-inked', on);
+      for (const el of roots) el.classList.toggle('is-inked', on);
       show(on);
       if (on) {
         watch();

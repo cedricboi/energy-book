@@ -47,6 +47,8 @@ const G = BOOK.gutter;
 /** Areas of the two pages, in page coordinates. */
 export const AREAS = {
   leftText: { x0: -(G + W) + 0.018, x1: -G - 0.014, z0: -H + 0.016, z1: H - 0.014 },
+  // The right page's text (the contents list), the left page's mirror.
+  rightText: { x0: G + 0.014, x1: G + W - 0.018, z0: -H + 0.016, z1: H - 0.014 },
   rightLedger: { x0: G + 0.016, x1: G + W - 0.016, z0: H - 0.052, z1: H - 0.01 },
   rightFigure: { x0: G + 0.016, x1: G + W - 0.016, z0: H - 0.072, z1: H - 0.0535 },
   spread: { x0: -(G + W) + 0.012, x1: G + W - 0.012, z0: -H + 0.012, z1: H - 0.01 },
@@ -97,8 +99,8 @@ export function quadMatrix(w, h, quad) {
  */
 export function computeLayout(camera, rect, { wide = false } = {}) {
   const portrait = isStacked(rect.width / rect.height);
-  if (wide) {
-    // A page with no diagram (the contents) uses the whole spread.
+  if (wide && portrait) {
+    // The contents in the stacked layout uses the whole screen.
     return {
       portrait,
       text: portrait
@@ -123,6 +125,7 @@ export function computeLayout(camera, rect, { wide = false } = {}) {
     textQuad: pageQuad(camera, rect, AREAS.leftText),
     ledgerQuad: pageQuad(camera, rect, AREAS.rightLedger),
     figureQuad: pageQuad(camera, rect, AREAS.rightFigure),
+    rightTextQuad: pageQuad(camera, rect, AREAS.rightText),
   };
 }
 

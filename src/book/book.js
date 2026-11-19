@@ -17,6 +17,7 @@ import { loadLesson, saveLesson, allNamedTerms } from '../ui/progress.js';
 import { renderGlossary } from '../ui/glossary.js';
 import { report } from '../hub/report.js';
 import { play } from '../core/sound.js';
+import { STORES, STORE_IDS, iconSvg } from '../energy/palette.js';
 
 function combine(list) {
   return {
@@ -39,6 +40,11 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
   figureRoot.className = 'figure-slot';
   figureRoot.hidden = true;
   overlayRoot.append(figureRoot);
+  // The right page's text, used by the contents spread (its list of lessons).
+  const rightPanel = document.createElement('section');
+  rightPanel.className = 'page-panel page-panel-right is-printed';
+  rightPanel.hidden = true;
+  overlayRoot.append(rightPanel);
   // Guided steps: narrated shots before the student takes over.
   const beats = createBeats({
     stage,
@@ -63,7 +69,7 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
   // Instant turns are for screenshots only. Reduced motion also skips the turn.
   const turner = createPageTurn(stage.scene, { reducedMotion: reducedMotion || instant });
   // The page text is printed into the paper (landscape only).
-  const printer = createPagePrint({ scene: stage.scene, leaf: turner.leaf, panel, figure: figureRoot, onChange: () => onChange?.() });
+  const printer = createPagePrint({ scene: stage.scene, leaf: turner.leaf, panel, figure: figureRoot, rightPanel, onChange: () => onChange?.() });
   let lastRect = null;
   const snapshot = renderer ? createFigureSnapshot(renderer) : null;
   const state = {
@@ -322,6 +328,8 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
   }
 
   async function openLesson(id, page) {
+    // The pages keep what they show (the contents) until the leaf turns.
+    printer.hold(true);
     clearScene();
     state.lesson = await importLesson(id);
     state.progress = loadLesson(id);
@@ -333,17 +341,71 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     await goTo(Math.min(Math.max(0, start), state.lesson.pages.length - 1), 1);
   }
 
-  function openContents() {
-    clearScene();
-    state.lesson = null;
+  const NUMBER_WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+
+  /**
+   * The contents spread: a title page on the left, the list of lessons on
+   * the right (in the stacked layout, the list follows the title page).
+   */
+  function renderContents() {
+    const shown = LESSONS.filter((l) => !l.hidden);
+    const lessons = shown.filter((l) => l.number).length;
+    const toc = () => `<ol class="toc">${shown.map((l) => `<li><button type="button" class="ink-row" data-lesson="${l.id}"><span class="toc-num">${l.number ? `Lesson ${l.number}` : 'Game'}</span><span class="toc-title">${l.title}</span>${loadLesson(l.id)?.done ? '<span class="c-stamp" aria-label="complete">Balanced</span>' : ''}</button></li>`).join('')}</ol>`;
     panel.dataset.type = 'contents';
-    panel.innerHTML = `<header class="page-head"><p class="page-kicker">Contents</p><h2 class="page-title">The Energy Ledger</h2></header>
-      <div class="page-body"><p>Every energy store is an account. Every transfer is a transaction. The total always balances.</p>
-      <ol class="contents-list">${LESSONS.filter((l) => !l.hidden).map((l) => `<li><button type="button" data-lesson="${l.id}">${l.number ? `<span class="c-num">${l.number}</span>` : ''}<span class="c-title">${l.title}</span>${loadLesson(l.id)?.done ? '<span class="c-stamp" aria-label="complete">Balanced</span>' : ''}</button></li>`).join('')}</ol></div>`;
-    panel.querySelectorAll('[data-lesson]').forEach((b) => b.addEventListener('click', () => openLesson(b.dataset.lesson)));
+    panel.dataset.pageKey = 'contents';
+    panel.innerHTML = `<p class="page-running" aria-hidden="true">G2 Science · Energy</p>
+      <header class="page-head"><p class="page-kicker">A workbook of energy</p><h2 class="page-title">The Energy Ledger</h2></header>
+      <div class="page-body">
+        <p class="title-motto">Every energy store is an account. Every transfer is a transaction. The total always balances.</p>
+        <h3 class="key-head">The six stores</h3>
+        <ul class="store-key">${STORE_IDS.map((id) => `<li style="--store:${STORES[id].hex}">${iconSvg(id, 22)}<span>${STORES[id].short}</span></li>`).join('')}</ul>
+        <div class="how-to"><h3>How to use this book</h3><p>Open a lesson from the contents. Turn the pages with Next and Back, or with the arrow keys. Each drawing can be handled. Drag it or tap it, and watch the energy move.</p></div>
+        <div class="toc-portrait">${toc()}</div>
+      </div>`;
+    rightPanel.innerHTML = `<p class="page-running" aria-hidden="true">The Energy Ledger</p>
+      <header class="page-head"><p class="page-kicker">Contents</p><h2 class="page-title">${NUMBER_WORDS[lessons] ?? lessons} lessons and a game</h2></header>
+      ${toc()}`;
+    for (const b of [...panel.querySelectorAll('[data-lesson]'), ...rightPanel.querySelectorAll('[data-lesson]')]) {
+      b.addEventListener('click', () => openLesson(b.dataset.lesson));
+    }
     hud.setTitle('Contents');
     hud.setNav({ canPrev: false, canNext: false });
+  }
+
+  /** Go to the contents. From a lesson, the page turns back to it. */
+  async function openContents() {
+    if (state.busy) return;
+    const turning = !!state.lesson && printer.enabled;
+    state.busy = true;
+    const { sheets } = printer;
+    printer.hold(true);
+    if (turning) {
+      panel.classList.add('is-leaving');
+      beats.clear();
+      const folded = await foldDown();
+      if (folded && snapshot && state.group) {
+        printer.overlay(sheets.right, snapshot(state.group, stage.camera));
+        state.group.visible = false;
+      }
+      printer.print('left', sheets.leafBack, { full: true });
+    }
+    clearScene();
+    state.lesson = null;
+    figureRoot.innerHTML = '';
+    renderContents();
+    if (lastRect) layout(lastRect);
+    if (turning) {
+      printer.print('right', sheets.leafFront);
+      printer.print('left');
+      play('page-turn');
+      const t = turner.turn(-1);
+      onChange?.();
+      await t;
+      printer.copy(sheets.leafFront, sheets.right);
+    }
+    printer.hold(false);
     panel.classList.remove('is-leaving');
+    state.busy = false;
     onChange?.();
   }
 
@@ -379,7 +441,7 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     panel.classList.toggle('is-printed', printed);
     panel.classList.toggle('is-portrait', l.portrait);
     // Landscape lesson pages are printed into the paper.
-    printer.setEnabled(printed && !!state.lesson);
+    printer.setEnabled(printed);
     // If the page does not fit, tighten the spacing (text stays at its
     // minimum size). Re-check only when the panel or its page changes.
     if (sizeChanged || panel.dataset.fitFor !== panel.dataset.pageKey) {
@@ -392,6 +454,14 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('denser')) panel.classList.add('denser');
     // A page never scrolls (focus can nudge it), so keep it at its top.
     if (panel.scrollTop) panel.scrollTop = 0;
+    // The contents list is printed on the right page in landscape.
+    const showRight = !state.lesson && !!l.rightTextQuad;
+    rightPanel.hidden = !showRight;
+    if (showRight) {
+      const rb = { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.rightText) };
+      placeBox(rightPanel, rb);
+      rightPanel.style.transform = quadMatrix(rb.w, rb.h, l.rightTextQuad);
+    }
     // The caption is printed only in landscape, where the page is in view.
     figureRoot.hidden = !l.figureQuad || !figureRoot.innerHTML;
     if (l.figureQuad) {

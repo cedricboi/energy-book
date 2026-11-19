@@ -660,7 +660,7 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 /* Printed into the paper (book/pagePrint.js). The HTML copy keeps its place
    for screen readers and keyboard focus, but only its live controls show:
    the words, rules and boxes are in the page's own texture. */
-.is-inked :not(:is(button, input, textarea, select, output, canvas, video, .q-feedback, .stamp-slot), :is(button, .q-feedback, .stamp-slot) *) {
+.is-inked :not(:is(button:not(.ink-row), input, textarea, select, output, canvas, video, .q-feedback, .stamp-slot), :is(button:not(.ink-row), .q-feedback, .stamp-slot) *) {
   color: transparent !important;
   border-color: transparent !important;
   background-color: transparent !important;
@@ -674,3 +674,32 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 /* Part names are handwritten on the paper, like notes in a workbook: no tag
    behind them, only the paper-coloured halo, set at a slight hand angle. */
 .label-part { background: none; padding: 0 0.15em; rotate: -1.5deg; text-shadow: 0 0 2px var(--paper), 0 0 5px var(--paper), 0 0 9px var(--paper); }
+
+/* ---------- The contents spread ----------
+   Left: a title page. Right: the lessons, ruled like a book's contents.
+   Both are printed into the paper. Each contents line is a real button,
+   printed too (ink-row), so only its focus ring shows as HTML. */
+.page-panel-right { position: absolute; left: 0; top: 0; }
+.page-panel-right[hidden] { display: none; }
+.page-panel[data-type=contents] .page-title { font-size: 2.2em; line-height: 1; letter-spacing: -0.015em; margin-bottom: 0.15em; }
+.page-panel-right .page-title { font-size: 1.5em; line-height: 1.05; }
+.title-motto { font-style: italic; font-size: 1.02em; line-height: 1.38; color: var(--soft-ink); margin: 0.35em 0 1em !important; }
+.key-head, .how-to h3 { margin: 0 0 0.35em; color: var(--red-ink); font-size: 0.6em; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+.store-key { list-style: none; padding: 0; margin: 0 0 1.1em; display: grid; grid-template-columns: 1fr 1fr; gap: 0.35em 1em; font-size: 0.74em; line-height: 1.15; }
+.store-key li { display: flex; align-items: center; gap: 0.5em; }
+.store-key .store-icon { flex: none; width: 1.45em; height: 1.45em; color: var(--store); vertical-align: middle; }
+.how-to { border-top: 1px solid var(--rule); padding-top: 0.55em; font-size: 0.76em; line-height: 1.38; }
+.how-to p { margin: 0; }
+.toc-portrait { display: none; }
+.is-portrait .toc-portrait { display: block; margin-top: 0.8em; }
+.toc { list-style: none; padding: 0; margin: 0.5em 0 0; border-top: 1px solid var(--rule); }
+.toc li { border-bottom: 1px solid var(--rule); }
+.page-panel .toc button.ink-row {
+  all: unset; box-sizing: border-box; cursor: pointer;
+  width: 100%; min-height: 44px; display: flex; align-items: baseline; gap: 0.6em;
+  padding: 0.38em 0.15em; font: inherit; color: var(--ink);
+}
+.toc-num { flex: none; min-width: 5.2em; color: var(--red-ink); font-size: 0.62em; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+.toc-title { flex: 1; font-size: 1em; }
+.page-panel .toc button.ink-row:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+.toc .c-stamp { align-self: center; }

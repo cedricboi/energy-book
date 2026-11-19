@@ -47,6 +47,39 @@ function transformText(s, cs) {
   return s;
 }
 
+/** An SVG shape as a canvas path. */
+function shapePath(p) {
+  const n = (a) => parseFloat(p.getAttribute(a)) || 0;
+  const path = new Path2D();
+  switch (p.tagName.toLowerCase()) {
+    case 'path':
+      return new Path2D(p.getAttribute('d') ?? '');
+    case 'rect': {
+      const rx = n('rx') || n('ry');
+      if (rx && path.roundRect) path.roundRect(n('x'), n('y'), n('width'), n('height'), rx);
+      else path.rect(n('x'), n('y'), n('width'), n('height'));
+      return path;
+    }
+    case 'circle':
+      path.arc(n('cx'), n('cy'), n('r'), 0, Math.PI * 2);
+      return path;
+    case 'ellipse':
+      path.ellipse(n('cx'), n('cy'), n('rx'), n('ry'), 0, 0, Math.PI * 2);
+      return path;
+    case 'line':
+      path.moveTo(n('x1'), n('y1'));
+      path.lineTo(n('x2'), n('y2'));
+      return path;
+    case 'polyline': {
+      const pts = (p.getAttribute('points') ?? '').trim().split(/[\s,]+/).map(Number);
+      for (let i = 0; i + 1 < pts.length; i += 2) (i ? path.lineTo : path.moveTo).call(path, pts[i], pts[i + 1]);
+      return path;
+    }
+    default:
+      return null;
+  }
+}
+
 const range = typeof document !== 'undefined' ? document.createRange() : null;
 
 /**
@@ -228,9 +261,14 @@ export function printElement(root, ctx, { x = 0, y = 0, scale = 1, skip = () => 
     ctx.translate(X(b.left) + (b.width - (vb?.width ?? 0) * s) * scale * 0.5, Y(b.top) + (b.height - (vb?.height ?? 0) * s) * scale * 0.5);
     ctx.scale(s * scale, s * scale);
     if (vb) ctx.translate(-vb.x, -vb.y);
-    for (const p of el.querySelectorAll('path')) {
+    for (const p of el.querySelectorAll('path, rect, circle, ellipse, line, polyline')) {
       const cs = style(p);
-      const path = new Path2D(p.getAttribute('d'));
+      const path = shapePath(p);
+      if (!path) continue;
+      // A shape's own transform (an icon's rotated ellipse).
+      const m = p.transform?.baseVal?.consolidate?.()?.matrix;
+      ctx.save();
+      if (m) ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f);
       const fill = colour(cs.fill === 'none' ? 'transparent' : cs.fill);
       const stroke = colour(cs.stroke === 'none' ? 'transparent' : cs.stroke);
       if (fill.a > 0) {
@@ -246,6 +284,7 @@ export function printElement(root, ctx, { x = 0, y = 0, scale = 1, skip = () => 
         ctx.lineJoin = cs.strokeLinejoin || 'miter';
         ctx.stroke(path);
       }
+      ctx.restore();
     }
     ctx.restore();
   }
