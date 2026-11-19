@@ -3,12 +3,12 @@
 // back of the right-hand page, flows between them, the display ledger, the
 // ledger bar along the front edge and the jar labels. A scene supplies its
 // own objects and physics model and reports the model's store values here.
-import { Vector3 } from 'three';
+import { Vector3, Color } from 'three';
 import { createStoreJar } from '../energy/storeJar.js';
 import { createFlowPath } from '../energy/flow.js';
 import { createLedgerBar } from '../energy/ledgerBar.js';
 import { createDisplayLedger } from '../energy/displayLedger.js';
-import { STORES, iconSvg } from '../energy/palette.js';
+import { STORES, iconSvg, glowColour } from '../energy/palette.js';
 import { formatQuantity } from '../physics/format.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
 
@@ -108,6 +108,33 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
     }
     ledger.update(shown.display, shown.transit);
     ledger.el.classList.toggle('values-hidden', hideValues);
+    lightPaper();
+  }
+
+  // Coloured light from the fullest jars falls on the paper around them.
+  const tmpPos = new Vector3();
+  const tmpCol = new Color();
+  function lightPaper() {
+    const lights = ctx.energyLights;
+    if (!lights) return;
+    const ranked = hideValues ? [] : stores
+      .map((s) => ({ s, f: Math.min(1, (shown.display[s] ?? 0) / jars[s].scale) }))
+      .filter((r) => r.f > 0.01)
+      .sort((a, b) => b.f - a.f);
+    lights.forEach((l, i) => {
+      const r = ranked[i];
+      if (!r) {
+        l.intensity = 0;
+        return;
+      }
+      const jar = jars[r.s];
+      jar.liquid.getWorldPosition(tmpPos);
+      tmpPos.y += jar.fillHeight() * jar.group.scale.y * 0.5;
+      l.position.copy(tmpPos);
+      tmpCol.setRGB(...glowColour(r.s, 1));
+      l.color.copy(tmpCol);
+      l.intensity = 0.0009 * (0.35 + 0.65 * r.f) * glow;
+    });
   }
   refresh();
 
@@ -169,6 +196,7 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
     },
     snapshot: () => shown,
     destroy() {
+      for (const l of ctx.energyLights ?? []) l.intensity = 0;
       ledger.destroy();
     },
   };

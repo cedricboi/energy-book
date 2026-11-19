@@ -11,7 +11,7 @@ import {
   EffectComposer, RenderPass, EffectPass, Effect, SMAAEffect, SMAAPreset,
   ToneMappingEffect, ToneMappingMode, VignetteEffect, BloomEffect,
 } from 'postprocessing';
-import { HalfFloatType, Uniform } from 'three';
+import { HalfFloatType, Uniform, Color } from 'three';
 import { N8AOPostPass } from 'n8ao';
 
 /**
@@ -69,6 +69,8 @@ export function createPost(renderer, scene, camera, { tier, toneMapping = 'neutr
     pass.configuration.aoRadius = 0.05;
     pass.configuration.distanceFalloff = 0.4;
     pass.configuration.intensity = 2.2;
+    // Contact shadows in a warm dark brown, not black.
+    pass.configuration.color = new Color('#2a2622');
     // Tone mapping comes later in the chain, so AO must not gamma-correct.
     pass.configuration.gammaCorrection = false;
     pass.setQualityMode('Medium');

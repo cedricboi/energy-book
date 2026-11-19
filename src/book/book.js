@@ -91,7 +91,7 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     const group = new Group();
     group.name = `scene-${id}`;
     stage.scene.add(group);
-    const scene = create({ scene: group, overlay, overlayRoot, ledgerRoot, reducedMotion });
+    const scene = create({ scene: group, overlay, overlayRoot, ledgerRoot, reducedMotion, energyLights: stage.energyLights });
     // Students handle the model itself (CLAUDE.md section 6, rule 1). A scene
     // can list its own touchable objects. Otherwise each lit object is a tap
     // that does its own action, or the scene's main action.

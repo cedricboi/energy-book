@@ -4,7 +4,7 @@
 // No lesson content lives here.
 import {
   Scene, PerspectiveCamera, SpotLight, PointLight, DirectionalLight, HemisphereLight, Object3D,
-  Mesh, PlaneGeometry, ShaderMaterial, Vector2, Vector3, Color, MathUtils,
+  Mesh, PlaneGeometry, ShaderMaterial, Vector2, Vector3, Color, MathUtils, CanvasTexture, SRGBColorSpace,
 } from 'three';
 import { createBook, BOOK, BOOK_EXTENT } from '../objects/book.js';
 import { createDesk } from '../objects/desk.js';
@@ -65,6 +65,39 @@ function contactShadow() {
   mesh.renderOrder = 1;
   mesh.name = 'contact-shadow';
   return mesh;
+}
+
+/**
+ * The light from a window, drawn in code: a tall window of six panes with
+ * soft-edged glazing bars, used as the daylight spotlight's pattern, so soft
+ * bars of light and shade fall across the desk and the book.
+ */
+function windowCookie() {
+  const size = 512;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  g.fillStyle = '#3a3a3a'; // light outside the window still reaches the desk, dimly
+  g.fillRect(0, 0, size, size);
+  g.filter = 'blur(10px)';
+  g.fillStyle = '#ffffff';
+  const x0 = 70;
+  const y0 = 40;
+  const w = size - 2 * x0;
+  const h = size - 2 * y0;
+  const bar = 18;
+  const cols = 2;
+  const rows = 3;
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      const pw = (w - bar * (cols - 1)) / cols;
+      const ph = (h - bar * (rows - 1)) / rows;
+      g.fillRect(x0 + i * (pw + bar), y0 + j * (ph + bar), pw, ph);
+    }
+  }
+  const tex = new CanvasTexture(c);
+  tex.colorSpace = SRGBColorSpace;
+  return tex;
 }
 
 /** Camera poses. `reading` is the working view, `intro` shows the window. */
@@ -140,7 +173,24 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
     hemi.color.set('#F3F1EC');
     hemi.groundColor.set('#A8927A');
     hemi.intensity = 1.25;
+    // The window's pattern falls across the desk (the spotlight casts shadows,
+    // which its pattern needs).
+    lamp.map = windowCookie();
+    lamp.intensity = 4.2;
+    lamp.angle = 0.62;
+    lamp.penumbra = 0.25;
+    lamp.position.set(-0.75, 1.05, -0.55);
   }
+
+  // Energy lights the paper: a small fixed set of coloured point lights that
+  // the scenes move to their brightest glowing jars. The set never changes
+  // size, so shaders never recompile when energy appears or empties.
+  const energyLights = [0, 1, 2].map(() => {
+    const l = new PointLight(new Color('#ffffff'), 0, 0.12, 2);
+    l.castShadow = false;
+    scene.add(l);
+    return l;
+  });
 
   // Light falling on an upward-facing page at a point, in the shader's units
   // (irradiance / pi, as luminance). The ink uses it to decide where to hatch.
@@ -364,6 +414,7 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
       reserveBottom = Math.min(0.7, Math.max(0, reserve));
     },
     placeCamera,
+    energyLights,
     setShot,
     updateShot,
     /** True while a guided shot holds the camera away from the reading view. */
