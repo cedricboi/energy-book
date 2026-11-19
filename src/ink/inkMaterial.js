@@ -51,7 +51,7 @@ export const INK_PRESETS = {
   // that only starts in real shadow, so objects read as white paper forms.
   D: {
     label: 'D. Bold outline, light shading',
-    outlinePx: 2.1, creasePx: 1.25, wobblePx: 0.3, wobbleFreq: 25,
+    outlinePx: 1.8, creasePx: 1.45, wobblePx: 0.3, wobbleFreq: 25,
     hatchSpacing: 5.2, hatchWidth: 0.8, hatchJitter: 0.25,
     t1: 0.52, t2: 0.24, t3: 0.08, lightRef: 0.72, flatten: 0.985, widthJitter: 0.25,
     // Body colours are lifted this far towards white paper, so objects read
@@ -72,6 +72,7 @@ export const inkUniforms = {
   uInkPx: { value: 1 }, // device pixels per ink pixel
   uResolution: { value: new Vector2(1366, 768) }, // drawing buffer, device pixels
   uOutlinePx: { value: 1.5 },
+  uCreasePx: { value: 1.25 },
   uWidthJitter: { value: 0.1 },
   uWobblePx: { value: 0.12 },
   uWobbleFreq: { value: 30 },
@@ -110,6 +111,7 @@ export function setInkStyle(values) {
   Object.assign(inkStyle, values);
   const u = inkUniforms;
   u.uOutlinePx.value = inkStyle.outlinePx;
+  u.uCreasePx.value = inkStyle.creasePx;
   u.uWidthJitter.value = inkStyle.widthJitter;
   u.uWobblePx.value = inkStyle.wobblePx;
   u.uWobbleFreq.value = inkStyle.wobbleFreq;
@@ -284,6 +286,11 @@ export function createInkMaterial({ color = '#F4EEDF', glass = false, glassAlpha
       .replace(
         '#include <opaque_fragment>',
         /* glsl */ `#include <opaque_fragment>
+        #ifndef EL_GLASS
+        // Before the form fades in, the surface dissolves in with a fixed
+        // dither, so the drawing is only lines until the pen has finished.
+        if (uForm < 0.999 && fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453) > uForm) discard;
+        #endif
         gl_FragColor.rgb = mix(gl_FragColor.rgb, uInkColor, elInk);
         gl_FragColor.a = mix(uGlassAlpha * uForm, 1.0, elInk);`,
       );

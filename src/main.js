@@ -244,6 +244,17 @@ async function start() {
       return { fits: p.scrollHeight <= p.clientHeight + 1, scrollHeight: p.scrollHeight, clientHeight: p.clientHeight };
     },
     labelRects: () => overlay.debugRects(),
+    /** Ink line meshes in the scene (for tests): visibility and pen. */
+    inkLines() {
+      const out = [];
+      stage.scene.traverse((o) => {
+        if (!o.isInkLines) return;
+        let vis = true;
+        for (let p = o; p; p = p.parent) vis = vis && p.visible;
+        out.push({ visible: vis, pen: o.material.uniforms.uPen.value, strokes: o.userData.strokes });
+      });
+      return out;
+    },
     /** The guided steps: { index, playing, text, away, inShot }. */
     beats() {
       return {

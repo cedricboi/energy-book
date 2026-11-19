@@ -1,7 +1,7 @@
 // src/ink/drawIn.js
 // When a page opens (CLAUDE.md section 4):
 //   1. the diagram rises from the page with a soft spring (overshoot under 4%)
-//   2. its lines draw themselves (LineMaterial dashes, 0.8 to 1.4 s)
+//   2. its lines ink themselves stroke by stroke (the ribbon pen, 0.8 to 1.4 s)
 //   3. the solid forms fade in (body, hatching, outline)
 //   4. then the energy appears (Phase 4 hooks onto `done`)
 // With prefers-reduced-motion, everything appears at once.
@@ -15,7 +15,7 @@ const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 /**
  * @param {object} o
  * @param {import('three').Object3D} o.root     the diagram (scaled in y to rise)
- * @param {import('three').LineSegments2[]} o.lines   ink lines to draw in
+ * @param {import('three').Mesh[]} o.lines   ink ribbons to draw in (creases.js)
  * @param {Array<{ value: number }>} o.formUniforms   uniforms faded from 0 to 1
  * @param {() => number} o.seconds   current draw-in duration (from the style)
  * @param {(p: number) => void} [o.onForm]  called with the form fade (0 to 1)
@@ -32,10 +32,8 @@ export function createDrawIn({ root, lines, formUniforms, seconds, onForm, reduc
     const lineP = Math.min(1, Math.max(0, time / T));
     const eased = easeInOut(lineP);
     for (const l of lines) {
-      const L = l.userData.totalLength || 1;
-      // Fully drawn: one dash longer than the line, so nothing is cut.
-      l.material.dashSize = lineP >= 1 ? 1e6 : Math.max(1e-6, eased * L);
-      l.material.gapSize = 1e6;
+      // The pen moves through each object's strokes in turn.
+      if (l.material.uniforms?.uPen) l.material.uniforms.uPen.value = lineP >= 1 ? 1 : eased;
       l.visible = lineP > 0;
     }
     const formP = Math.min(1, Math.max(0, (time - T) / FADE_SECONDS));
