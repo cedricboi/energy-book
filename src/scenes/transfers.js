@@ -51,7 +51,7 @@ const DEVICES = {
     start: { internal: 0 },
     source: 'mains',
     build(add) {
-      const k = createInkObject(kettleGeometry(0.045), { color: '#EEE7DA', name: 'kettle' });
+      const k = createInkObject(kettleGeometry(0.045), { color: '#EEE7DA', name: 'kettle', creaseDeg: 55 });
       k.group.position.copy(at(0.01));
       add(k, 'kettle of water', at(0.01, 0.075));
       const plug = createInkObject(new BoxGeometry(0.018, 0.022, 0.006).translate(0, 0.011, 0), { color: '#E8E1D4', name: 'plug' });

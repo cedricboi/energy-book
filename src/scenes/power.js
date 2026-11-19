@@ -75,7 +75,7 @@ export default function createPowerScene(ctx) {
     } else {
       const kettleGeo = () => kettleGeometry(0.052);
       const kettles = KETTLE.powers.map((P, i) => {
-        const k = createInkObject(kettleGeo(), { color: '#EEE7DA', name: `kettle-${i}` });
+        const k = createInkObject(kettleGeo(), { color: '#EEE7DA', name: `kettle-${i}`, creaseDeg: 55 });
         const x = cx + (i === 0 ? -0.045 : 0.045);
         k.group.position.set(x, pageSurfaceY(x, 0.04), 0.04);
         group.add(k.group);

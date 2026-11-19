@@ -64,6 +64,14 @@ export const INK_PRESETS = {
 };
 
 const LUMA = new Vector3(0.2126, 0.7152, 0.0722);
+let materialCount = 0;
+/** A pleasant diagonal hatch direction, a little different for each object. */
+function hatchDirFor(i) {
+  const a = 0.62 + ((i * 0.618034) % 1) * 0.5; // radians from horizontal
+  const z = (((i * 0.381966) % 1) - 0.5) * 0.7;
+  return new Vector3(Math.cos(a), Math.sin(a), z).normalize();
+}
+const ILLUM_WORLD = new Vector3(-0.5, 0.78, 0.36).normalize();
 const PAPER_WHITE = new Color('#FBF8F1');
 
 /** Uniforms shared by every ink material, so one change restyles everything. */
@@ -86,6 +94,12 @@ export const inkUniforms = {
   uLightRef: { value: 0.9 },
   uFlatten: { value: 0.55 },
   uFlatTint: { value: new Vector3(1.13, 0.98, 0.78) },
+  // Paper shading (step 2, see docs/TECHNIQUES.md A3): the form is read from
+  // a fixed drawing light, not from the scene lights, so objects stay paper.
+  uIllumDir: { value: new Vector3(-0.5, 0.78, 0.36).normalize() }, // view space, set each frame
+  uHatchWorld: { value: 0.0013 }, // m between hatch lines on the object
+  uPaperShade: { value: 0.16 }, // how much the surface itself darkens in shadow
+  uHatchCap: { value: 0.62 }, // hatching never covers more than this
 };
 
 /** The live style, including values that are not uniforms. */
@@ -207,6 +221,57 @@ float el_hatchSet(vec2 p, float angle, float spacing, float width, float seed) {
   return 1.0 - smoothstep(width * 0.5 - aa * 0.5, width * 0.5 + aa * 0.5, dist);
 }
 
+uniform vec3 uIllumDir;
+uniform float uHatchWorld;
+uniform float uPaperShade;
+uniform float uHatchCap;
+uniform vec3 uHatchDir;
+uniform float uHatchSeed;
+varying vec3 vElWorldPos;
+varying vec3 vElWorldN;
+
+// One set of hatch lines fixed to the object: the lines are where the surface
+// crosses evenly spaced planes, so they follow the form like an engraving.
+// halfW is the half-width as a fraction of the spacing.
+float el_objHatch(vec3 p, vec3 dir, float spacing, float halfW, float seed) {
+  vec3 side = normalize(cross(dir, abs(dir.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0)));
+  float c = dot(p, dir) / spacing;
+  float along = dot(p, side) / spacing;
+  float idx = floor(c + 0.5);
+  // Each line wanders a little, and breaks now and then along its length.
+  c += (el_n1(along * 0.18 + idx * 7.31 + seed) - 0.5) * 0.14;
+  float f = abs(fract(c + 0.5) - 0.5);
+  float aa = max(fwidth(c), 1e-4);
+  float line = 1.0 - smoothstep(halfW - aa, halfW + aa, f);
+  float gap = smoothstep(0.18, 0.3, el_n1(along * 0.09 + idx * 3.7 + seed * 1.3));
+  // Lines finer than about two pixels fade to their average grey, so they
+  // never shimmer or make moire.
+  float px = 1.0 / aa;
+  return mix(2.0 * halfW * 0.8, line * gap, smoothstep(2.0, 3.6, px));
+}
+
+// The hatching for a darkness d (0 = full light, 1 = deepest shadow).
+float el_paperHatch(vec3 p, float d) {
+  float layers = min(uLayers, uMaxLayers);
+  float s = uHatchWorld;
+  float halfW = mix(0.06, 0.2, clamp((d - 0.3) / 0.6, 0.0, 1.0));
+  float w1 = smoothstep(0.3, 0.44, d);
+  // Where a surface runs nearly along the hatch planes, the lines would
+  // spread into wide bands, so that surface takes the second direction.
+  vec3 dir2 = normalize(cross(uHatchDir, vec3(0.31, 0.83, 0.47)));
+  vec3 n = normalize(vElWorldN);
+  vec3 dir = abs(dot(n, uHatchDir)) > abs(dot(n, dir2)) + 0.15 ? dir2 : uHatchDir;
+  vec3 crossDir = dir == uHatchDir ? dir2 : uHatchDir;
+  float h = w1 * el_objHatch(p, dir, s, halfW, uHatchSeed);
+  // Close up, a half-spaced set fades in, so the density stays like an engraving.
+  float px = 1.0 / max(fwidth(dot(p, dir) / s), 1e-4);
+  float close = smoothstep(10.0, 18.0, px);
+  if (close > 0.0) h = max(h, close * w1 * el_objHatch(p + dir * s * 0.5, dir, s, halfW, uHatchSeed + 5.0));
+  // Cross-hatching only in deep shadow.
+  if (layers > 1.5) h = max(h, smoothstep(0.78, 0.9, d) * el_objHatch(p, crossDir, s * 1.12, halfW, uHatchSeed + 11.0));
+  return min(h, uHatchCap);
+}
+
 float el_hatching(vec2 p, float tone) {
   float soft = 0.012;
   float w1 = 1.0 - smoothstep(uT1 - soft, uT1 + soft, tone);
@@ -244,14 +309,17 @@ export function createInkMaterial({ color = '#F4EEDF', glass = false, glassAlpha
     uMaxLayers: { value: maxLayers },
     uForm: { value: 1 },
     uGlassAlpha: { value: glass ? glassAlpha : 1 },
+    // Each object gets its own hatch direction and seed, so they differ.
+    uHatchDir: { value: hatchDirFor(materialCount) },
+    uHatchSeed: { value: (materialCount++ % 97) * 1.37 },
   };
   material.userData.ink = own;
   if (glass) material.defines = { EL_GLASS: '' };
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, inkUniforms, own);
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vElObjPos;\nvarying vec3 vElObjN;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvElObjPos = transformed;\nvElObjN = objectNormal;');
+      .replace('#include <common>', '#include <common>\nvarying vec3 vElObjPos;\nvarying vec3 vElObjN;\nvarying vec3 vElWorldPos;\nvarying vec3 vElWorldN;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvElObjPos = transformed;\nvElObjN = objectNormal;\nvElWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;\nvElWorldN = normalize(mat3(modelMatrix) * objectNormal);');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>\nvarying vec3 vElObjPos;\nvarying vec3 vElObjN;\n${HATCH_GLSL}`)
       .replace(
@@ -264,8 +332,16 @@ export function createInkMaterial({ color = '#F4EEDF', glass = false, glassAlpha
           float light = dot(lit, LUMA) / albedo;
           float ref = max(uPageLight * uLightRef, 1e-3);
           float tone = clamp(light / ref, 0.0, 1.0);
+          // Darkness: the form under the fixed drawing light, or a real shadow
+          // where the scene light is blocked, whichever is darker.
+          float form = clamp(dot(normalize(normal), uIllumDir), 0.0, 1.0) * 0.82 + 0.18;
+          float darkness = clamp(max(1.0 - form, (1.0 - tone) * 0.92), 0.0, 1.0);
+          #ifdef EL_GLASS
           vec2 p = (gl_FragCoord.xy - uAnchor) / uInkPx;
           elInk = el_hatching(p, tone) * uForm;
+          #else
+          elInk = el_paperHatch(vElWorldPos, darkness) * uForm;
+          #endif
           #ifdef EL_GLASS
           // Glass: shade only the outer surface. A pen drawing never hatches
           // the inside of the far wall seen through the glass.
@@ -278,6 +354,10 @@ export function createInkMaterial({ color = '#F4EEDF', glass = false, glassAlpha
           // shaded side stays paper-coloured and only the hatching darkens it.
           float flatLight = pow(max(light, 1e-4), 1.0 - uFlatten) * pow(uPageLight, uFlatten);
           vec3 flatColour = diffuseColor.rgb * flatLight * uFlatTint;
+          #ifndef EL_GLASS
+          // Paper: as bright as the page beside it, darkened only a little.
+          flatColour *= 1.0 - uPaperShade * darkness;
+          #endif
           vec3 shaded = lit * (flatLight / max(light, 1e-4));
           reflectedLight.directDiffuse = mix(shaded, flatColour, uFlatten);
           reflectedLight.indirectDiffuse = vec3(0.0);
@@ -317,6 +397,7 @@ export function setPageLightProvider(fn) {
 export function anchorHatching(mesh, anchorObject = mesh) {
   const own = mesh.material.userData.ink;
   mesh.onBeforeRender = (renderer, scene, camera) => {
+    inkUniforms.uIllumDir.value.copy(ILLUM_WORLD).transformDirection(camera.matrixWorldInverse);
     anchorObject.getWorldPosition(_w);
     own.uPageLight.value = pageLightAt(_w);
     _v.copy(_w).project(camera);
