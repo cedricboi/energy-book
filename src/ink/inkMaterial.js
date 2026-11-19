@@ -262,13 +262,18 @@ float el_paperHatch(vec3 p, float d) {
   vec3 n = normalize(vElWorldN);
   vec3 dir = abs(dot(n, uHatchDir)) > abs(dot(n, dir2)) + 0.15 ? dir2 : uHatchDir;
   vec3 crossDir = dir == uHatchDir ? dir2 : uHatchDir;
-  float h = w1 * el_objHatch(p, dir, s, halfW, uHatchSeed);
-  // Close up, a half-spaced set fades in, so the density stays like an engraving.
+  // Keep the lines about 4 to 8 pixels apart at any zoom: close up, the
+  // spacing halves (and halves again), with each new set fading in between
+  // the old lines, so the density stays like an engraving.
   float px = 1.0 / max(fwidth(dot(p, dir) / s), 1e-4);
-  float close = smoothstep(10.0, 18.0, px);
-  if (close > 0.0) h = max(h, close * w1 * el_objHatch(p + dir * s * 0.5, dir, s, halfW, uHatchSeed + 5.0));
+  float lev = max(0.0, log2(px / 8.0));
+  float l0 = floor(lev);
+  float f = smoothstep(0.0, 1.0, fract(lev));
+  float sA = s / exp2(l0);
+  float h = w1 * el_objHatch(p, dir, sA, halfW, uHatchSeed);
+  if (lev > 0.0) h = max(h, f * w1 * el_objHatch(p + dir * sA * 0.5, dir, sA, halfW, uHatchSeed + 5.0));
   // Cross-hatching only in deep shadow.
-  if (layers > 1.5) h = max(h, smoothstep(0.78, 0.9, d) * el_objHatch(p, crossDir, s * 1.12, halfW, uHatchSeed + 11.0));
+  if (layers > 1.5) h = max(h, smoothstep(0.78, 0.9, d) * el_objHatch(p, crossDir, sA * 1.12, halfW, uHatchSeed + 11.0));
   return min(h, uHatchCap);
 }
 

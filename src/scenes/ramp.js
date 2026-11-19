@@ -222,7 +222,7 @@ export default function createRampScene(ctx) {
   const api = {
     shots: {
       rider: () => ({ target: rider.group.getWorldPosition(new Vector3()).add(new Vector3(0, 0.012, 0)), dist: 0.2, elevationDeg: 24, azimuthDeg: 8 }),
-      wheels: () => ({ target: rider.group.getWorldPosition(new Vector3()), dist: 0.085, elevationDeg: 16, azimuthDeg: -12 }),
+      wheels: () => ({ target: rider.group.getWorldPosition(new Vector3()), dist: 0.13, elevationDeg: 24, azimuthDeg: 4 }),
       jars: () => ({ target: jarsCentre(), dist: 0.24, elevationDeg: 22 }),
       pipe: () => ({ target: world(toWorld(0, 1.2)), dist: 0.34, elevationDeg: 26 }),
     },

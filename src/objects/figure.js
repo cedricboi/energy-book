@@ -3,27 +3,59 @@
 // Each limb is a capsule between two joints, so a pose is just a list of
 // joint positions. Poses: stand, push, carry, skate.
 // Local origin: between the feet, on the ground. The figure faces +x.
-import { Vector3, Quaternion, CapsuleGeometry, SphereGeometry, BoxGeometry, CylinderGeometry } from 'three';
+import { Vector3, Vector2, Quaternion, LatheGeometry, SphereGeometry, BoxGeometry, CylinderGeometry } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createInkObject } from '../ink/inkObject.js';
 
 const UP = new Vector3(0, 1, 0);
 
-/** A capsule from joint a to joint b. */
-function limb(a, b, r) {
+/**
+ * A shaped limb from joint a to joint b, like a wooden artist's mannequin:
+ * a smooth solid of revolution that tapers from radius r to r * taper, swells
+ * a little a third of the way along (the muscle) and closes in rounded ends.
+ */
+function limb(a, b, r, { taper = 0.78, swell = 0.12 } = {}) {
   const A = new Vector3(...a);
   const B = new Vector3(...b);
   const d = B.clone().sub(A);
-  const len = Math.max(0.001, d.length() - 2 * r * 0.4);
-  const g = new CapsuleGeometry(r, len, 4, 10);
+  const L = d.length();
+  const pts = [];
+  const N = 18;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const base = r * (1 + (taper - 1) * t);
+    const muscle = 1 + swell * Math.exp(-(((t - 0.33) / 0.22) ** 2));
+    // Round the ends: the radius closes like a quarter circle near each joint.
+    const e = Math.min(t, 1 - t) * L;
+    const cap = Math.min(1, e / (base * 0.9));
+    const round = Math.sqrt(Math.max(0, 1 - (1 - cap) ** 2));
+    pts.push(new Vector2(Math.max(0.0005, base * muscle * round), t * L));
+  }
+  pts[0].x = 0;
+  pts[N].x = 0;
+  const g = new LatheGeometry(pts, 16);
   g.applyQuaternion(new Quaternion().setFromUnitVectors(UP, d.normalize()));
-  const m = A.clone().add(B).multiplyScalar(0.5);
-  g.translate(m.x, m.y, m.z);
+  g.translate(A.x, A.y, A.z);
+  g.deleteAttribute('uv');
   return g.toNonIndexed();
 }
 
-const ball = (c, r) => new SphereGeometry(r, 16, 12).translate(...c).toNonIndexed();
-const shoe = (c, dir = 1) => new BoxGeometry(0.24, 0.07, 0.1).translate(c[0] + 0.05 * dir, c[1] - 0.035, c[2]).toNonIndexed();
+const ball = (c, r) => {
+  const g = new SphereGeometry(r, 16, 12).translate(...c);
+  g.deleteAttribute('uv');
+  return g.toNonIndexed();
+};
+/** The head: a slightly egg-shaped oval, tilted a little forward. */
+const head = (c) => {
+  const g = new SphereGeometry(1, 20, 14).scale(0.095, 0.12, 0.1).rotateZ(-0.16).translate(...c);
+  g.deleteAttribute('uv');
+  return g.toNonIndexed();
+};
+const shoe = (c, dir = 1) => {
+  const g = new BoxGeometry(0.24, 0.07, 0.1).translate(c[0] + 0.05 * dir, c[1] - 0.035, c[2]);
+  g.deleteAttribute('uv');
+  return g.toNonIndexed();
+};
 
 // Joint positions (metres) for each pose. L and R are the left (+z) and
 // right (-z) sides.
@@ -64,18 +96,23 @@ const POSES = {
 /** The figure's geometry for a pose (merged, one drawing). */
 export function figureGeometry(pose = 'stand') {
   const j = POSES[pose];
+  // Joints are small spheres between the shaped segments, as on a mannequin.
+  const joint = (c, r) => ball(c, r);
+  const pelvis = [j.hips[0], j.hips[1] - 0.02, j.hips[2]];
   const parts = [
-    limb(j.hips, j.chest, 0.15), // body
-    limb(j.chest, j.neck, 0.05), // neck
-    ball(j.head, 0.11),
-    limb(j.shoulderL, j.elbowL, 0.045), limb(j.elbowL, j.wristL, 0.04), ball(j.wristL, 0.045),
-    limb(j.shoulderR, j.elbowR, 0.045), limb(j.elbowR, j.wristR, 0.04), ball(j.wristR, 0.045),
-    limb(j.hipL, j.kneeL, 0.065), limb(j.kneeL, j.ankleL, 0.055),
-    limb(j.hipR, j.kneeR, 0.065), limb(j.kneeR, j.ankleR, 0.055),
+    limb(pelvis, j.chest, 0.13, { taper: 1.2, swell: 0.08 }), // torso widens to the chest
+    ball(pelvis, 0.12),
+    limb(j.chest, j.neck, 0.05, { taper: 0.9, swell: 0 }), // neck
+    head(j.head),
+    joint(j.shoulderL, 0.05), limb(j.shoulderL, j.elbowL, 0.048), joint(j.elbowL, 0.04), limb(j.elbowL, j.wristL, 0.042, { taper: 0.7 }), ball(j.wristL, 0.04),
+    joint(j.shoulderR, 0.05), limb(j.shoulderR, j.elbowR, 0.048), joint(j.elbowR, 0.04), limb(j.elbowR, j.wristR, 0.042, { taper: 0.7 }), ball(j.wristR, 0.04),
+    joint(j.hipL, 0.065), limb(j.hipL, j.kneeL, 0.07, { swell: 0.16 }), joint(j.kneeL, 0.052), limb(j.kneeL, j.ankleL, 0.056, { taper: 0.62, swell: 0.18 }),
+    joint(j.hipR, 0.065), limb(j.hipR, j.kneeR, 0.07, { swell: 0.16 }), joint(j.kneeR, 0.052), limb(j.kneeR, j.ankleR, 0.056, { taper: 0.62, swell: 0.18 }),
   ];
   const side = pose === 'skate';
   parts.push(shoe(j.ankleL, side ? 0 : 1), shoe(j.ankleR, side ? 0 : 1));
   if (pose === 'carry') parts.push(new BoxGeometry(0.3, 0.3, 0.28).translate(0.47, 1.2, 0).toNonIndexed()); // the bag
+  for (const g of parts) if (g.getAttribute('uv')) g.deleteAttribute('uv');
   return mergeGeometries(parts);
 }
 
@@ -91,5 +128,6 @@ export function boardGeometry() {
     parts.push(new BoxGeometry(0.14, 0.025, 0.21).rotateZ(s * 0.35).translate(s * 0.37, 0.105, 0).toNonIndexed());
     for (const z of [-0.08, 0.08]) parts.push(new CylinderGeometry(0.032, 0.032, 0.04, 14).rotateX(Math.PI / 2).translate(s * 0.24, 0.035, z).toNonIndexed());
   }
+  for (const g of parts) if (g.getAttribute('uv')) g.deleteAttribute('uv');
   return mergeGeometries(parts);
 }
