@@ -44,11 +44,27 @@ export const INK_PRESETS = {
     outlinePx: 3.0, creasePx: 2.0, wobblePx: 0.3, wobbleFreq: 25,
     hatchSpacing: 6.5, hatchWidth: 1.35, hatchJitter: 0.25,
     t1: 0.75, t2: 0.5, t3: 0.25, lightRef: 0.75, flatten: 0.85, widthJitter: 0.25,
+    flatTint: [1.13, 0.98, 0.78],
+    drawInSeconds: 1.0,
+  },
+  // D keeps C's bold outline, but shades lightly: finer, thinner hatching
+  // that only starts in real shadow, so objects read as white paper forms.
+  D: {
+    label: 'D. Bold outline, light shading',
+    outlinePx: 2.8, creasePx: 1.7, wobblePx: 0.3, wobbleFreq: 25,
+    hatchSpacing: 5.2, hatchWidth: 0.8, hatchJitter: 0.25,
+    t1: 0.52, t2: 0.24, t3: 0.08, lightRef: 0.72, flatten: 0.985, widthJitter: 0.25,
+    // Body colours are lifted this far towards white paper, so objects read
+    // as white forms with ink, not as tan ones.
+    bodyLift: 0.5,
+    // The shaded side keeps the paper's colour instead of turning brown.
+    flatTint: [1.04, 1.0, 0.93],
     drawInSeconds: 1.0,
   },
 };
 
 const LUMA = new Vector3(0.2126, 0.7152, 0.0722);
+const PAPER_WHITE = new Color('#FBF8F1');
 
 /** Uniforms shared by every ink material, so one change restyles everything. */
 export const inkUniforms = {
@@ -68,10 +84,11 @@ export const inkUniforms = {
   uLayers: { value: 3 },
   uLightRef: { value: 0.9 },
   uFlatten: { value: 0.55 },
+  uFlatTint: { value: new Vector3(1.13, 0.98, 0.78) },
 };
 
 /** The live style, including values that are not uniforms. */
-export const HOUSE_INK = 'C';
+export const HOUSE_INK = 'D';
 export const inkStyle = { ...INK_PRESETS[HOUSE_INK], preset: HOUSE_INK };
 
 const lineMaterials = new Set();
@@ -104,6 +121,7 @@ export function setInkStyle(values) {
   u.uT3.value = inkStyle.t3;
   u.uLightRef.value = inkStyle.lightRef;
   u.uFlatten.value = inkStyle.flatten;
+  u.uFlatTint.value.fromArray(inkStyle.flatTint ?? [1.13, 0.98, 0.78]);
   for (const m of lineMaterials) applyLineStyle(m);
   for (const fn of listeners) fn(inkStyle);
 }
@@ -159,6 +177,7 @@ uniform float uT3;
 uniform float uLayers;
 uniform float uLightRef;
 uniform float uFlatten;
+uniform vec3 uFlatTint;
 uniform vec2 uAnchor;
 uniform float uPageLight;
 uniform float uMaxLayers;
@@ -210,8 +229,10 @@ float el_hatching(vec2 p, float tone) {
  * @param {number} [o.maxLayers] glass is drawn with one hatch layer at most
  */
 export function createInkMaterial({ color = '#F4EEDF', glass = false, glassAlpha = 0.1, maxLayers = glass ? 1 : 3 } = {}) {
+  const body = new Color(color);
+  if (!glass && inkStyle.bodyLift) body.lerp(PAPER_WHITE, inkStyle.bodyLift);
   const material = new MeshLambertMaterial({
-    color: new Color(color),
+    color: body,
     transparent: glass,
     depthWrite: true,
   });
@@ -254,7 +275,7 @@ export function createInkMaterial({ color = '#F4EEDF', glass = false, glassAlpha
           // The flat colour takes the warm colour of the lamp-lit page, so a
           // shaded side stays paper-coloured and only the hatching darkens it.
           float flatLight = pow(max(light, 1e-4), 1.0 - uFlatten) * pow(uPageLight, uFlatten);
-          vec3 flatColour = diffuseColor.rgb * flatLight * vec3(1.13, 0.98, 0.78);
+          vec3 flatColour = diffuseColor.rgb * flatLight * uFlatTint;
           vec3 shaded = lit * (flatLight / max(light, 1e-4));
           reflectedLight.directDiffuse = mix(shaded, flatColour, uFlatten);
           reflectedLight.indirectDiffuse = vec3(0.0);

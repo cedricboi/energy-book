@@ -6,6 +6,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createInkLines, polylineToSegments } from '../ink/creases.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { formatQuantity } from '../physics/format.js';
+import { createFigure } from '../objects/figure.js';
 
 /**
  * A ruler drawn to scale: a line from a to b (world points) with ticks.
@@ -41,23 +42,9 @@ export function arrowSegments(a, b, head = 0.006) {
   ];
 }
 
-/** A simple standing person, 1.6 m tall, facing +x. Origin at the feet. */
+/** A person, about 1.7 m tall, facing +x. Origin at the feet. Pushing, or carrying a bag. */
 export function createPerson({ name = 'person', carrying = false } = {}) {
-  const p = [];
-  const add = (g) => p.push(g.toNonIndexed());
-  add(new CapsuleGeometry(0.07, 0.7, 4, 10).translate(-0.08, 0.42, 0));
-  add(new CapsuleGeometry(0.07, 0.7, 4, 10).translate(0.08, 0.42, 0));
-  add(new CapsuleGeometry(0.16, 0.45, 4, 12).translate(0, 1.07, 0));
-  add(new SphereGeometry(0.12, 16, 12).translate(0, 1.48, 0));
-  if (carrying) {
-    add(new CapsuleGeometry(0.045, 0.45, 4, 8).rotateZ(-1.2).translate(0.25, 1.1, 0.12));
-    add(new CapsuleGeometry(0.045, 0.45, 4, 8).rotateZ(-1.2).translate(0.25, 1.1, -0.12));
-    add(new BoxGeometry(0.32, 0.3, 0.3).translate(0.5, 1.08, 0)); // the bag
-  } else {
-    add(new CapsuleGeometry(0.045, 0.55, 4, 8).rotateZ(-1.4).translate(0.32, 1.12, 0.1));
-    add(new CapsuleGeometry(0.045, 0.55, 4, 8).rotateZ(-1.4).translate(0.32, 1.12, -0.1));
-  }
-  return createInkObject(mergeGeometries(p), { color: '#EFE6D3', creaseDeg: 45, name });
+  return createFigure({ pose: carrying ? 'carry' : 'push', name });
 }
 
 /** A cup (for hot kopi): a lathe with a handle. Origin at the base. */

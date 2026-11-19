@@ -108,7 +108,7 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
   const moon = new DirectionalLight(new Color('#7D93D9'), 0.22);
   moon.position.set(0.25, 0.7, WALL_Z - 1);
   scene.add(moon);
-  const hemi = new HemisphereLight(new Color('#1A2448'), new Color('#24170F'), 0.32);
+  const hemi = new HemisphereLight(new Color('#2A3458'), new Color('#2E2116'), 0.5);
   scene.add(hemi);
 
   // Light falling on an upward-facing page at a point, in the shader's units

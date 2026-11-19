@@ -12,6 +12,7 @@ import { createStoreJar } from '../energy/storeJar.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
 import { createPerson, shotOf } from './helpers.js';
+import { kettleGeometry } from '../objects/kettle.js';
 import { gravitationalPotentialEnergy, energyFromPower, timeFromPower } from '../physics/equations.js';
 import { formatQuantity } from '../physics/format.js';
 import { iconSvg } from '../energy/palette.js';
@@ -72,15 +73,7 @@ export default function createPowerScene(ctx) {
       const jars = [jarAt('gravitational', cx - 0.03, -0.09, bagEnergy * 1.2, 'jarA', 'bag A'), jarAt('gravitational', cx + 0.03, -0.09, bagEnergy * 1.2, 'jarB', 'bag B')];
       parts = { kind: 'stairs', stairs, people, jars, base: stairs.group.position.clone() };
     } else {
-      const kettleGeo = () => {
-        const body = new LatheGeometry([[0, 0], [0.03, 0], [0.032, 0.05], [0.026, 0.06], [0, 0.06]].map(([r, y]) => new Vector2(r, y)), 32).toNonIndexed();
-        const spout = new CylinderGeometry(0.004, 0.007, 0.025, 10).rotateZ(-0.9).translate(0.038, 0.045, 0).toNonIndexed();
-        body.deleteAttribute('uv');
-        spout.deleteAttribute('uv');
-        const g = mergeGeometries([body, spout]);
-        g.computeVertexNormals();
-        return g;
-      };
+      const kettleGeo = () => kettleGeometry(0.052);
       const kettles = KETTLE.powers.map((P, i) => {
         const k = createInkObject(kettleGeo(), { color: '#EEE7DA', name: `kettle-${i}` });
         const x = cx + (i === 0 ? -0.045 : 0.045);

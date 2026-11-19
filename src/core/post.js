@@ -76,7 +76,7 @@ export function createPost(renderer, scene, camera, { tier, toneMapping = 'aces'
   }
 
   const toneMappingEffect = new ToneMappingEffect({ mode: TONE_MAPPINGS[toneMapping] ?? ToneMappingMode.AGX });
-  const vignette = new VignetteEffect({ offset: 0.32, darkness: 0.42 });
+  const vignette = new VignetteEffect({ offset: 0.45, darkness: 0.25 });
   const grain = new StillGrainEffect({ amount: 0.007 });
   // Bloom on the HDR image, before tone mapping. Only energy is above a
   // luminance of 1, so only energy blooms (CLAUDE.md section 4). Lower tiers

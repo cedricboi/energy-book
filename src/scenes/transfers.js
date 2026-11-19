@@ -7,6 +7,7 @@
 import { Group, Vector3, BoxGeometry, CylinderGeometry, SphereGeometry, LatheGeometry, Vector2 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { shotOf } from './helpers.js';
+import { kettleGeometry } from '../objects/kettle.js';
 import { createEnergyKit } from './energyKit.js';
 import { createFlowPath } from '../energy/flow.js';
 import { createInkObject } from '../ink/inkObject.js';
@@ -50,9 +51,7 @@ const DEVICES = {
     start: { internal: 0 },
     source: 'mains',
     build(add) {
-      const body = new LatheGeometry([[0, 0], [0.03, 0], [0.032, 0.05], [0.026, 0.06], [0, 0.06]].map(([r, y]) => new Vector2(r, y)), 32);
-      const spout = new CylinderGeometry(0.004, 0.007, 0.025, 10).rotateZ(-0.9).translate(0.038, 0.045, 0);
-      const k = createInkObject(geo([body, spout]), { color: '#EEE7DA', name: 'kettle' });
+      const k = createInkObject(kettleGeometry(0.045), { color: '#EEE7DA', name: 'kettle' });
       k.group.position.copy(at(0.01));
       add(k, 'kettle of water', at(0.01, 0.075));
       const plug = createInkObject(new BoxGeometry(0.018, 0.022, 0.006).translate(0, 0.011, 0), { color: '#E8E1D4', name: 'plug' });
