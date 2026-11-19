@@ -42,6 +42,7 @@ export default function createBounceScene(ctx) {
     start: { gravitational: model.total, kinetic: 0, elastic: 0, internal: 0 },
     travel: 0.04,
     jarSize: 0.48,
+    stand: true,
     rowZ: -0.09,
     transfers: [
       { from: 'gravitational', to: 'kinetic', pathway: 'mechanical', moved: (p, c) => Math.max(0, p.gravitational - c.gravitational) },

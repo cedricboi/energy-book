@@ -34,6 +34,7 @@ export default function createKineticScene(ctx) {
     start: { kinetic: ek(), internal: 0 },
     travel: 0.04,
     jarSize: 0.55,
+    stand: true,
     transfers: [{ from: 'kinetic', to: 'internal', pathway: 'mechanical', moved: (p, c) => Math.max(0, c.internal - p.internal) }],
   });
 

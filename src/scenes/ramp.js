@@ -2,9 +2,7 @@
 // Lesson 5 scene: a skateboarder on a half-pipe, drawn to scale (1 : 40)
 // beside a height ruler, with gravitational potential, kinetic and internal
 // jars and the ledger bar.
-import { Group, Vector3, Mesh, SphereGeometry, MeshBasicMaterial, Color, CircleGeometry, AdditiveBlending, Matrix4, BoxGeometry } from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { createInkObject } from '../ink/inkObject.js';
+import { Group, Vector3, Mesh, SphereGeometry, MeshBasicMaterial, Color, CircleGeometry, AdditiveBlending, Matrix4 } from 'three';
 import { scenePlanePoint } from '../core/pick.js';
 import { STORES } from '../energy/palette.js';
 import { createEnergyKit } from './energyKit.js';
@@ -36,37 +34,8 @@ export default function createRampScene(ctx) {
 
   let model = createRampModel({ mass: settings.mass, startHeight: settings.height, friction: settings.friction });
 
-  // The store stand: a low shelf behind the half-pipe for the three jars, and
-  // a backboard with a paper card pinned above each jar. The jars belong to
-  // the drawing, and their names and joules are printed on the cards.
-  const STAND = { z: -0.075, depth: 0.036, width: 0.16, shelf: 0.01, board: 0.072, boardT: 0.003 };
+  // The jars stand on a store stand behind the half-pipe (scenes/stand.js).
   const jarXs = [cx - 0.05, cx, cx + 0.05];
-  const standY = pageSurfaceY(cx, STAND.z);
-  const backZ = STAND.z - STAND.depth / 2;
-  const standGeo = mergeGeometries([
-    new BoxGeometry(STAND.width, STAND.shelf, STAND.depth).translate(0, STAND.shelf / 2, 0),
-    new BoxGeometry(STAND.width, STAND.board, STAND.boardT).translate(0, STAND.board / 2, -STAND.depth / 2 + STAND.boardT / 2),
-  ].map((g) => g.toNonIndexed()));
-  const stand = createInkObject(standGeo, { color: '#E2D2B6', name: 'store-stand', maxLayers: 1 });
-  stand.group.position.set(cx, standY, STAND.z);
-  ctx.scene.add(stand.group);
-  const CARD = { w: 0.046, h: 0.024, top: 0.07 };
-  const cardZ = backZ + STAND.boardT + 0.0006;
-  const cards = jarXs.map((x, i) => {
-    const c = createInkObject(new BoxGeometry(CARD.w, CARD.h, 0.0006).translate(0, -CARD.h / 2, 0), { color: '#FBF7EE', name: `card-${i}`, maxLayers: 1 });
-    c.group.position.set(x, standY + CARD.top, cardZ);
-    ctx.scene.add(c.group);
-    return c;
-  });
-  const cardQuad = (i) => () => {
-    const x = jarXs[i];
-    const y0 = standY + CARD.top - 0.0012;
-    const y1 = y0 - CARD.h + 0.0024;
-    const z = cardZ + 0.0004;
-    const v = (px, py) => ctx.scene.localToWorld(new Vector3(px, py, z));
-    return [v(x - CARD.w / 2 + 0.0012, y0), v(x + CARD.w / 2 - 0.0012, y0), v(x + CARD.w / 2 - 0.0012, y1), v(x - CARD.w / 2 + 0.0012, y1)];
-  };
-  const STORE_ORDER = ['gravitational', 'kinetic', 'internal'];
 
   const kit = createEnergyKit(ctx, {
     stores: ['gravitational', 'kinetic', 'internal'],
@@ -74,10 +43,9 @@ export default function createRampScene(ctx) {
     start: { gravitational: model.total, kinetic: 0, internal: 0 },
     travel: 0.2,
     jarSize: 0.42,
-    rowZ: STAND.z,
+    rowZ: -0.075,
     xs: jarXs,
-    jarY: STAND.shelf,
-    card: (s) => cardQuad(STORE_ORDER.indexOf(s)),
+    stand: true,
     caption: 'Energy ledger. The dark line marks the total.',
     transfers: [
       { from: 'gravitational', to: 'kinetic', pathway: 'mechanical', moved: (p, c) => Math.max(0, p.gravitational - c.gravitational), bulge: new Vector3(0, 0.8, 1) },
@@ -245,7 +213,7 @@ export default function createRampScene(ctx) {
       },
     }],
     onParamChange: null,
-    objects: [...kit.objects, stand, ...cards, pipe, rider],
+    objects: [...kit.objects, pipe, rider],
     cueTargets: { rider: rider.group },
     params,
     setParam(id, value) {

@@ -23,14 +23,15 @@ export const OBJECT_NAMES = {
 };
 
 export default function createStoresScene(ctx) {
-  const x0 = BOOK.gutter + 0.022;
-  const dx = (BOOK.pageW - 0.044) / 5;
+  const x0 = BOOK.gutter + 0.03;
+  const dx = (BOOK.pageW - 0.06) / 5;
   const xs = STORE_IDS.map((_, i) => x0 + i * dx);
   const kit = createEnergyKit(ctx, {
     stores: STORE_IDS,
     scale: FULL,
     start: Object.fromEntries(STORE_IDS.map((s) => [s, 0])),
-    jarSize: 0.4,
+    jarSize: 0.36,
+    stand: true,
     xs,
     rowZ: -0.09,
     ledger: false,

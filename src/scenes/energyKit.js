@@ -11,6 +11,7 @@ import { createDisplayLedger } from '../energy/displayLedger.js';
 import { STORES, iconSvg, glowColour } from '../energy/palette.js';
 import { formatQuantity } from '../physics/format.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
+import { createStand } from './stand.js';
 
 /** Back row of the right-hand page, where the jars stand. */
 export const JAR_ROW_Z = -0.07;
@@ -31,18 +32,27 @@ export const JAR_ROW_Z = -0.07;
  * @param {boolean} [o.values]         show joules (false for lessons before any equation)
  * @param {number[]} [o.xs]            x positions for the jars, if not evenly spaced
  * @param {boolean} [o.compactLabels]  two-line names, staggered heights (many jars)
+ * @param {boolean} [o.stand]          stand the jars on a store stand with a printed card above each
  * @param {number} [o.jarY]            height of the jars' base above the page (on a shelf)
  * @param {(store: string, jar: object) => (() => Vector3[])} [o.card]  print each jar's label on a
  *   paper card with these world corners, instead of a floating label
  */
-export function createEnergyKit(ctx, { stores, scale, start, transfers = [], travel = 0.3, caption, total, jarSize = 0.6, rowZ = JAR_ROW_Z, ledger: withLedger = true, values: withValues = true, xs, compactLabels = stores.length >= 4, jarY = 0, card }) {
+export function createEnergyKit(ctx, { stores, scale, start, transfers = [], travel = 0.3, caption, total, jarSize = 0.6, rowZ = JAR_ROW_Z, ledger: withLedger = true, values: withValues = true, xs, compactLabels = stores.length >= 4, jarY = 0, card, stand: withStand = false }) {
   const { scene, overlay } = ctx;
   const n = stores.length;
   const span = Math.min(0.17, 0.055 * (n - 1));
   const x0 = BOOK.gutter + BOOK.pageW / 2 - span / 2;
+  const jarXs = stores.map((s, i) => xs?.[i] ?? (n === 1 ? BOOK.gutter + BOOK.pageW / 2 : x0 + (span * i) / (n - 1)));
+  // The store stand: the jars stand on its shelf, and their labels are
+  // printed on the cards above them.
+  const standKit = withStand ? createStand(ctx, { xs: jarXs, z: rowZ, jarSize }) : null;
+  if (standKit) {
+    jarY = standKit.shelf;
+    card = (s) => standKit.cardQuad(stores.indexOf(s));
+  }
   const jars = {};
   stores.forEach((s, i) => {
-    const x = xs?.[i] ?? (n === 1 ? BOOK.gutter + BOOK.pageW / 2 : x0 + (span * i) / (n - 1));
+    const x = jarXs[i];
     const jar = createStoreJar({ store: s, scale, value: start[s] ?? 0, size: jarSize });
     jar.group.position.set(x, pageSurfaceY(x, rowZ) + jarY, rowZ);
     scene.add(jar.group);
@@ -74,7 +84,7 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
 
   stores.forEach((s, i) => {
     const stagger = compactLabels && i % 2 === 1 ? 0.03 : 0;
-    if (card) overlay.addPrinted({ id: `jar-${s}`, quad: card(s, jars[s]), size: [220, 115], className: 'jar-card' });
+    if (card) overlay.addPrinted({ id: `jar-${s}`, quad: card(s, jars[s]), size: [220, 115], className: `jar-card${withValues ? '' : ' no-values'}` });
     else overlay.add({ id: `jar-${s}`, anchor: () => jars[s].labelPoint().add(new Vector3(0, stagger, 0)), html: '', gap: 4 });
     overlay.addGlow(() => jars[s].glowCorners());
   });
@@ -142,7 +152,7 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
     jars,
     flows,
     ledger,
-    objects: stores.map((s) => jars[s]),
+    objects: [...(standKit?.objects ?? []), ...stores.map((s) => jars[s])],
     /** Feed the model's latest values (model time step dt). */
     step(values, dt, screenDt) {
       shown = dl.step(values, dt);

@@ -35,7 +35,10 @@ export default function createLedgerRunScene(ctx) {
     scale: 0.5,
     start: { gravitational: 0, elastic: 0, chemical: 0, kinetic: 0, internal: 0 },
     travel: 0.25,
-    jarSize: 0.42,
+    jarSize: 0.34,
+    stand: true,
+    // Five jars across the page, so the stand stays on the paper.
+    xs: [-2, -1, 0, 1, 2].map((k) => BOOK.gutter + BOOK.pageW / 2 + k * 0.0375),
     rowZ: -0.095,
     caption: 'The machine\'s accounts. The dark line marks the energy put in.',
     transfers: [

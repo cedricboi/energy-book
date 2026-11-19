@@ -37,6 +37,7 @@ export default function createGpeScene(ctx) {
     scale: SCALE,
     start: { gravitational: ep() },
     jarSize: 0.6,
+    stand: true,
     rowZ: -0.085,
     xs: [BOOK.gutter + 0.072], // behind the ruler, clear of the spine and the page edge
   });

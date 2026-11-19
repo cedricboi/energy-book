@@ -41,6 +41,7 @@ export default function createWorkScene(ctx) {
     start: { chemical: work(), internal: 0 },
     travel: 0.4,
     jarSize: 0.55,
+    stand: true,
     rowZ: -0.085,
     caption: 'Energy ledger. The dark line marks the work done in this push.',
     transfers: [{ from: 'chemical', to: 'internal', pathway: 'mechanical', moved: (p, c) => Math.max(0, c.internal - p.internal) }],

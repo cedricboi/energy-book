@@ -645,3 +645,5 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 /* The front face fades as the flap passes upright, so its text never shows mirrored. */
 .q-flap .flap-front { transition: opacity 0.12s 0.14s; }
 .q-flap.is-lifted .flap-front { opacity: 0; }
+
+.jar-card.no-values .card-name { font-size: 36px; line-height: 1.02; }
