@@ -4,6 +4,7 @@
 // gravitational potential jar shows Ep = mgh for its height and mass.
 import { Vector3, BoxGeometry } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { scenePlanePoint } from '../core/pick.js';
 import { createEnergyKit } from './energyKit.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { createCrate } from '../objects/crate.js';
@@ -63,7 +64,28 @@ export default function createGpeScene(ctx) {
   }
   place();
 
-  return {
+  // Drag the box up or down: it settles on the nearest shelf.
+  const hit = new Vector3();
+  let api;
+  const interactive = [{
+    object: box.group,
+    label: 'box',
+    onDrag(ray) {
+      if (!scenePlanePoint(ctx.scene, ray, cz, hit)) return;
+      const metres = (hit.y - base) / S;
+      let best = 0;
+      SHELVES.forEach((y, i) => {
+        if (Math.abs(y - metres) < Math.abs(SHELVES[best] - metres)) best = i;
+      });
+      if (best === s.shelf) return;
+      api.setParam('shelf', String(best));
+      api.onParamChange?.('shelf', String(best));
+    },
+  }];
+
+  api = {
+    interactive,
+    onParamChange: null,
     objects: [...kit.objects, unit, box],
     cueTargets: { box: box.group },
     params,
@@ -89,4 +111,5 @@ export default function createGpeScene(ctx) {
       kit.destroy();
     },
   };
+  return api;
 }

@@ -151,16 +151,20 @@ export default function createTransfersScene(ctx) {
     if (firstBuild) allObjects.push(...kit.objects, ...objects);
     else kit.setGlow(1);
     firstBuild = false;
-    current = { id, dev, group, kit, edges, shown: { ...dev.start }, emitting: 0, running: false };
+    current = { id, dev, group, kit, edges, objects, shown: { ...dev.start }, emitting: 0, running: false };
     applyHidden();
   }
   build('catapult');
 
-  return {
+  const api = {
     get objects() {
       return allObjects;
     },
     cueTargets: {},
+    // Tap the device to run it.
+    get interactive() {
+      return (current?.objects ?? []).map((o) => ({ object: o.group, label: current.dev.label, onTap: () => api.act('run') }));
+    },
     params,
     setParam(id, value) {
       if (id === 'device' && DEVICES[value]) {
@@ -229,4 +233,5 @@ export default function createTransfersScene(ctx) {
       current?.kit.destroy();
     },
   };
+  return api;
 }

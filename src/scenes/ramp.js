@@ -2,7 +2,8 @@
 // Lesson 5 scene: a skateboarder on a half-pipe, drawn to scale (1 : 40)
 // beside a height ruler, with gravitational potential, kinetic and internal
 // jars and the ledger bar.
-import { Group, Vector3, Plane, Mesh, SphereGeometry, MeshBasicMaterial, Matrix4 } from 'three';
+import { Group, Vector3, Mesh, SphereGeometry, MeshBasicMaterial } from 'three';
+import { scenePlanePoint } from '../core/pick.js';
 import { createEnergyKit } from './energyKit.js';
 import { createRampModel, rampHeight, RAMP } from '../physics/models/ramp.js';
 import { createHalfPipe, HALF_PIPE_DEPTH } from '../objects/halfPipe.js';
@@ -58,6 +59,7 @@ export default function createRampScene(ctx) {
   grab.position.y = 0.9;
   grab.name = 'rider-grab';
   rider.group.add(grab);
+  rider.group.userData.grab = grab;
 
   // Height ruler beside the left deck: a tick every 0.5 m, a label every 1 m.
   // The ruler and the start-height line stand at the rider's depth (the middle
@@ -129,15 +131,9 @@ export default function createRampScene(ctx) {
 
   // Drag the rider up or down the wall to choose the start height. Let go
   // and she rolls (unless a prediction has to be made first).
-  const dragPlane = new Plane(new Vector3(0, 0, 1), -cz);
   const hitPoint = new Vector3();
-  const toLocal = new Matrix4();
   function dragTo(worldRay) {
-    // The scene group may be lifted or scaled (the pop-up), so work in its space.
-    ctx.scene.updateMatrixWorld();
-    toLocal.copy(ctx.scene.matrixWorld).invert();
-    const ray = worldRay.clone().applyMatrix4(toLocal);
-    if (!ray.intersectPlane(dragPlane, hitPoint)) return;
+    if (!scenePlanePoint(ctx.scene, worldRay, cz, hitPoint)) return;
     const raw = (hitPoint.y - base) / S;
     const h = Math.round(Math.min(MAX.height, Math.max(0.5, raw)) * 10) / 10;
     // She starts on whichever wall she is dragged up.

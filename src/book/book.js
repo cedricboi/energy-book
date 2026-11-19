@@ -66,6 +66,16 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     group.name = `scene-${id}`;
     stage.scene.add(group);
     const scene = create({ scene: group, overlay, overlayRoot, ledgerRoot, reducedMotion });
+    // Students handle the model itself (CLAUDE.md section 6, rule 1). A scene
+    // can list its own touchable objects. Otherwise each lit object is a tap
+    // that does its own action, or the scene's main action.
+    if (!scene.interactive) {
+      const actions = scene.actions ?? {};
+      const primary = Object.keys(actions).find((a) => actions[a].primary);
+      scene.interactive = Object.entries(scene.cueTargets ?? {})
+        .filter(([k]) => actions[k] || primary)
+        .map(([k, object]) => ({ object, label: k, onTap: () => scene.act(actions[k] ? k : primary) }));
+    }
     const drawIn = combine(scene.objects.map((o) => createDrawIn({
       root: o.rise, lines: o.lines, formUniforms: o.formUniforms, seconds: () => inkStyle.drawInSeconds, reducedMotion,
     })));

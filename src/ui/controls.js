@@ -72,6 +72,9 @@ export function createSwitch(parent, p, onChange) {
   input.addEventListener('change', () => onChange(input.checked));
   return {
     el: row,
+    update(v) {
+      input.checked = !!v;
+    },
     set(v) {
       input.checked = v;
       onChange(v);
@@ -95,6 +98,10 @@ export function createChoice(parent, p, onChange) {
   row.addEventListener('change', (e) => onChange(e.target.value));
   return {
     el: row,
+    update(v) {
+      const r = row.querySelector(`input[value="${v}"]`);
+      if (r) r.checked = true;
+    },
     set(v) {
       const r = row.querySelector(`input[value="${v}"]`);
       if (r) r.checked = true;

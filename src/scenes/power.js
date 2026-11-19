@@ -129,11 +129,16 @@ export default function createPowerScene(ctx) {
 
   build();
 
-  return {
+  const api = {
     get objects() {
       return first;
     },
     cueTargets: {},
+    // Tap a person or a kettle to start the stopwatches.
+    get interactive() {
+      const things = parts.kind === 'stairs' ? parts.people.map((x) => x.p) : parts.kettles;
+      return things.map((o) => ({ object: o.group, label: o.group.name, onTap: () => api.act('run') }));
+    },
     params,
     setParam(id, v) {
       s[id] = v;
@@ -174,4 +179,5 @@ export default function createPowerScene(ctx) {
     values: () => ({ compare: s.compare, timeA: s.timeA, timeB: s.timeB, bagEnergy }),
     destroy() {},
   };
+  return api;
 }

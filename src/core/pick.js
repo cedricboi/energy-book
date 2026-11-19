@@ -4,9 +4,52 @@
 //   { object, label, onTap?, onDrag?(ray, phase) }   phase: 'start' | 'move' | 'end'
 // A press that hits one of them is taken here, so it does not orbit the view.
 // A press that misses falls through to the drag orbit (core/input.js).
-import { Raycaster, Vector2 } from 'three';
+import { Raycaster, Vector2, Vector3, Box3, Sphere, Mesh, SphereGeometry, MeshBasicMaterial, Plane, Matrix4 } from 'three';
 
 const TAP_PX = 6; // a press that moves less than this is a tap
+
+const box = new Box3();
+const sphere = new Sphere();
+const scale = new Vector3();
+const proxyMaterial = new MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+
+/**
+ * Give a small object a larger, invisible target, so a finger can catch it.
+ * The target is a sphere around the object, at least minRadius metres.
+ */
+export function addGrabTarget(group, { grow = 1.5, minRadius = 0.012 } = {}) {
+  if (group.userData.grab) return;
+  group.getWorldScale(scale);
+  if (Math.min(scale.x, scale.y, scale.z) < 1e-4) return; // still popping up
+  group.updateMatrixWorld(true);
+  box.setFromObject(group).getBoundingSphere(sphere);
+  const s = Math.max(scale.x, scale.y, scale.z) || 1;
+  const r = Math.max(sphere.radius * grow, minRadius) / s;
+  const proxy = new Mesh(new SphereGeometry(1, 12, 8), proxyMaterial);
+  proxy.scale.setScalar(r);
+  proxy.position.copy(group.worldToLocal(sphere.center.clone()));
+  proxy.name = 'grab-target';
+  proxy.renderOrder = -1;
+  group.add(proxy);
+  group.userData.grab = proxy;
+}
+
+const plane = new Plane();
+const toLocal = new Matrix4();
+const zAxis = new Vector3(0, 0, 1);
+
+/**
+ * Where a pointer ray meets the upright plane z = const, in the scene group's
+ * own coordinates (the group may be lifted or scaled while it pops up).
+ * Returns the point, or null if the ray runs parallel to the plane.
+ */
+export function scenePlanePoint(group, worldRay, z, out = new Vector3()) {
+  group.updateMatrixWorld();
+  toLocal.copy(group.matrixWorld).invert();
+  const ray = worldRay.clone().applyMatrix4(toLocal);
+  plane.set(zAxis, -z);
+  return ray.intersectPlane(plane, out);
+}
 
 export function createPicker(element, camera, { getTargets, onChange }) {
   const ray = new Raycaster();
@@ -26,6 +69,8 @@ export function createPicker(element, camera, { getTargets, onChange }) {
     rayAt(e);
     let best = null;
     for (const t of targets) {
+      // Added on first use, once the object has drawn in at its full size.
+      addGrabTarget(t.object);
       const h = ray.intersectObject(t.object, true)[0];
       if (h && (!best || h.distance < best.distance)) best = { target: t, distance: h.distance };
     }

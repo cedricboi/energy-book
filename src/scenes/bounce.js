@@ -1,5 +1,5 @@
 // src/scenes/bounce.js
-// Lesson 6 scene: a ball dropped beside a metre rule, drawn at 1 : 10.
+// Lesson 6 scene: a ball dropped beside a metre rule, drawn at 1 : 12.
 // Gravitational potential, kinetic, elastic potential and internal jars.
 // Each squash sends some energy to the internal store, and some away as
 // sound (ripples spreading from the contact point, by propagation of waves).
@@ -13,15 +13,16 @@ import { addRuler } from './helpers.js';
 import { createBounceModel, BALLS, SOUND_SHARE } from '../physics/models/bounce.js';
 import { gravitationalPotentialEnergy } from '../physics/equations.js';
 import { play } from '../core/sound.js';
+import { scenePlanePoint } from '../core/pick.js';
 
-export const DRAW_SCALE = 1 / 10;
+export const DRAW_SCALE = 1 / 12;
 export const SLOW = 0.25;
 const MAX_H = 1.2;
 
 export default function createBounceScene(ctx) {
   const S = DRAW_SCALE;
   const cx = BOOK.gutter + BOOK.pageW * 0.62;
-  const cz = 0.045;
+  const cz = 0.07;
   const floor = pageSurfaceY(cx, cz);
   const W = (x, y, z = 0) => new Vector3(cx + x * S, floor + y * S, cz + z * S);
 
@@ -52,8 +53,9 @@ export default function createBounceScene(ctx) {
     ],
   });
 
-  addRuler(ctx, { at: (m) => W(-0.35, m, 0.3), length: MAX_H, tick: 0.1, labelEvery: 0.5, tickDir: new Vector3(0.004, 0, 0), id: 'rule' });
-  const ground = createInkLines(polylineToSegments([W(-0.45, 0, 0.3), W(0.6, 0, 0.3)]), { widthScale: 0.6 });
+  // The rule and the floor line stand at the ball's depth, so heights read true.
+  addRuler(ctx, { at: (m) => W(-0.35, m, 0), length: MAX_H, tick: 0.1, labelEvery: 0.5, tickDir: new Vector3(0.004, 0, 0), id: 'rule' });
+  const ground = createInkLines(polylineToSegments([W(-0.45, 0, 0), W(0.6, 0, 0)]), { widthScale: 0.6 });
   ctx.scene.add(ground);
 
   let ball = null;
@@ -88,11 +90,8 @@ export default function createBounceScene(ctx) {
   }
 
   function place(v) {
-    const r = BALLS[s.ball].radius;
     ball.group.position.copy(W(0, v.y));
     ball.group.scale.set(1 + v.squash * 0.25, 1 - v.squash * 0.35, 1 + v.squash * 0.25);
-    ball.group.position.y += 0;
-    if (r === 0) ball.group.position.y += 0;
   }
   const storesOf = (v) => ({ gravitational: v.gravitational, kinetic: v.kinetic, elastic: v.elastic, internal: v.internal });
 
@@ -132,9 +131,36 @@ export default function createBounceScene(ctx) {
     return { v, flowing };
   }
 
+  // Lift the ball to a drop height by dragging it. Let go and it drops.
+  const hit = new Vector3();
   const api = {
-    objects: [...kit.objects, ball],
-    cueTargets: { ball: ball.group },
+    interactive: [{
+      get object() {
+        return ball.group;
+      },
+      label: 'ball',
+      onDrag(ray, phase) {
+        if (locked) return;
+        if (phase === 'start') running = false;
+        if (scenePlanePoint(ctx.scene, ray, cz, hit)) {
+          const h = Math.round(Math.min(MAX_H, Math.max(params.height.min, (hit.y - floor) / S)) * 10) / 10;
+          if (h !== s.height) {
+            s.height = h;
+            params.height.value = h;
+            rebuild();
+            api.onParamChange?.('height', h);
+          }
+        }
+        if (phase === 'end') api.act('drop');
+      },
+    }],
+    onParamChange: null,
+    get objects() {
+      return [...kit.objects, ball];
+    },
+    get cueTargets() {
+      return { ball: ball.group };
+    },
     params,
     setParam(id, value) {
       s[id] = value;

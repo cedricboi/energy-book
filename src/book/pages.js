@@ -159,8 +159,8 @@ function workBox(parent, page, c) {
     const p = c.scene.params[id];
     if (!p) continue;
     const onChange = (v) => c.scene.setParam(id, v);
-    if (p.type === 'switch') createSwitch(controls, p, onChange);
-    else if (p.type === 'choice') createChoice(controls, p, onChange);
+    if (p.type === 'switch') handles[id] = createSwitch(controls, p, onChange);
+    else if (p.type === 'choice') handles[id] = createChoice(controls, p, onChange);
     else handles[id] = createSlider(controls, p, onChange);
   }
   // A value changed by handling the object in the scene shows on its slider too.

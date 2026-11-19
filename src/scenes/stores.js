@@ -102,11 +102,12 @@ export default function createStoresScene(ctx) {
   }
 
   const actions = {};
-  for (const id of Object.keys(objects)) actions[id] = { label: `Tap the ${OBJECT_NAMES[id]}` };
+  for (const id of Object.keys(objects)) actions[id] = { label: `Tap ${OBJECT_NAMES[id].startsWith('the ') ? '' : 'the '}${OBJECT_NAMES[id]}` };
   actions.reset = { label: 'Empty the jars' };
 
   return {
     objects: [...kit.objects, ...Object.values(objects)],
+    values: () => ({ ...shown }),
     cueTargets: Object.fromEntries(Object.entries(objects).map(([k, o]) => [k, o.group])),
     params: {},
     actions,

@@ -4,6 +4,22 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 19 Nov 2026. Presentation rework (approved from the Lesson 5 sample)
+
+Learned from Every Joule (no code, text or assets taken): the diagram should be the main thing on screen, the text should read as printed, and students should handle the objects.
+- **Camera:** 38 degrees (was 50), the book fills 97% of the width (was 85%). Diagrams read large and solid.
+- **Printed page:** in landscape the text panel and the ledger bar are laid out at a fixed page size (600 px wide, text at 24 px) and mapped onto the pages in perspective with a CSS matrix3d (`layout.js` `quadMatrix`). They stay HTML, so they are sharp, accessible and interactive. A page fits the same way on every screen. Stacked layouts (portrait, near-square) keep the flat panel.
+- **Handling:** `core/pick.js` takes taps and drags on scene objects before the orbit sees them, with an invisible larger target for small objects. Any lit object whose action exists is a tap (L1 objects, L3 car, L6 ball, L7 person). L2 devices and L8 people or kettles are taps that run. Drags: L5 skateboarder (either wall, sets the start height, lets go to run, stays put on the predict page until committed), L4 box (snaps to the nearest shelf), L6 ball (sets the drop height, lets go to drop). Sliders and choices follow the drag.
+- **Fixes on the way:** the L5 ruler and start line and the L6 rule and floor stand at the object's depth, so heights read true (audit items 9 and 14). The L6 column moved forward at 1 : 12 so it clears the jars. The ribbon runs beside the gutter. "Tap the the Sun" fixed. The L6 ball cue no longer points at a removed ball.
+- **Tests:** `tests/handle.spec.js` (drag the skateboarder, predict lock, drag the box, drag the ball, tap the car). Full suite: 148 passed, 57 intended skips.
+
+### Next
+- Print the jar labels as paper cards on the jars.
+- Guided steps in the bottom bar (narrated beats with progress dots).
+- The rest of `docs/AUDIT.md`, from group 2 (missing student activities).
+
+---
+
 ## 19 Nov 2026. Audit, group 1 fixes, new CLAUDE.md
 
 ### Audit
