@@ -111,6 +111,7 @@ export default function createKineticScene(ctx) {
     setLocked() {},
     setHideValues(on) {
       kit.setHideValues(on);
+      ctx.overlay.setVisible('dent', !on && phase === 'done');
     },
     update(dt, { formReady }) {
       let moving = kit.fadeGlow(dt, formReady);

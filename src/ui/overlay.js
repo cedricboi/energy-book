@@ -20,8 +20,18 @@ function overlaps(a, b, pad = 4) {
   return a.x < b.x + b.w + pad && a.x + a.w + pad > b.x && a.y < b.y + b.h + pad && a.y + a.h + pad > b.y;
 }
 
+// Labels stay at least this far inside the visible stage.
+const EDGE = 4;
+
+function inside(r, area) {
+  return r.x >= area.x + EDGE && r.y >= area.y + EDGE && r.x + r.w <= area.x + area.w - EDGE && r.y + r.h <= area.y + area.h - EDGE;
+}
+
 export function createOverlay(root, camera) {
   const labels = new Map();
+  // The part of the screen the stage shows (above the bottom bar, and above
+  // the text panel in the stacked layout). Null means the whole root.
+  let safeArea = null;
   const glowSources = new Set();
   const v = new Vector3();
 
@@ -78,6 +88,10 @@ export function createOverlay(root, camera) {
       labels.clear();
       glowSources.clear();
     },
+    /** Keep labels inside this rectangle (CSS px). */
+    setSafeArea(r) {
+      safeArea = r;
+    },
     /** A function returning world points that bound a glow. */
     addGlow(fn) {
       glowSources.add(fn);
@@ -89,9 +103,18 @@ export function createOverlay(root, camera) {
         const pts = fn();
         if (pts.length) blocked.push(rectOf(pts));
       }
+      const r = root.getBoundingClientRect();
+      const area = safeArea ?? { x: 0, y: 0, w: r.width, h: r.height };
       for (const l of labels.values()) {
         if (!l.visible) continue;
         const a = project(l.anchor());
+        // An object outside the visible stage keeps its label hidden.
+        const offStage = a.behind || a.x < area.x || a.x > area.x + area.w || a.y < area.y || a.y > area.y + area.h;
+        l.el.style.visibility = offStage ? 'hidden' : '';
+        if (offStage) {
+          l.rect = null;
+          continue;
+        }
         const w = l.el.offsetWidth;
         const h = l.el.offsetHeight;
         let chosen = null;
@@ -103,12 +126,18 @@ export function createOverlay(root, camera) {
             y: a.y + cy * (h / 2 + l.gap) - h / 2,
             w, h,
           };
-          if (!blocked.some((b) => overlaps(rect, b))) {
+          if (inside(rect, area) && !blocked.some((b) => overlaps(rect, b))) {
             chosen = rect;
             break;
           }
         }
-        chosen ??= { x: a.x - w / 2, y: a.y - h - l.gap, w, h };
+        // Nothing is clear: take the first spot, pushed back on screen.
+        if (!chosen) {
+          const [cx, cy] = order[0];
+          chosen = { x: a.x + cx * (w / 2 + l.gap) - w / 2, y: a.y + cy * (h / 2 + l.gap) - h / 2, w, h };
+          chosen.x = Math.min(Math.max(chosen.x, area.x + EDGE), area.x + area.w - w - EDGE);
+          chosen.y = Math.min(Math.max(chosen.y, area.y + EDGE), area.y + area.h - h - EDGE);
+        }
         l.el.style.transform = `translate(${Math.round(chosen.x)}px, ${Math.round(chosen.y)}px)`;
         l.rect = chosen;
         blocked.push(chosen);
@@ -117,7 +146,9 @@ export function createOverlay(root, camera) {
     /** For tests: every visible label's rectangle and every glow rectangle. */
     debugRects() {
       const glows = [...glowSources].map((fn) => fn()).filter((p) => p.length).map(rectOf);
-      return { labels: [...labels.values()].filter((l) => l.visible && l.rect).map((l) => l.rect), glows };
+      const r = root.getBoundingClientRect();
+      const area = safeArea ?? { x: 0, y: 0, w: r.width, h: r.height };
+      return { labels: [...labels.values()].filter((l) => l.visible && l.rect).map((l) => l.rect), glows, area };
     },
   };
 }

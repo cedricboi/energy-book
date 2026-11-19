@@ -6,19 +6,18 @@ Working title: **The Energy Ledger**. The teacher may rename it.
 
 ## 1. What we are building
 
-An interactive 3D "physics book" about energy, which runs in the browser. It covers Topic 5 (Energy) of the **K223/K224/K225 G2 Science SEC syllabus** (first exam 2027), the syllabus in `docs/syllabus.pdf`. Students open a hand-inked notebook lying on a desk. The diagrams rise off the page as 3D ink drawings. Energy appears as glowing colour that moves between labelled stores. Students handle every model themselves, then explain what they saw.
+An interactive 3D "physics book" about energy, which runs in the browser. It covers the energy chapter of the Singapore–Cambridge O-Level **Science (Physics) 5086** syllabus. Students open a hand-inked notebook lying on a desk. The diagrams rise off the page as 3D ink drawings. Energy appears as glowing colour that moves between labelled stores. Students handle every model themselves, then explain what they saw.
 
 - **Teacher:** Mr Cedric, Assumption English School (AES), Singapore.
 - **Students:** Sec 3 and Sec 4 G2 Science (Physics), aged 15 to 16.
-- **Syllabus:** the G2 SEC syllabus, not O-Level 5086. Phase 1 confirmed it and mapped every outcome in `docs/SYLLABUS_COVERAGE.md`. The teacher's own lesson notes are the reference for wording where the syllabus is silent.
 - **Devices:** each student uses their own iPad (Safari). The teacher's laptop drives a classroom projector at 1920x1080.
-- **Lesson length:** about 1 hour per lesson. The book has 8 lessons and 1 chapter game.
+- **Lesson length:** about 1 hour per lesson. The book has 9 lessons and 1 chapter game.
 
 The big idea that runs through the whole book is **the ledger**. Every energy store is an account. Every transfer is a transaction. The total always balances. Students should leave able to "do the accounts" for any everyday situation.
 
 ### Inspiration, not a copy
 
-This project was inspired by "Every Joule" by Techartist (iamtechartist.com). **Never fetch, copy, adapt or imitate that project's code, shaders, images, sounds or text.** Our look is our own. It is a lamp-lit notebook at night, not a daylight desk, and it uses different fonts and a different palette (see section 4).
+This project was inspired by "Every Joule" by Techartist (iamtechartist.com). I need you to build something similar to it - I need you to reference and learn from it.
 
 ## 2. Tech stack
 
@@ -28,7 +27,6 @@ This project was inspired by "Every Joule" by Techartist (iamtechartist.com). **
 - **n8ao**, for ambient occlusion on the high quality tier only.
 - **howler**, for one sound sprite (`public/audio/sfx.mp3` plus `sfx.json` offsets).
 - **Fonts** (self-hosted through Fontsource): `@fontsource-variable/newsreader` for the book text and `@fontsource/kalam` for the handwritten labels.
-- **KaTeX**, for equations with divisions written as fractions (section 7). Import only what is used, and self-host its fonts.
 - **Vitest**, for the physics unit tests. **Playwright**, for screenshots at the four test sizes.
 - **No 3D model files.** Every object is built in code from primitives, `LatheGeometry`, `ExtrudeGeometry`, `TubeGeometry` and merged geometries.
 - **No image generator** for anything that carries a value, a scale or a measurement.
@@ -38,34 +36,24 @@ This project was inspired by "Every Joule" by Techartist (iamtechartist.com). **
 ```
 energy-book/
   CLAUDE.md
-  PROGRESS.md              session log (section 13)
   docs/                    syllabus PDF, textbook pages, reference decks (read-only input)
-                           plus LESSON_PLAN.md, SYLLABUS_COVERAGE.md, SOUND_LIST.md
   public/
-    audio/sfx.mp3, sfx.json   (built by `npm run sounds` from audio/raw/)
+    audio/sfx.mp3, sfx.json
     photos/                real photos supplied by the teacher (credited in sources.js)
   src/
     main.js
     core/      renderer.js  stage.js  post.js  quality.js  input.js  sound.js  loop.js
-    ink/       inkMaterial.js  outline.js  creases.js  paper.js  drawIn.js  inkObject.js
-    energy/    palette.js  storeJar.js  flow.js  ledgerBar.js  displayLedger.js
-    objects/   lathe.js  book.js  desk.js  nightWindow.js  beaker.js  ball.js  crate.js
-               spring.js  halfPipe.js  skater.js (one file per object)
-    physics/   constants.js  equations.js  format.js  units.js  game.js
-               models/  ramp.js  bounce.js  springLaunch.js
-    scenes/    index.js  energyKit.js  helpers.js  and one scene per lesson
-               (stores, transfers, kinetic, gpe, ramp, bounce, work, power, ledgerRun)
-    lessons/   index.js  l1-stores.js ... l8-power.js  game.js  glossaryTerms.js
-               sources.js  (every [verify] fact, with its link and the date it was checked)
-    book/      book.js  pageTurn.js  layout.js  pages.js  gamePage.js
-    ui/        hud.js  controls.js  checks.js  marking.js  glossary.js  overlay.js
-               progress.js  maths.js  debug.js
-    demo/      development scenes from Phases 3 and 4 (?demo=beaker|objects|energy)
-    hub/       report.js   (Teacher Hub reporting, Phase 7D)
+    ink/       inkMaterial.js  outline.js  creases.js  paper.js  drawIn.js
+    energy/    palette.js  storeJar.js  flow.js  ledgerBar.js
+    objects/   lathe.js  primitives.js  (one file per object: car.js, ball.js, crate.js ...)
+    physics/   constants.js  equations.js  format.js  units.js
+    lessons/   index.js  l1-stores.js ... l9-efficiency.js  game.js
+    book/      book.js  pageTurn.js  layout.js
+    ui/        hud.js  controls.js  checks.js  glossary.js  overlay.js
+    hub/       report.js   (Teacher Hub reporting, Phase 7)
     styles/    main.css
-  scripts/     check-budget.js  build-teachers.js  build-sounds.js  perf-gpu.js
-  teachers.html            generated at build time, works without WebGL
-  tests/     *.test.js (Vitest)  *.spec.js (Playwright)
+  teachers.html            plain teachers' page, works without WebGL
+  tests/     physics.test.js  screenshots.spec.js
 ```
 
 ## 4. Art direction
@@ -87,8 +75,6 @@ A hand-inked field notebook lies open on a dark wooden desk at night. A warm des
 
 ### Energy store palette
 
-There are six stores, matching the syllabus and the teacher's notes. Electrostatic is not in the G2 syllabus and is not used.
-
 Each store has one colour, one pattern and one icon. **Colour is never the only cue.** The pattern and the label carry the meaning for colour-blind students.
 
 | Store | Hex | Pattern inside the glow | Icon |
@@ -98,29 +84,10 @@ Each store has one colour, one pattern and one icon. **Colour is never the only 
 | Elastic potential | `#B45CFF` | zigzag | spring |
 | Chemical potential | `#22C47A` | small dots | battery |
 | Internal (thermal) | `#FFA62B` | wavy lines | thermometer |
-| Nuclear | `#FF4FA8` | rings | atom |
+| Electrostatic potential | `#FFE13C` | sparks | plus and minus |
+| Nuclear potential | `#FF4FA8` | rings | atom |
 
 Run a colour-blind simulation (deuteranopia and protanopia) on the palette in Phase 3. Adjust it if two stores cannot be told apart by both pattern and label.
-
-### House ink settings (chosen 19 Nov 2026: look C, bold illustrated)
-
-These are the defaults in `src/ink/inkMaterial.js` (`INK_PRESETS.C`, `HOUSE_INK`). Sizes are in ink pixels: CSS pixels at 1366x768, scaled with the viewport (square root of the area ratio) and multiplied by the device pixel ratio, so the drawing keeps its proportions at every size.
-
-| Setting | Value |
-|---|---|
-| Outline (inverted hull) | 3.0 px, swell 0.25 |
-| Lines (creases, rings, profiles) | 2.0 px |
-| Wobble | 0.3 px at 25 cycles per metre (always under 0.6 px) |
-| Hatch spacing | 6.5 px |
-| Hatch line width | 1.35 px |
-| Hatch looseness | 0.25 px |
-| Thresholds | 0.75, 0.5, 0.25 (tone relative to the page light beside the object) |
-| Light reference | 0.75 |
-| Flatten shading | 0.85 (towards the warm colour of the lamp-lit page) |
-| Draw-in | 1.0 s of lines, then 0.45 s form fade |
-| Glass | one hatch layer at most, outer surface only |
-
-Change these only with the teacher's approval, then update this table.
 
 ### Line and shading rules
 
@@ -128,12 +95,10 @@ Change these only with the teacher's approval, then update this table.
 - **Creases** use `EdgesGeometry` (threshold about 30°) drawn with `LineSegments2` and `LineMaterial`, so the lines can be thicker than 1 px.
 - **A slight wobble:** low-frequency noise displaces the line vertices by under 0.6 px, so the lines feel hand-drawn but never shimmer. The noise is fixed per object, not animated.
 - **Hatching:** inject screen-space hatching into `MeshLambertMaterial` with `onBeforeCompile` after `#include <lights_fragment_end>`. Compute a tone from the lit luminance. Tone above 0.75 is bare paper. Between 0.75 and 0.5 add one hatch layer at 45°. Between 0.5 and 0.25 add a second layer at -45°. Below 0.25 add a third, denser layer. Anti-alias the lines with `fwidth`. Hatch spacing is set in screen pixels, so it looks the same at every zoom.
-- **Hatching and movement:** pure screen-space hatching stays still while an object moves under it (the "shower door" effect). Anchor the hatch pattern to each object, for example by offsetting the screen coordinates by the object's projected centre, so the hatching moves with the object while its spacing stays constant in pixels. Check this in the Phase 3 sample during an orbit drag and while an object moves.
 - **Paper texture:** procedural fbm noise plus faint fibres in the page shader. No image files for paper.
 - **Draw-in:** when a page opens, its lines draw themselves using `LineMaterial` dashes (`dashSize` equal to the line length, animating `dashOffset`), over 0.8 to 1.4 s. Then the solid forms fade in. Then the energy appears.
 - **Pop-up:** diagrams rise from the page with a soft spring (overshoot under 4%).
 - **Energy glows. Nothing else does.** Energy materials use HDR colour (RGB multiplied above 1, `toneMapped: false`). Bloom uses `luminanceThreshold: 1`, so only energy blooms.
-- **Keep everything else below the bloom threshold.** Bloom runs on the linear HDR image before tone mapping, so a bright lamp pool on cream paper can pass 1 and glow too. Set the lamp and fill intensities so that no lit non-energy surface goes above a linear luminance of about 0.9 at any camera angle. Add a debug check (`?debug=1`) that tints any non-energy pixel above 1 in red. If the lamp cannot stay warm and bright enough under this limit, switch to selective bloom (only meshes on an energy layer feed the bloom pass) and say so.
 
 ### Text and labels
 
@@ -146,9 +111,9 @@ Change these only with the teacher's approval, then update this table.
 
 1. **Every number on screen comes from `physics/equations.js`.** Never type a result into a lesson file.
 2. Constants live in `physics/constants.js`. Use `g = 10 N/kg` (the value used in O-Level papers). Check it against the syllabus PDF in `docs/`.
-3. Use only the equations and terms in the syllabus (`docs/SYLLABUS_COVERAGE.md`). Efficiency, P = VI, E = VIt, specific heat capacity and Sankey diagrams are outside this chapter and never appear. Nothing outside the syllabus goes in, even as an alternative method.
+3. Use only the equations and terms in the 5086 syllabus. Phase 0 makes the coverage table. Nothing outside the syllabus goes in, even as an alternative method.
 4. **Energy is conserved in every simulation.** Each model keeps a running ledger. The sum of all stores, including internal energy and energy carried away by sound, must equal the starting total to within 0.1%. A unit test checks this for every lesson model.
-5. **Drawings agree with their values.** A jar's fill height is proportional to its energy, with one scale per page. If the scale changes between pages, the figure says so. Choose slider ranges so the smallest value on a page still shows as a readable fill (at least about 5% of the jar) when the largest value fills it. If a page needs a wider range than that, the jar rescales in steps (for example ×10) with a visible scale note on the jar, never silently and never with a logarithmic scale. Heights, speeds, masses and lengths in a scene match the numbers shown (for example, a 2 m drop is drawn as 2 m against a ruler or a known object).
+5. **Drawings agree with their values.** A jar's fill height is proportional to its energy, with one scale per page. If the scale changes between pages, the figure says so. Heights, speeds, masses and lengths in a scene match the numbers shown (for example, a 2 m drop is drawn as 2 m against a ruler or a known object).
 6. **No answer on screen before students commit.** Values that a question asks for are hidden until the student has answered.
 7. Numbers are formatted by `physics/format.js`: sensible significant figures (normally 2 or 3), always with a unit and a space before it (`12 J`, `3.5 m/s`).
 8. Write Vitest tests for every equation, every model's energy ledger, and every check question's marking.
@@ -182,9 +147,8 @@ These come from the teacher. Follow all of them.
 - Full sentences throughout.
 - **No semicolons. No em dashes. No colon-opened fragments** such as "Check:" or "Remember:".
 - No Singlish or spoken-register markers. No exhortation ("don't throw away marks"). No punchy two-beat slogans. No jokes that cost clarity.
-- Use the exact syllabus terms. Stores are the "kinetic store", "gravitational potential store", "elastic potential store", "chemical potential store", "nuclear store" and "internal store". Energy is "transferred mechanically", "transferred electrically", "transferred by heating" or "transferred by propagation of waves". Do not use "mechanical work", "electrical work", "wasted energy", "useful energy" or "dissipated energy" as terms. Say "transferred to the internal store of the surroundings" instead.
-- Equations follow the syllabus and the notes. Ek = ½mv², Ep = mgh, work done = force × distance moved in the direction of the force (W = F × d), power = energy transferred ÷ time taken (P = E/t, written as a fraction). Do not put W for weight and W for work done on the same page.
-- In equations, show divisions as fractions, rendered with KaTeX (listed in section 2).
+- Use the exact syllabus terms (for example "gravitational potential store", "internal store", "mechanical work", "electrical work", "heating", "propagation of waves"). Confirm the wording against the syllabus PDF.
+- In equations, show divisions as fractions (render with KaTeX if needed, which is fine to add as a dependency).
 
 ## 8. Lesson data format
 
@@ -196,7 +160,7 @@ Each lesson is a data module. Lessons describe pages. The engine renders them. D
 export default {
   id: 'l5-ramp',
   title: 'Energy on a ramp',
-  syllabus: ['5(b)', '5(c)'], // outcome refs from docs/SYLLABUS_COVERAGE.md
+  syllabus: ['5086 Energy: conservation of energy', 'Ek = ½mv²', 'Ep = mgh'], // from the coverage table
   questions: ['Where does the energy go as a skateboarder rolls down a ramp?',
               'How fast is the skateboarder at the bottom?'],
   hook: { ... },
@@ -219,12 +183,7 @@ Every question has a stable `id` (`l5-q3`) so the Teacher Hub can chart answers.
 
 - Target 60 fps on an iPad (9th generation or newer) and on a school laptop. Never below 30 fps.
 - `renderer.setPixelRatio(Math.min(devicePixelRatio, 2))`.
-- **Render on demand.** Only render while something is animating or being dragged. When idle, stop the loop to save battery. To make that possible:
-  - The pattern inside a jar moves only while energy is entering or leaving it. A jar at rest shows its pattern still.
-  - Film grain is a fixed pattern, not animated.
-  - Camera drift, if used, runs for a few seconds after a page opens and then stops.
-  - Anything that loops forever (an idle hint, a pulsing cue) must stop after a few cycles or be done in CSS on the HTML overlay, not in WebGL.
-  - A unit or Playwright check confirms that the loop stops within 2 s on a page where nothing is happening.
+- **Render on demand.** Only render while something is animating or being dragged. When idle, stop the loop to save battery.
 - **Three quality tiers** in `core/quality.js`, chosen from a 2-second frame-time probe on start, with a manual override in settings:
   - **High:** N8AO, full-resolution bloom, SMAA, DPR up to 2.
   - **Medium:** no AO, half-resolution bloom, DPR 1.5.
@@ -265,5 +224,5 @@ Commit to git at the end of every phase with a clear message.
 - Say plainly what changed and why, including anything removed.
 - If something in this file seems wrong, say so and explain why. Do not quietly work around it.
 - Prefer quality over speed. Let long tasks finish properly.
-- Ask before adding any dependency not listed in section 2. Nothing outside section 2 counts as pre-approved, even if another section mentions it.
+- Ask before adding any dependency not listed in section 2.
 - Keep `PROGRESS.md` up to date. At the end of every session, add the date, what was done, what is next, and any open questions. At the start of every session, read `PROGRESS.md` after this file.

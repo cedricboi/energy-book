@@ -4,6 +4,30 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 19 Nov 2026. Audit, group 1 fixes, new CLAUDE.md
+
+### Audit
+- `docs/AUDIT.md` lists about 150 gaps between the book and its plan, from biggest to smallest, with a suggested order of work.
+
+### Group 1 fixes (correctness)
+- The P = E/t fraction renders (the backslash was lost in a template literal). `tests/maths.test.js` checks it. The teachers' page links KaTeX's stylesheet.
+- Lesson 2 no longer says heating needs matter. The heating option is removed from the solar-light question, and the exit item "The Sun warms the Earth" is now "A phone sends a signal to a mast" (radiation counts as heating in the syllabus, so both answers were defensible).
+- Windows narrower than 1.3 : 1 use the stacked layout (diagram above, text below). On a near-square window the left page was too short and the Run button was cut off.
+- Labels stay inside the visible stage. Labels for objects outside it are hidden. The framing keeps the jars and their labels in view. The Lesson 4 jar moved off the spine.
+- While a question asks for them, scenes hide fills and the ledger bar as well as numbers. Lesson 2 hides pathway lines and store names on its question and notes pages. The Lesson 3 dent label hides too.
+- Tests: a fifth Playwright size (`window-square-1355x1205`), and every page check now fails if a label leaves the stage. 194 unit tests pass. Every lesson page passes at all five sizes.
+
+### New CLAUDE.md
+The teacher replaced `CLAUDE.md` wholesale with the original pre-Phase-1 version (copied from `CLAUDE_1.md`). It now asks us to reference and learn from Every Joule. It also brings back things the book was built without, so the code and `docs/LESSON_PLAN.md` no longer match the spec:
+- Syllabus: O-Level 5086. The only syllabus in `docs/` is the G2 SEC PDF.
+- 9 lessons with Lesson 9 on efficiency. The book has 8 lessons.
+- Seven stores including electrostatic potential, and "nuclear potential" as a name. The book has six stores.
+- Terms "mechanical work" and "electrical work". The book uses "transferred mechanically" and "transferred electrically".
+- The house ink table (look C) is no longer in the spec. The values are still the defaults in `src/ink/inkMaterial.js`.
+Nothing in the code has been changed to match yet. Waiting for the teacher to confirm which of these to act on.
+
+---
+
 ## 20 Nov 2026. Phase 7 (game, sound, teachers' page, accessibility, deployment)
 
 ### 7A. Ledger Run

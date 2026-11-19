@@ -37,7 +37,7 @@ export default function createGpeScene(ctx) {
     start: { gravitational: ep() },
     jarSize: 0.6,
     rowZ: -0.085,
-    xs: [BOOK.gutter + 0.04],
+    xs: [BOOK.gutter + 0.072], // behind the ruler, clear of the spine and the page edge
   });
 
   // The shelf unit: two sides and four boards, 0.8 m wide and 0.4 m deep.

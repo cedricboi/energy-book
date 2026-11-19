@@ -81,16 +81,20 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
 
   let shown = dl.snapshot();
   let glow = 0;
-  // While a question asks for these values, show the stores without numbers.
+  // While a question asks for these values, show the stores without numbers
+  // or fills. While a question asks for the stores themselves, hide the names.
   let hideValues = false;
+  let hideNames = false;
 
   function refresh() {
     for (const s of stores) {
       const val = Math.max(0, shown.display[s] ?? 0);
       jars[s].setValue(val);
+      if (hideValues) jars[s].liquid.visible = false;
       jars[s].setGlowFade(glow);
-      const name = compactLabels ? STORES[s].short.replace(' potential', '<br>potential') : STORES[s].short;
-      overlay.setHtml(`jar-${s}`, `<span class="jar-name">${iconSvg(s, 16)} ${name}</span>${withValues ? `<span class="jar-val">${hideValues ? '?' : formatQuantity(val, 'J', 2)}</span>` : ''}`);
+      const full = compactLabels ? STORES[s].short.replace(' potential', '<br>potential') : STORES[s].short;
+      const name = hideNames ? 'which store?' : `${iconSvg(s, 16)} ${full}`;
+      overlay.setHtml(`jar-${s}`, `<span class="jar-name">${name}</span>${withValues ? `<span class="jar-val">${hideValues ? '?' : formatQuantity(val, 'J', 2)}</span>` : ''}`);
     }
     ledger.update(shown.display, shown.transit);
     ledger.el.classList.toggle('values-hidden', hideValues);
@@ -120,6 +124,10 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
     },
     setHideValues(on) {
       hideValues = on;
+      refresh();
+    },
+    setHideNames(on) {
+      hideNames = on;
       refresh();
     },
     setTotal(t) {

@@ -126,6 +126,7 @@ html, body {
 .ledger-key li { display: flex; align-items: center; gap: 4px; }
 .ledger-key .k-val { font-variant-numeric: tabular-nums; }
 .ledger-bar.values-hidden .k-val { visibility: hidden; }
+.ledger-bar.values-hidden .ledger-segs { visibility: hidden; }
 .ledger-table { border-collapse: collapse; width: 100%; font-size: 0.9em; }
 .ledger-table th, .ledger-table td { border: 1px solid var(--ink); padding: 0.15em 0.3em; text-align: left; }
 .ledger-table th { font-weight: 600; }

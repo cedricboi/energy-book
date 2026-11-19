@@ -8,13 +8,14 @@
 //   in an HTML panel below it.
 import { Vector3 } from 'three';
 import { BOOK, pageSurfaceY } from '../objects/book.js';
+import { isStacked } from '../core/stage.js';
 
 export const HUD_HEIGHT = 56; // px, the bottom bar
 export const PORTRAIT_PANEL = 0.44; // fraction of the height for the text panel
 
 /** Fraction of the screen height the stage must keep clear at the bottom. */
 export function reserveFor(width, height) {
-  return width < height ? PORTRAIT_PANEL : HUD_HEIGHT / height;
+  return isStacked(width / height) ? PORTRAIT_PANEL : HUD_HEIGHT / height;
 }
 
 const v = new Vector3();
@@ -54,7 +55,7 @@ export const AREAS = {
  * @returns {{ portrait: boolean, text: object, ledger: object }} rectangles in CSS px
  */
 export function computeLayout(camera, rect, { wide = false } = {}) {
-  const portrait = rect.width < rect.height;
+  const portrait = isStacked(rect.width / rect.height);
   if (wide) {
     // A page with no diagram (the contents) uses the whole spread.
     return {

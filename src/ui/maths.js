@@ -10,5 +10,5 @@ export function tex(expr) {
 
 /** "P = E/t" written as a fraction: frac('P', 'E', 't'). */
 export function fracEq(lhs, top, bottom) {
-  return tex(`${lhs} = \dfrac{${top}}{${bottom}}`);
+  return tex(String.raw`${lhs} = \dfrac{${top}}{${bottom}}`);
 }

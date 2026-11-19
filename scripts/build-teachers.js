@@ -4,7 +4,7 @@
 // syllabus links and sources, plus the game's levels and their solutions.
 // A plain, printable page that works with no WebGL.
 import { createServer } from 'vite';
-import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { writeFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'error' });
 try {
@@ -83,12 +83,18 @@ try {
   const sources = Object.entries(SOURCES).map(([, s]) => `<li>${s.fact} <em>${s.source}</em>${s.url ? ` <a href="${s.url}">${s.url}</a>` : ''}${s.checked ? ` (checked ${s.checked})` : ''}${s.note ? ` ${s.note}` : ''}</li>`).join('');
   const glossary = Object.values(GLOSSARY).map((g) => `<dt>${g.term}</dt><dd>${g.meaning}</dd>`).join('');
 
+  // KaTeX's stylesheet, so the fractions render. The book's build emits it
+  // (with its fonts) into dist/assets, so link that file from dist/teachers.html.
+  const katexCss = existsSync('dist/assets') ? readdirSync('dist/assets').find((f) => f.endsWith('.css') && readFileSync(`dist/assets/${f}`, 'utf8').includes('.katex')) : null;
+  const katexLink = katexCss ? `<link rel="stylesheet" href="./assets/${katexCss}">` : '';
+
   const page = `<!doctype html>
 <html lang="en-SG">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Energy Ledger: teachers' page</title>
+${katexLink}
 <style>
   body { font: 17px/1.5 Georgia, 'Times New Roman', serif; color: #1E1B24; background: #F4EEDF; max-width: 860px; margin: 0 auto; padding: 24px 16px; }
   h1 { font-weight: 600; margin-bottom: 0; }

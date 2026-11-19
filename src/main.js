@@ -106,7 +106,9 @@ async function start() {
 
   function resize() {
     const { width: w, height: h } = rect();
-    stage.setViewport(w, h, demo ? 0 : reserveFor(w, h));
+    const reserve = demo ? 0 : reserveFor(w, h);
+    stage.setViewport(w, h, reserve);
+    overlay.setSafeArea({ x: 0, y: 0, w, h: h * (1 - reserve) });
     post.setSize(w, h);
     setInkResolution(w, h, renderer.getPixelRatio(), tier.hatchLayers);
     loop.request();

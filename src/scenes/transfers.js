@@ -108,6 +108,17 @@ export default function createTransfersScene(ctx) {
   };
   let current = null;
   let firstBuild = true;
+  // While a question asks how energy moves or where it is kept, hide the
+  // pathway lines and the store names (CLAUDE.md section 5, rule 6).
+  let hidden = false;
+  function applyHidden() {
+    if (!current) return;
+    current.kit.setHideNames(hidden);
+    for (const e of current.edges) {
+      e.flow.pathLine.visible = !hidden;
+      e.flow.points.visible = !hidden;
+    }
+  }
   const allObjects = [];
 
   function build(id) {
@@ -141,6 +152,7 @@ export default function createTransfersScene(ctx) {
     else kit.setGlow(1);
     firstBuild = false;
     current = { id, dev, group, kit, edges, shown: { ...dev.start }, emitting: 0, running: false };
+    applyHidden();
   }
   build('catapult');
 
@@ -166,6 +178,10 @@ export default function createTransfersScene(ctx) {
       c.emitting = id === 'run' ? 1 : 0;
     },
     setLocked() {},
+    setHideValues(on) {
+      hidden = on;
+      applyHidden();
+    },
     update(dt, { formReady }) {
       const c = current;
       let moving = c.kit.fadeGlow(dt, formReady);

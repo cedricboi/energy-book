@@ -59,6 +59,7 @@ export default {
       scene: 'transfers',
       title: 'Which way?',
       sceneState: { device: 'catapult' },
+      hideValues: true,
       question: {
         id: 'l2-q1',
         type: 'mcq',
@@ -76,6 +77,7 @@ export default {
       scene: 'transfers',
       title: 'Which way?',
       sceneState: { device: 'kettle' },
+      hideValues: true,
       question: {
         id: 'l2-q2',
         type: 'mcq',
@@ -93,6 +95,7 @@ export default {
       scene: 'transfers',
       title: 'Which way?',
       sceneState: { device: 'speaker' },
+      hideValues: true,
       question: {
         id: 'l2-q3',
         type: 'mcq',
@@ -129,6 +132,7 @@ export default {
       scene: 'transfers',
       title: 'A hair dryer',
       sceneState: { device: 'kettle' },
+      hideValues: true,
       question: {
         id: 'l2-q5',
         type: 'label',
@@ -147,6 +151,7 @@ export default {
       scene: 'transfers',
       title: 'A solar garden light',
       sceneState: { device: 'torch' },
+      hideValues: true,
       question: {
         id: 'l2-q6',
         type: 'mcq',
@@ -154,7 +159,6 @@ export default {
         options: [
           { id: 'mech', text: 'It is transferred mechanically.', feedback: 'Nothing pushes the panel. Think about what crosses space from the Sun.' },
           { id: 'elec', text: 'It is transferred electrically.', feedback: 'There is no wire from the Sun. The panel then transfers energy electrically to the battery.' },
-          { id: 'heat', text: 'It is transferred by heating.', feedback: 'Heating needs matter between the objects. Space is empty, so something else carries the energy.' },
           { id: 'wave', text: 'It is transferred by propagation of waves.', correct: true, feedback: 'Right. Light, an electromagnetic wave, carries energy across space to the panel.' },
         ],
       },
@@ -164,6 +168,7 @@ export default {
       scene: 'transfers',
       title: 'Where did the 100% go?',
       sceneState: { device: 'speaker' },
+      hideValues: true,
       question: {
         id: 'l2-q7',
         type: 'short',
@@ -183,6 +188,7 @@ export default {
       scene: 'transfers',
       title: 'Notes. A torch',
       sceneState: { device: 'torch' },
+      hideValues: true,
       question: {
         id: 'l2-n1',
         type: 'cloze',
@@ -211,7 +217,7 @@ export default {
             { id: 'a', item: 'A crane lifts a load', answer: 'mechanically' },
             { id: 'b', item: 'A battery lights a lamp', answer: 'electrically' },
             { id: 'c', item: 'A hot drink warms your hands', answer: 'heating' },
-            { id: 'd', item: 'The Sun warms the Earth', answer: 'waves' },
+            { id: 'd', item: 'A phone sends a signal to a mast', answer: 'waves' },
           ],
           choices: WAYS,
         },

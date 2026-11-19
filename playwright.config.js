@@ -1,5 +1,6 @@
 // playwright.config.js
-// Screenshots at the four test sizes in CLAUDE.md section 12, using Chromium
+// Screenshots at the four test sizes in CLAUDE.md section 12, plus a
+// near-square laptop window (the stacked layout), using Chromium
 // with SwiftShader so WebGL works headless.
 import { defineConfig } from '@playwright/test';
 
@@ -8,6 +9,7 @@ export const SIZES = [
   { name: 'laptop-1366x768', width: 1366, height: 768 },
   { name: 'ipad-landscape-1180x820', width: 1180, height: 820 },
   { name: 'ipad-portrait-820x1180', width: 820, height: 1180 },
+  { name: 'window-square-1355x1205', width: 1355, height: 1205 },
 ];
 
 export default defineConfig({

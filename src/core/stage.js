@@ -11,6 +11,16 @@ import { createDesk } from '../objects/desk.js';
 import { createNightWindow, NIGHT_HEX } from '../objects/nightWindow.js';
 import { setPageLightProvider } from '../ink/inkMaterial.js';
 
+/**
+ * Below this width-to-height ratio the book uses the stacked layout (the
+ * right page framed at the top, the text panel below). Near-square windows
+ * stack too, because the open book is too short there for the text page.
+ */
+export const STACK_BELOW_ASPECT = 1.3;
+// Height kept in frame above the head of the page (jars plus their labels), m.
+const JAR_ROOM = 0.085;
+export const isStacked = (aspect) => aspect < STACK_BELOW_ASPECT;
+
 export const LAMP_HEX = '#FFD9A0';
 const WALL_Z = -0.42;
 
@@ -149,6 +159,9 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
     const z = BOOK_EXTENT.depth / 2;
     const pts = [];
     for (const x of [x0, x1]) for (const zz of [-z, z]) for (const y of [0, 0.016]) pts.push([x, y, zz]);
+    // The jars stand near the head of the page with their labels above them.
+    // Keep that height in frame, so nothing is cut off at the top.
+    for (const x of [x0, x1]) pts.push([x, JAR_ROOM, -BOOK.pageH / 2 + 0.03]);
     return pts;
   }
 
@@ -248,7 +261,7 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
       camera.updateProjectionMatrix();
       return;
     }
-    const { target, dist } = framing(regionAspect, aspect < 1);
+    const { target, dist } = framing(regionAspect, isStacked(aspect));
     const elevation = MathUtils.degToRad(pose.elevationDeg) + pitch;
     camera.position.set(
       target.x + dist * Math.cos(elevation) * Math.sin(yaw),
