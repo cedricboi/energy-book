@@ -186,6 +186,13 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
           save();
         }
       },
+      onComplete() {
+        if (!state.progress.done) {
+          state.progress.done = true;
+          save();
+          play('chime');
+        }
+      },
       onUnlock() {
         state.scene?.setLocked?.(false);
       },
@@ -266,7 +273,7 @@ export function createBook({ stage, overlay, overlayRoot, reducedMotion, hud, on
     panel.dataset.type = 'contents';
     panel.innerHTML = `<header class="page-head"><p class="page-kicker">Contents</p><h2 class="page-title">The Energy Ledger</h2></header>
       <div class="page-body"><p>Every energy store is an account. Every transfer is a transaction. The total always balances.</p>
-      <ol class="contents-list">${LESSONS.filter((l) => !l.hidden).map((l) => `<li><button type="button" data-lesson="${l.id}">${l.number ? `<span class="c-num">${l.number}</span>` : ''}<span class="c-title">${l.title}</span></button></li>`).join('')}</ol></div>`;
+      <ol class="contents-list">${LESSONS.filter((l) => !l.hidden).map((l) => `<li><button type="button" data-lesson="${l.id}">${l.number ? `<span class="c-num">${l.number}</span>` : ''}<span class="c-title">${l.title}</span>${loadLesson(l.id)?.done ? '<span class="c-stamp" aria-label="complete">Balanced</span>' : ''}</button></li>`).join('')}</ol></div>`;
     panel.querySelectorAll('[data-lesson]').forEach((b) => b.addEventListener('click', () => openLesson(b.dataset.lesson)));
     hud.setTitle('Contents');
     hud.setNav({ canPrev: false, canNext: false });

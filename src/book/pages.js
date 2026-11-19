@@ -117,6 +117,20 @@ export function renderPage(panel, page, c) {
     }
     case 'exit': {
       body.insertAdjacentHTML('beforeend', paras(text));
+      const stampSlot = document.createElement('div');
+      stampSlot.className = 'stamp-slot';
+      stampSlot.innerHTML = stampHtml(c.number);
+      stampSlot.hidden = !c.saved?.done;
+      panel.append(stampSlot);
+      const prior = c.onComplete;
+      c.onComplete = (fresh) => {
+        stampSlot.hidden = false;
+        if (fresh && !stampSlot.dataset.pressed) {
+          stampSlot.dataset.pressed = '1';
+          stampSlot.classList.add('is-pressing');
+        }
+        prior?.(fresh);
+      };
       questionSequence(body, page.questions, c);
       break;
     }
@@ -220,6 +234,18 @@ function workBox(parent, page, c) {
 }
 
 /** A set of questions shown one at a time. */
+/**
+ * The ink stamp a lesson earns when its exit ticket is complete: a ledger
+ * stamp, "Accounts balanced", pressed into the page at a slight angle.
+ */
+export function stampHtml(number) {
+  return `<div class="ink-stamp" role="img" aria-label="Lesson ${number ?? ''} complete. Accounts balanced.">
+    <span class="stamp-top">Lesson ${number ?? ''}</span>
+    <span class="stamp-main">Balanced</span>
+    <span class="stamp-bottom">accounts checked</span>
+  </div>`;
+}
+
 function questionSequence(parent, questions, c) {
   const holder = document.createElement('div');
   holder.className = 'q-sequence';
@@ -246,6 +272,8 @@ function questionSequence(parent, questions, c) {
       onCommit: (rec) => {
         c.onAnswer(rec);
         if (i < questions.length - 1) next.hidden = false;
+        // Every question answered: the lesson's stamp presses into the page.
+        if (questions.every((qq) => c.saved?.answers?.[qq.id] || qq.id === rec.id)) c.onComplete?.(true);
       },
     });
   }

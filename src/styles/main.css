@@ -553,3 +553,95 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 /* While a diagram folds back onto the page, its labels and cards fade. */
 .label, .printed { transition: opacity 0.25s ease; }
 .is-folding .label, .is-folding .printed { opacity: 0; }
+
+/* ---------- Lift the flap: a two-sided paper flap hinged at its top ---------- */
+.q-feedback { overflow: visible; }
+.q-flap {
+  background: none !important;
+  border-top: none !important;
+  padding: 0 !important;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.34, 1.45, 0.64, 1), opacity 0.2s 0.45s;
+}
+.q-flap .flap-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 1px;
+}
+.q-flap .flap-front {
+  background: #F1E7CF;
+  border-top: 1px dashed var(--rule);
+  box-shadow: 0 2px 4px rgba(30, 27, 36, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0 0.75em;
+}
+.flap-why { font-weight: 600; letter-spacing: 0.04em; color: var(--red-ink); }
+.flap-hint { font-style: italic; color: rgba(30, 27, 36, 0.7); flex: 1; }
+.flap-arrow { width: 2.6em; height: 1.3em; color: #273463; }
+/* The back of the flap: a cream card with a red double rule and fine hatching. */
+.q-flap .flap-back {
+  transform: rotateX(180deg);
+  background:
+    repeating-linear-gradient(135deg, rgba(155, 45, 32, 0.08) 0 1px, transparent 1px 6px),
+    #F3EAD5;
+  box-shadow: inset 0 0 0 5px #F3EAD5, inset 0 0 0 6.5px rgba(155, 45, 32, 0.55), inset 0 0 0 9px #F3EAD5, inset 0 0 0 10px rgba(155, 45, 32, 0.4);
+}
+.q-flap.is-lifted { transform: perspective(600px) rotateX(156deg); opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .q-flap { transition: opacity 0.2s; } }
+
+/* ---------- The lesson stamp ---------- */
+.stamp-slot { position: absolute; right: 4%; bottom: 7%; pointer-events: none; z-index: 2; }
+.stamp-slot[hidden] { display: none; }
+.ink-stamp {
+  --stamp: #A8382A;
+  display: grid;
+  justify-items: center;
+  padding: 0.25em 0.8em 0.3em;
+  border: 2.5px solid var(--stamp);
+  outline: 1px solid var(--stamp);
+  outline-offset: 3px;
+  border-radius: 8px;
+  color: var(--stamp);
+  transform: rotate(-7deg);
+  font-family: var(--font-book);
+  line-height: 1.05;
+  mix-blend-mode: multiply;
+  opacity: 0.88;
+  /* Ink that did not quite reach the paper: a speckled mask. */
+  -webkit-mask:
+    radial-gradient(circle at 20% 30%, transparent 0 1.2px, #000 1.6px) 0 0 / 9px 11px,
+    radial-gradient(circle at 70% 60%, transparent 0 0.9px, #000 1.3px) 0 0 / 13px 7px;
+  -webkit-mask-composite: source-in;
+  mask:
+    radial-gradient(circle at 20% 30%, transparent 0 1.2px, #000 1.6px) 0 0 / 9px 11px,
+    radial-gradient(circle at 70% 60%, transparent 0 0.9px, #000 1.3px) 0 0 / 13px 7px;
+  mask-composite: intersect;
+}
+.stamp-top, .stamp-bottom { font-size: 0.5em; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; }
+.stamp-main { font-size: 1.15em; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
+.is-pressing .ink-stamp { animation: stamp-press 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+@keyframes stamp-press {
+  0% { transform: rotate(-7deg) scale(1.6); opacity: 0; }
+  60% { transform: rotate(-7deg) scale(0.96); opacity: 0.95; }
+  100% { transform: rotate(-7deg) scale(1); opacity: 0.88; }
+}
+@media (prefers-reduced-motion: reduce) { .is-pressing .ink-stamp { animation: none; } }
+.c-stamp {
+  margin-left: auto;
+  font-size: 0.62em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #A8382A;
+  border: 1.5px solid #A8382A;
+  border-radius: 4px;
+  padding: 0 0.35em;
+  transform: rotate(-5deg);
+}
+
+/* The front face fades as the flap passes upright, so its text never shows mirrored. */
+.q-flap .flap-front { transition: opacity 0.12s 0.14s; }
+.q-flap.is-lifted .flap-front { opacity: 0; }

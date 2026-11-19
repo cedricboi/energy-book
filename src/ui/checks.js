@@ -91,7 +91,7 @@ export function renderQuestion(parent, q, { saved, onCommit, checkLabel = 'Check
     fb.className = `q-feedback ${kind}`;
     const verdict = q.neutral ? 'Saved' : result.correct ? 'Right' : 'Not yet';
     const flap = !q.neutral && !lifted && !result.needsReason && !result.detail?.tooShort;
-    fb.innerHTML = `<p class="q-fb-head">${verdict}</p><p class="q-fb-text"></p>${flap ? '<button type="button" class="q-flap">Lift the flap to see why</button>' : ''}`;
+    fb.innerHTML = `<p class="q-fb-head">${verdict}</p><p class="q-fb-text"></p>${flap ? `<button type="button" class="q-flap" aria-label="Lift the flap to see why"><span class="flap-face flap-front"><span class="flap-why">Why?</span><span class="flap-hint">lift the flap</span><svg class="flap-arrow" viewBox="0 0 60 30" aria-hidden="true"><path d="M4 24 C 18 26, 34 20, 50 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M41 7 L51 7 L48 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="flap-face flap-back" aria-hidden="true"></span></button>` : ''}`;
     fb.querySelector('.q-fb-text').textContent = result.feedback;
     fb.querySelector('.q-flap')?.addEventListener('click', (e) => {
       e.currentTarget.classList.add('is-lifted');
