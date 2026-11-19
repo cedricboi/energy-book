@@ -47,6 +47,14 @@ function transformText(s, cs) {
   return s;
 }
 
+/** A pattern fill, url(#id), drawn as its base colour (the first rect's fill). */
+function patternColour(svgEl, fill) {
+  const m = /url\(["']?#([^"')]+)["']?\)/.exec(fill);
+  if (!m) return fill;
+  const base = svgEl.querySelector(`[id="${m[1]}"] rect`);
+  return base ? getComputedStyle(base).fill : 'transparent';
+}
+
 /** An SVG shape as a canvas path. */
 function shapePath(p) {
   const n = (a) => parseFloat(p.getAttribute(a)) || 0;
@@ -267,12 +275,16 @@ export function printElement(root, ctx, { x = 0, y = 0, scale = 1, skip = () => 
     const vb = el.viewBox?.baseVal;
     const sx = vb && vb.width ? b.width / vb.width : 1;
     const sy = vb && vb.height ? b.height / vb.height : 1;
-    const s = Math.min(sx, sy);
+    // preserveAspectRatio="none" stretches the drawing to the box (a bar).
+    const stretch = el.getAttribute('preserveAspectRatio') === 'none';
+    const kx = stretch ? sx : Math.min(sx, sy);
+    const ky = stretch ? sy : Math.min(sx, sy);
     ctx.save();
-    ctx.translate(X(b.left) + (b.width - (vb?.width ?? 0) * s) * scale * 0.5, Y(b.top) + (b.height - (vb?.height ?? 0) * s) * scale * 0.5);
-    ctx.scale(s * scale, s * scale);
+    ctx.translate(X(b.left) + (b.width - (vb?.width ?? 0) * kx) * scale * 0.5, Y(b.top) + (b.height - (vb?.height ?? 0) * ky) * scale * 0.5);
+    ctx.scale(kx * scale, ky * scale);
     if (vb) ctx.translate(-vb.x, -vb.y);
     for (const p of el.querySelectorAll('path, rect, circle, ellipse, line, polyline')) {
+      if (p.closest('defs, pattern')) continue;
       const cs = style(p);
       const path = shapePath(p);
       if (!path) continue;
@@ -280,7 +292,7 @@ export function printElement(root, ctx, { x = 0, y = 0, scale = 1, skip = () => 
       const m = p.transform?.baseVal?.consolidate?.()?.matrix;
       ctx.save();
       if (m) ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f);
-      const fill = colour(cs.fill === 'none' ? 'transparent' : cs.fill);
+      const fill = colour(cs.fill === 'none' ? 'transparent' : patternColour(el, cs.fill));
       const stroke = colour(cs.stroke === 'none' ? 'transparent' : cs.stroke);
       if (fill.a > 0) {
         ctx.globalAlpha = alpha * fill.a;

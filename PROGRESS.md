@@ -18,6 +18,7 @@ The largest gap from the technique study (TECHNIQUES.md C1) is closed. On landsc
 - **Part names are handwritten on the paper:** the Kalam labels lost their tag box and keep only a paper-coloured halo, at a slight hand angle, like notes in a workbook.
 - **The contents is a printed spread:** a title page on the left (the motto, the six stores with their icons in their colours, how to use the book) and a ruled list of lessons on the right (`rightPanel`, `AREAS.rightText`). Each contents line is a real button, printed too (class `ink-row`), so only its focus ring shows as HTML. Opening a lesson turns the contents away on the leaf. Back from a lesson's first page turns back to the contents. The printer now also draws SVG rectangles, circles, ellipses, lines and polylines.
 - **Stamps are printed too:** the printer now draws 2D transforms and design outlines, so the exit page's "Balanced" stamp (once it has pressed in) and the contents marks are printed into the paper at their angle. The press itself still plays as HTML.
+- **The ledger turns with its page:** at the fold it is printed onto the right page (the printer draws stretched SVG and pattern fills as the store colour), its live copy hides, and the leaf carries it away. The arriving page's ledger is printed under the leaf. Once the leaf lands, the live ledger is back.
 - **Unchanged:** the stacked (portrait) layout keeps the HTML panel (the contents list follows the title page there). The ledger stays live HTML.
 
 ### Checks
@@ -26,7 +27,7 @@ The largest gap from the technique study (TECHNIQUES.md C1) is closed. On landsc
 - Screenshots of every lesson's pages checked by eye, including forward and backward turns caught mid-curl.
 
 ### Next
-- Print the ledger bar on the leaf too, and hand the arriving page over from a print (TECHNIQUES.md C2, the arriving half).
+- Hand the arriving page over from a print (TECHNIQUES.md C2, the arriving half). Today the new drawing rises from flat and inks itself.
 - The Lesson 1 battery could move onto the shared cutaway helper.
 - Part names (Kalam labels) could also be printed in the drawing.
 

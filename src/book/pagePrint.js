@@ -61,9 +61,10 @@ function placeOf(area, side) {
  * @param {HTMLElement} o.panel               the text panel (left page)
  * @param {HTMLElement} o.figure              the figure caption (right page)
  * @param {HTMLElement} o.rightPanel          the right page's text (the contents list)
+ * @param {HTMLElement} [o.ledger]            the ledger bar (live, printed only for turns)
  * @param {() => void} o.onChange             request a frame
  */
-export function createPagePrint({ scene, leaf, panel, figure, rightPanel, onChange }) {
+export function createPagePrint({ scene, leaf, panel, figure, rightPanel, ledger, onChange }) {
   const roots = [panel, figure, rightPanel];
   const sheets = { left: sheet(), right: sheet(), leafFront: sheet(), leafBack: sheet() };
   const pages = { left: scene.getObjectByName('page-left'), right: scene.getObjectByName('page-right') };
@@ -91,9 +92,10 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, onChan
   function printInto(target, el, area, side, full) {
     if (!el || el.hidden) return;
     const transform = el.style.transform;
-    const inked = el.classList.contains('is-inked');
+    // Print it as it really looks: not inked out, not hidden for a turn.
+    const states = ['is-inked', 'is-turning'].filter((c) => el.classList.contains(c));
     el.style.transform = 'none';
-    el.classList.remove('is-inked');
+    el.classList.remove(...states);
     // A printed part that is fading or sliding in is printed as it ends up
     // (its HTML is invisible, so finishing the motion costs nothing).
     for (const anim of el.getAnimations?.({ subtree: true }) ?? []) {
@@ -107,7 +109,7 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, onChan
     }
     printElement(el, target.ctx, { ...placeOf(area, side), skip: full ? isUnprintable : isLive });
     el.style.transform = transform;
-    if (inked) el.classList.add('is-inked');
+    el.classList.add(...states);
   }
 
   function clear(target) {
@@ -121,15 +123,28 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, onChan
    * full: draw the live controls too (for a page whose HTML is hidden, as
    * during a turn).
    */
-  function print(side, target = sheets[side], { full = false } = {}) {
+  function print(side, target = sheets[side], { full = false, withLedger = false } = {}) {
     observer.disconnect();
     clear(target);
+    if (side === 'right' && withLedger && ledger?.innerHTML) printInto(target, ledger, AREAS.rightLedger, 'right', true);
     if (side === 'left') printInto(target, panel, AREAS.leftText, 'left', full);
     else {
       printInto(target, figure, AREAS.rightFigure, 'right', full);
       printInto(target, rightPanel, AREAS.rightText, 'right', full);
     }
     target.blank = false;
+    target.texture.needsUpdate = true;
+    watch();
+  }
+
+  /**
+   * Add the ledger bar to what a sheet shows. The ledger is live HTML (its
+   * numbers move every frame), so it is printed only for a turn.
+   */
+  function addLedger(target) {
+    if (!ledger?.innerHTML) return;
+    observer.disconnect();
+    printInto(target, ledger, AREAS.rightLedger, 'right', true);
     target.texture.needsUpdate = true;
     watch();
   }
@@ -219,5 +234,6 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, onChan
     copy,
     clear,
     overlay,
+    addLedger,
   };
 }

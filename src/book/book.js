@@ -69,7 +69,7 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
   // Instant turns are for screenshots only. Reduced motion also skips the turn.
   const turner = createPageTurn(stage.scene, { reducedMotion: reducedMotion || instant });
   // The page text is printed into the paper (landscape only).
-  const printer = createPagePrint({ scene: stage.scene, leaf: turner.leaf, panel, figure: figureRoot, rightPanel, onChange: () => onChange?.() });
+  const printer = createPagePrint({ scene: stage.scene, leaf: turner.leaf, panel, figure: figureRoot, rightPanel, ledger: ledgerRoot, onChange: () => onChange?.() });
   let lastRect = null;
   const snapshot = renderer ? createFigureSnapshot(renderer) : null;
   const state = {
@@ -260,6 +260,9 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
       printer.overlay(sheets.right, snapshot(state.group, stage.camera));
       state.group.visible = false;
     }
+    // The ledger goes onto the page's print too, and its live copy hides.
+    if (printer.enabled) printer.addLedger(sheets.right);
+    ledgerRoot.classList.add('is-turning');
     // The leaf carries the page it lifts from: going on, the right page
     // (its front); going back, the left page (its back).
     // The page's controls are hidden from here on, so its print takes them
@@ -289,9 +292,9 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     if (printer.enabled) {
       if (direction > 0) {
         printer.print('left', sheets.leafBack, { full: true });
-        printer.print('right');
+        printer.print('right', sheets.right, { withLedger: true });
       } else {
-        printer.print('right', sheets.leafFront);
+        printer.print('right', sheets.leafFront, { withLedger: true });
         printer.print('left', sheets.left, { full: true });
       }
     }
@@ -306,6 +309,7 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     }
     printer.hold(false);
     overlayRoot.classList.remove('is-folding');
+    ledgerRoot.classList.remove('is-turning');
     if (state.group) state.group.visible = true;
     if (state.drawIn) {
       state.drawIn.play();
@@ -387,6 +391,7 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
         printer.overlay(sheets.right, snapshot(state.group, stage.camera));
         state.group.visible = false;
       }
+      printer.addLedger(sheets.right);
       printer.print('left', sheets.leafBack, { full: true });
     }
     clearScene();

@@ -552,7 +552,9 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 
 /* While a diagram folds back onto the page, its labels and cards fade. */
 .label, .printed { transition: opacity 0.25s ease; }
-.is-folding .label, .is-folding .printed, .is-folding .ledger-slot { opacity: 0; }
+.is-folding .label, .is-folding .printed { opacity: 0; }
+/* During a turn the ledger is printed on the page (and the leaf). */
+.ledger-slot.is-turning { visibility: hidden; }
 
 /* ---------- Lift the flap: a two-sided paper flap hinged at its top ---------- */
 .q-feedback { overflow: visible; }
