@@ -254,8 +254,8 @@ float el_objHatch(vec3 p, vec3 dir, float spacing, float halfW, float seed) {
 float el_paperHatch(vec3 p, float d) {
   float layers = min(uLayers, uMaxLayers);
   float s = uHatchWorld;
-  float halfW = mix(0.06, 0.2, clamp((d - 0.3) / 0.6, 0.0, 1.0));
-  float w1 = smoothstep(0.3, 0.44, d);
+  float halfW = mix(0.06, 0.2, clamp((d - 0.46) / 0.46, 0.0, 1.0));
+  float w1 = smoothstep(0.46, 0.6, d);
   // Where a surface runs nearly along the hatch planes, the lines would
   // spread into wide bands, so that surface takes the second direction.
   vec3 dir2 = normalize(cross(uHatchDir, vec3(0.31, 0.83, 0.47)));
@@ -338,7 +338,7 @@ export function createInkMaterial({ color = '#F4EEDF', glass = false, glassAlpha
           float darkness = clamp(max(1.0 - form, (1.0 - tone) * 0.92), 0.0, 1.0);
           #ifdef EL_GLASS
           vec2 p = (gl_FragCoord.xy - uAnchor) / uInkPx;
-          elInk = el_hatching(p, tone) * uForm;
+          elInk = el_hatching(p, tone) * uForm * step(0.5, uMaxLayers);
           #else
           elInk = el_paperHatch(vElWorldPos, darkness) * uForm;
           #endif

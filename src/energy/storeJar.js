@@ -4,7 +4,7 @@
 // section 5, rule 5). The store's pattern sits inside the glow and moves
 // slowly only while energy is entering or leaving (render on demand).
 // The glow is HDR colour, scaled so every store passes the bloom threshold.
-import { Mesh, CylinderGeometry, ShaderMaterial, Vector3, Color } from 'three';
+import { Mesh, CylinderGeometry, ShaderMaterial, Vector3, Color, SphereGeometry, InstancedMesh, MeshBasicMaterial, Object3D } from 'three';
 import { createBeaker, BEAKER } from '../objects/beaker.js';
 import { STORES, PATTERN_INDEX, glowColour } from './palette.js';
 
@@ -52,9 +52,11 @@ function liquidMaterial(storeId) {
       varying vec3 vLocal;
       varying vec3 vWorld;
       varying vec3 vN;
+      varying vec3 vNW;
       void main() {
         vLocal = position;
         vN = normal;
+        vNW = normalize(mat3(modelMatrix) * normal);
         vec4 w = modelMatrix * vec4(position, 1.0);
         vWorld = w.xyz;
         gl_Position = projectionMatrix * viewMatrix * w;
@@ -67,15 +69,27 @@ function liquidMaterial(storeId) {
       varying vec3 vLocal;
       varying vec3 vWorld;
       varying vec3 vN;
+      varying vec3 vNW;
       ${PATTERN_GLSL}
       void main() {
         float angle = atan(vLocal.x, vLocal.z);
         vec2 p = vec2(angle * ${(BEAKER.R * 1000).toFixed(1)}, vWorld.y * 1000.0 + uPhase);
+        bool top = abs(vN.y) > 0.5;
         // The flat top of the liquid uses flat coordinates, not the angle.
-        if (abs(vN.y) > 0.5) p = vec2(vWorld.x, vWorld.z) * 1000.0 + vec2(0.0, uPhase);
+        if (top) p = vec2(vWorld.x, vWorld.z) * 1000.0 + vec2(0.0, uPhase);
         float pat = elPattern(uKind, p);
-        // Pattern marks are a dimmer shade of the same colour, still glowing.
-        vec3 c = uGlow * mix(1.0, 0.45, pat);
+        // Light in a liquid: brighter towards the edges, where you look
+        // through more of it, and a little brighter higher up, with a slow
+        // swirl. The surface is brightest of all, brighter still at its rim.
+        vec3 nW = normalize(vNW);
+        vec3 v = normalize(cameraPosition - vWorld);
+        float rim = pow(1.0 - abs(dot(nW, v)), 2.2);
+        float swirl = sin(angle * 3.0 + vLocal.y * 9.0 + uPhase * 0.05) * 0.5 + 0.5;
+        float b = 0.62 + 0.3 * vLocal.y + 0.5 * rim + 0.14 * swirl;
+        if (top) b = 1.2 + 0.5 * smoothstep(0.55, 1.0, length(vLocal.xz) / ${(BEAKER.R - BEAKER.t).toFixed(4)});
+        // The store's pattern stays (colour is never the only cue), as a
+        // dimmer shade of the same colour.
+        vec3 c = uGlow * b * mix(1.0, 0.62, pat);
         gl_FragColor = vec4(c * uFade, 1.0);
       }`,
     toneMapped: false,
@@ -105,13 +119,41 @@ export function createStoreJar({ store, scale, value = 0, size = 0.6 }) {
   liquid.renderOrder = 1;
   beaker.rise.add(liquid);
 
+  // A few small bubbles rise near the wall while energy is moving in or out.
+  // At rest they stay still, so an idle page stops rendering.
+  const BUBBLES = 7;
+  const bubbleMat = new MeshBasicMaterial({ color: new Color(...glowColour(store, 1.3)).lerp(new Color(1.6, 1.6, 1.6), 0.16).multiplyScalar(1.6), toneMapped: false, transparent: true, opacity: 0 });
+  const bubbles = new InstancedMesh(new SphereGeometry(1, 8, 6), bubbleMat, BUBBLES);
+  bubbles.name = `jar-${store}-bubbles`;
+  bubbles.renderOrder = 1;
+  bubbles.frustumCulled = false;
+  beaker.rise.add(bubbles);
+  const seeds = Array.from({ length: BUBBLES }, (_, i) => ({ a: i * 2.39996, r: Ri * (0.62 + 0.3 * ((i * 0.618) % 1)), off: (i * 0.371) % 1, size: 0.0009 + 0.0007 * ((i * 0.43) % 1) }));
+  const dummy = new Object3D();
+  let bubblePhase = 0;
+
   const state = { value, scale, flowing: 0 };
+
+  function placeBubbles() {
+    const h = Math.min(1, Math.max(0, state.value / state.scale)) * JAR_USABLE_HEIGHT;
+    bubbles.visible = h > 0.004;
+    seeds.forEach((b, i) => {
+      const t = (b.off + bubblePhase * (0.25 + 0.15 * ((i * 0.77) % 1))) % 1;
+      const s = b.size * (t < 0.08 ? t / 0.08 : t > 0.92 ? (1 - t) / 0.08 : 1);
+      dummy.position.set(Math.sin(b.a + t * 0.8) * b.r, BASE_Y + 0.002 + t * Math.max(0, h - 0.004), Math.cos(b.a + t * 0.8) * b.r);
+      dummy.scale.setScalar(Math.max(s, 1e-5));
+      dummy.updateMatrix();
+      bubbles.setMatrixAt(i, dummy.matrix);
+    });
+    bubbles.instanceMatrix.needsUpdate = true;
+  }
 
   function applyFill() {
     const frac = Math.min(1, Math.max(0, state.value / state.scale));
     const h = frac * JAR_USABLE_HEIGHT;
     liquid.visible = h > 0.0002;
     liquid.scale.y = Math.max(h, 1e-5);
+    placeBubbles();
   }
   applyFill();
 
@@ -147,11 +189,14 @@ export function createStoreJar({ store, scale, value = 0, size = 0.6 }) {
     /** Fade the glow in (after the draw-in) from 0 to 1. */
     setGlowFade(f) {
       liquid.material.uniforms.uFade.value = f;
+      bubbleMat.opacity = f;
     },
     /** Move the pattern while energy flows. Returns true if it moved. */
     animate(dt, flowing) {
       if (!flowing) return false;
       liquid.material.uniforms.uPhase.value += dt * 6; // mm per second
+      bubblePhase += dt;
+      placeBubbles();
       return true;
     },
     /** World position just above the jar, for its label. */

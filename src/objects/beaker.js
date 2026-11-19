@@ -96,7 +96,9 @@ export function createBeaker({ spoutDirection = new Vector3(-1, 0, -0.35) } = {}
   const rise = new Group(); // scaled in y for the pop-up
   group.add(rise);
 
-  const glass = new Mesh(geometry, createInkMaterial({ glass: true, color: '#EEF1EA', glassAlpha: 0.1 }));
+  // Glass is drawn, not rendered: a faint clear body for depth, no hatching,
+  // and the ink rings, silhouettes and gloss strokes do the drawing.
+  const glass = new Mesh(geometry, createInkMaterial({ glass: true, color: '#F3F6F2', glassAlpha: 0.05, maxLayers: 0 }));
   glass.name = 'beaker-glass';
   glass.renderOrder = 2;
   // Glass would cast a solid shadow from the lamp, which looks wrong. A drawn
@@ -106,6 +108,8 @@ export function createBeaker({ spoutDirection = new Vector3(-1, 0, -0.35) } = {}
   rise.add(glass);
   anchorHatching(glass, group);
   const outline = addOutline(glass, hull);
+  // No heavy shell outline on glass: the live side lines are its silhouette.
+  outline.visible = false;
 
   // Feature rings: the top of the lip, the inside of the lip (so the glass
   // thickness shows at the rim), where the wall meets the base, and the
@@ -139,11 +143,28 @@ export function createBeaker({ spoutDirection = new Vector3(-1, 0, -0.35) } = {}
     };
   });
 
+  // Two short gloss strokes, where the light catches the glass: they turn
+  // with the camera, a little inside the left silhouette.
+  const glossSegs = [
+    ...polylineToSegments([new Vector3(0, H * 0.3, R + 0.0002), new Vector3(0, H * 0.72, R + 0.0002)]),
+  ];
+  const gloss = [createInkLines(glossSegs, { widthScale: 0.55 }), createInkLines(polylineToSegments([new Vector3(0, H * 0.36, R + 0.0002), new Vector3(0, H * 0.52, R + 0.0002)]), { widthScale: 0.45 })];
+  gloss.forEach((line, k) => {
+    rise.add(line);
+    line.onBeforeRender = (renderer, scene, camera) => {
+      camLocal.copy(camera.position);
+      group.worldToLocal(camLocal);
+      const alpha = Math.atan2(camLocal.x, camLocal.z);
+      line.rotation.y = alpha - (k === 0 ? 0.62 : 0.78);
+      line.updateMatrixWorld();
+    };
+  });
+
   return {
     group,
     rise,
     glass,
-    lines: [rings, ...sides],
+    lines: [rings, ...sides, ...gloss],
     formUniforms: [glass.material.userData.ink.uForm, outline.material.uniforms.uOpacity],
   };
 }
