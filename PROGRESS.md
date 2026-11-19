@@ -4,6 +4,30 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+## 19 Nov 2026. Daylight look, Lesson 5 illustration, and the eight technique steps
+
+The teacher chose **daylight** as the house look (CLAUDE.md section 4 updated; night stays as `?look=night`). The book's public build was then studied for techniques at the teacher's request. Notes are in our own words in `docs/TECHNIQUES.md`, and no code or text was copied. Built on our own code, one step at a time:
+
+1. **Ink lines as ribbons** (`ink/creases.js`): screen-facing strips with mitred corners, a slow swell in width, tapered ends, a slight overshoot at open ends, and a fixed wobble. A pen draws each object stroke by stroke. Surfaces dissolve in only after the pen finishes.
+2. **Paper shading** (`ink/inkMaterial.js`): darkness comes from a fixed drawing light, or from a real shadow. Hatching is fixed to each object in world space, with its own direction per object, capped coverage and a fade to grey when lines get too fine. The line spacing holds at any zoom.
+3. **Jars** (`objects/beaker.js`, `energy/storeJar.js`): ink-only glass with gloss strokes. The liquid is brighter at its edges, with a bright surface, a swirl and rising bubbles. The store pattern is kept.
+4. **Energy tubes** (`energy/flow.js`): a glowing tube along each transfer, with its colour blended the short way round the hue circle and a motion for each pathway. The particles remain as beads.
+5. **Light:** window light across the desk (a spotlight pattern drawn in code), three coloured lights that tint the paper near full jars, and warm ambient occlusion.
+6. **Page turns:** the drawing folds flat before every turn. The leaf curls with its top corner leading over 1.1 s, then the drawing rises and re-inks on the new page. The page text is still HTML laid onto the page, not yet printed into the page texture.
+7. **The flap and the stamp:** a two-sided flap hinged at the top. Completing a lesson presses a "Balanced" ledger stamp onto the exit page and marks the lesson on the contents page.
+8. **Mannequin people:** shaped lathe limbs with sphere joints and an oval head.
+
+**Lesson 5 page:** a store stand with paper cards printed in perspective (`overlay.addPrinted`), an open-frame half-pipe, ruler numbers printed beside the ruler, no floating tags, a slim ledger and a floating toolbar.
+
+**Checks:** 196 unit tests pass. In the full suite, 149 passed. Two tests timed out under load and pass when run alone.
+
+### Next
+- Print the page text into the page texture, so it turns with the leaf.
+- Store stands with printed cards for the other lessons (only Lesson 5 has them).
+- Cutaways where a lesson needs them (the battery, the kettle).
+
+---
+
 ## 19 Nov 2026. Drawing pass (approved from the sample)
 
 ### House ink style is now D (approved by the teacher)
