@@ -12,6 +12,7 @@
 // the pure part (tested). FlowPath adds the visuals.
 import {
   BufferGeometry, Float32BufferAttribute, Points, ShaderMaterial, CatmullRomCurve3, Vector3, Color, AdditiveBlending,
+  TubeGeometry, Mesh,
 } from 'three';
 import { glowColour, PATHWAYS } from './palette.js';
 import { createInkLines, polylineToSegments } from '../ink/creases.js';
@@ -50,11 +51,97 @@ export class TransferLedger {
 
 const MAX_POINTS = 160;
 
+// The glowing tube along a transfer (docs/TECHNIQUES.md A6, our own take).
+// Its colour runs from the source store to the destination store the short
+// way round the colour wheel, so it never turns a muddy grey. Each pathway
+// moves differently: a ripple (mechanical), sharp pulses (electrical), a
+// shimmer (heating) and dashes (waves).
+const HSV_GLSL = /* glsl */ `
+vec3 el_rgb2hsv(vec3 c) {
+  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+  float d = q.x - min(q.w, q.y);
+  float e = 1.0e-10;
+  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+vec3 el_hsv2rgb(vec3 c) {
+  vec3 p = abs(fract(c.xxx + vec3(1.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0);
+  return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+}
+`;
+
+function tubeMaterial(style, from, to, radius) {
+  return new ShaderMaterial({
+    uniforms: {
+      uFrom: { value: from },
+      uTo: { value: to },
+      uTime: { value: 0 },
+      uActive: { value: 0 },
+      uStyle: { value: style },
+      uRadius: { value: radius },
+    },
+    vertexShader: /* glsl */ `
+      uniform float uTime;
+      uniform float uStyle;
+      uniform float uRadius;
+      varying float vU;
+      varying vec3 vNW;
+      varying vec3 vWorld;
+      void main() {
+        vU = uv.x;
+        // Taper both ends to under half the radius.
+        float taper = mix(0.45, 1.0, smoothstep(0.0, 0.14, min(uv.x, 1.0 - uv.x)));
+        // Heating: the tube's width wavers.
+        if (uStyle > 1.5 && uStyle < 2.5) taper *= 0.85 + 0.25 * sin(uv.x * 40.0 - uTime * 7.0);
+        vec3 centre = position - normal * uRadius;
+        vec3 p = centre + normal * uRadius * taper;
+        vec4 w = modelMatrix * vec4(p, 1.0);
+        vWorld = w.xyz;
+        vNW = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * w;
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uFrom;
+      uniform vec3 uTo;
+      uniform float uTime;
+      uniform float uActive;
+      uniform float uStyle;
+      varying float vU;
+      varying vec3 vNW;
+      varying vec3 vWorld;
+      ${HSV_GLSL}
+      void main() {
+        // Colour: the short way round the hue circle, blended widely for
+        // nearby hues and sharply for distant ones.
+        vec3 a = el_rgb2hsv(uFrom);
+        vec3 b = el_rgb2hsv(uTo);
+        float dh = b.x - a.x;
+        dh -= floor(dh + 0.5);
+        float wide = mix(0.36, 0.05, smoothstep(0.08, 0.3, abs(dh)));
+        float k = smoothstep(0.5 - wide, 0.5 + wide, vU);
+        vec3 hsv = vec3(fract(a.x + dh * k), mix(a.y, b.y, k), mix(a.z, b.z, k));
+        vec3 col = el_hsv2rgb(hsv);
+        float facing = abs(dot(normalize(vNW), normalize(cameraPosition - vWorld)));
+        float bright = 0.55 + 0.45 * facing;
+        float m = 1.0;
+        if (uStyle < 0.5) m = 0.72 + 0.28 * sin((vU * 14.0 - uTime * 3.0) * 6.2832);
+        else if (uStyle < 1.5) m = 0.5 + 1.1 * pow(fract(vU * 5.0 - uTime * 2.6), 10.0);
+        else if (uStyle < 2.5) m = 0.8 + 0.2 * sin(vU * 31.0 + uTime * 9.0);
+        else { if (fract(vU * 9.0 - uTime * 2.2) > 0.55) discard; }
+        gl_FragColor = vec4(col * bright * m * 1.45 * uActive, uActive);
+      }`,
+    transparent: true,
+    depthWrite: false,
+    toneMapped: false,
+  });
+}
+
 function particleMaterial(style) {
   return new ShaderMaterial({
     uniforms: {
       uInkPx: inkUniforms.uInkPx,
-      uSize: { value: [11, 7, 13, 18][style] },
+      uSize: { value: [8, 6, 10, 14][style] },
       uStyle: { value: style },
     },
     vertexShader: /* glsl */ `
@@ -167,6 +254,33 @@ export function createFlowPath({ from, to, pathway, fromStore, toStore, arc = 0.
   pathLine.material.opacity = 0.75;
   pathLine.material.transparent = true;
 
+  // The glowing tube: a child of the ink path, so it shows and hides with it.
+  // It glows while energy moves along it, then fades out.
+  const span = from.distanceTo(to);
+  const radius = Math.min(0.0014, Math.max(0.0007, span * 0.02));
+  const tube = new Mesh(
+    new TubeGeometry(curve, 72, radius, 10, false),
+    tubeMaterial(style, new Color(...glowColour(fromStore, 1.6)), new Color(...glowColour(toStore, 1.6)), radius),
+  );
+  tube.name = 'energy-tube';
+  tube.renderOrder = 4;
+  tube.visible = false;
+  tube.frustumCulled = false;
+  pathLine.add(tube);
+  let glow = 0;
+  let lastNow = 0;
+  function updateTube() {
+    const now = performance.now() / 1000;
+    const dt = lastNow ? Math.min(0.1, now - lastNow) : 0;
+    lastNow = now;
+    const target = ledger.packets.length > 0 ? 1 : 0;
+    glow += (target - glow) * Math.min(1, dt * (target ? 8 : 3));
+    if (target === 0 && glow < 0.01) glow = 0;
+    tube.material.uniforms.uActive.value = glow;
+    tube.material.uniforms.uTime.value += dt;
+    tube.visible = glow > 0;
+  }
+
   // Particles.
   const geo = new BufferGeometry();
   geo.setAttribute('position', new Float32BufferAttribute(new Float32Array(MAX_POINTS * 3), 3));
@@ -184,6 +298,7 @@ export function createFlowPath({ from, to, pathway, fromStore, toStore, arc = 0.
   const p = new Vector3();
 
   function updateVisuals(slow = 1) {
+    updateTube();
     // Show at most MAX_POINTS packets, oldest first.
     const list = ledger.packets.slice(-MAX_POINTS);
     const pos = geo.attributes.position;
@@ -233,6 +348,11 @@ export function createFlowPath({ from, to, pathway, fromStore, toStore, arc = 0.
     get active() {
       return ledger.packets.length > 0;
     },
+    /** True while the tube is still glowing (it fades after the energy lands). */
+    get glowing() {
+      return ledger.packets.length > 0 || glow > 0;
+    },
+    tube,
     clear() {
       ledger.clear();
       updateVisuals();

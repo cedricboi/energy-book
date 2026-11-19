@@ -150,10 +150,18 @@ export function createEnergyKit(ctx, { stores, scale, start, transfers = [], tra
     },
     /** Fade the glow in once the jars have drawn in. Returns true while fading. */
     fadeGlow(dt, ready) {
-      if (!ready || glow >= 1) return false;
+      // Tubes keep glowing briefly after their energy lands, then fade.
+      let tubes = false;
+      for (const f of flows) {
+        if (f.glowing && !f.active) {
+          f.step(0);
+          tubes = tubes || f.glowing;
+        }
+      }
+      if (!ready || glow >= 1) return tubes;
       glow = Math.min(1, glow + dt / 0.5);
       refresh();
-      return glow < 1;
+      return glow < 1 || tubes;
     },
     setGlow(g) {
       glow = g;
