@@ -9,7 +9,7 @@ import { createEnergyKit } from './energyKit.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { createCrate } from '../objects/crate.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
-import { addRuler, shotOf, shotOfJars } from './helpers.js';
+import { addRuler } from './helpers.js';
 import { gravitationalPotentialEnergy } from '../physics/equations.js';
 
 export const DRAW_SCALE = 1 / 20;
@@ -87,11 +87,6 @@ export default function createGpeScene(ctx) {
   api = {
     interactive,
     onParamChange: null,
-    shots: {
-      shelves: shotOf(() => [unit.group, box.group], { fill: 2.2 }),
-      box: shotOf(() => box.group, { fill: 4 }),
-      jar: shotOfJars(kit, null, { fill: 3 }),
-    },
     figure: {
       caption: `The shelves are drawn at 1 : ${Math.round(1 / S)} beside a metre rule.`,
       hint: 'Drag the box up or down to another shelf.',

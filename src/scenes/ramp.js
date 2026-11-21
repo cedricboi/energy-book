@@ -184,16 +184,7 @@ export default function createRampScene(ctx) {
     api.onParamChange?.('height', h);
   }
 
-  // Named shots for the guided steps: where the camera can look.
-  const world = (v) => ctx.scene.localToWorld(v.clone());
-  const jarsCentre = () => kit.jars.kinetic.group.getWorldPosition(new Vector3()).add(new Vector3(0, 0.02, 0));
   const api = {
-    shots: {
-      rider: () => ({ target: rider.group.getWorldPosition(new Vector3()).add(new Vector3(0, 0.012, 0)), dist: 0.2, elevationDeg: 24, azimuthDeg: 8 }),
-      wheels: () => ({ target: rider.group.getWorldPosition(new Vector3()), dist: 0.13, elevationDeg: 24, azimuthDeg: 4 }),
-      jars: () => ({ target: jarsCentre(), dist: 0.24, elevationDeg: 22 }),
-      pipe: () => ({ target: world(toWorld(0, 1.2)), dist: 0.34, elevationDeg: 26 }),
-    },
     figure: {
       caption: `The half-pipe is drawn at 1 : ${Math.round(1 / S)}. The dashed line marks her start height.`,
       hint: 'Drag the skateboarder up either wall, then let go.',

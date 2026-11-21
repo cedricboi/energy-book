@@ -7,7 +7,6 @@ import { LESSONS, loadLesson as importLesson } from '../lessons/index.js';
 import { loadScene } from '../scenes/index.js';
 import { renderPage } from './pages.js';
 import { createPageTurn } from './pageTurn.js';
-import { createBeats } from './beats.js';
 import { createPagePrint } from './pagePrint.js';
 import { createFigureSnapshot } from './figureSnapshot.js';
 import { computeLayout, placeBox, quadMatrix, PRINT_W, printHeight, AREAS } from './layout.js';
@@ -45,19 +44,6 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
   rightPanel.className = 'page-panel page-panel-right is-printed';
   rightPanel.hidden = true;
   overlayRoot.append(rightPanel);
-  // Guided steps: narrated shots before the student takes over.
-  const beats = createBeats({
-    stage,
-    hud,
-    getScene: () => state.scene,
-    reducedMotion,
-    onAway: (away) => [panel, ledgerRoot, figureRoot].forEach((el) => el.classList.toggle('is-away', away)),
-    onChange: () => onChange?.(),
-  });
-  // Touching the controls hands the page to the student.
-  panel.addEventListener('pointerdown', () => beats.interrupt());
-  panel.addEventListener('keydown', () => beats.interrupt());
-
   // Labels keep clear of the printed caption.
   overlay.addBlocker(() => {
     if (figureRoot.hidden || !figureRoot.innerHTML) return null;
@@ -242,7 +228,6 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     state.busy = true;
     const page = lesson.pages[index];
     panel.classList.add('is-leaving');
-    beats.clear();
     if (state.cue) {
       state.cue.position.y -= 0.006;
       state.cue = null;
@@ -326,8 +311,6 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
       panel.classList.remove('is-leaving');
     }
     state.busy = false;
-    // A predict page plays its steps only once the prediction is in.
-    if (!(page.type === 'predict' && !state.progress.answers[page.question?.id])) beats.start(page.beats);
     onChange?.();
   }
 
@@ -390,7 +373,6 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     printer.hold(true);
     if (turning) {
       panel.classList.add('is-leaving');
-      beats.clear();
       const folded = await foldDown();
       if (folded && snapshot && state.group) {
         printer.overlay(sheets.right, snapshot(state.group, stage.camera));
@@ -462,8 +444,9 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     // so keep checking and step to denser spacing when needed.
     if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('dense')) panel.classList.add('dense');
     if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('denser')) panel.classList.add('denser');
-    // A page never scrolls (focus can nudge it), so keep it at its top.
-    if (panel.scrollTop) panel.scrollTop = 0;
+    // A printed page never scrolls (focus can nudge it), so keep it at its
+    // top. The stacked panel scrolls when its page is longer than the panel.
+    if (printed && panel.scrollTop) panel.scrollTop = 0;
     // The contents list is printed on the right page in landscape.
     const showRight = !state.lesson && !!l.rightTextQuad;
     rightPanel.hidden = !showRight;
@@ -502,14 +485,7 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
       const turning = turner.update(dt);
       const drawing = state.drawIn ? state.drawIn.update(dt) : false;
       const moving = state.scene ? state.scene.update(dt, { formReady: formReady() }) : false;
-      // Steps wait for the diagram to finish drawing in.
-      const guiding = formReady() && !turning ? beats.update() : beats.playing;
-      return turning || drawing || moving || guiding;
-    },
-    beats,
-    /** The student touched the model or the view: stop the guided steps. */
-    interrupt() {
-      beats.interrupt();
+      return turning || drawing || moving;
     },
     layout,
     get state() {

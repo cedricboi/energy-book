@@ -34,11 +34,6 @@ export default {
       type: 'explore',
       scene: 'work',
       title: 'Push the crate, then the wall',
-      beats: [
-        { say: 'A person stands ready to push a crate across the floor.', shot: 'person', seconds: 3 },
-        { say: 'One jar shows the chemical potential store of the person. The other shows the internal store.', shot: 'jars', seconds: 4 },
-        { say: 'Your turn. Tap the person, or press Push.' },
-      ],
       text: ['The person pushes the crate at a steady speed. Friction with the floor warms the crate and the floor.'],
       goal: 'Push the crate with different forces and distances. Then choose the wall and push it as hard as you can.',
       controls: ['target', 'force', 'distance'],

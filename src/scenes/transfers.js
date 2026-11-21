@@ -6,7 +6,6 @@
 // No joules are shown yet.
 import { Group, Vector3, BoxGeometry, CylinderGeometry, SphereGeometry, LatheGeometry, Vector2 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { shotOf } from './helpers.js';
 import { kettleGeometry, kettleInside } from '../objects/kettle.js';
 import { createCutaway } from '../objects/cutaway.js';
 import { createEnergyKit } from './energyKit.js';
@@ -162,10 +161,6 @@ export default function createTransfersScene(ctx) {
   build('catapult');
 
   const api = {
-    shots: {
-      device: shotOf(() => (current?.objects ?? []).map((o) => o.group), { fill: 2.4 }),
-      jars: shotOf(() => Object.values(current?.kit.jars ?? {}).map((j) => j.group), { fill: 2.2, elevationDeg: 22 }),
-    },
     get figure() {
       return { caption: `The ${current.dev.label.toLowerCase()} transfers energy from one store to others.`, hint: 'Tap the device to run it.' };
     },

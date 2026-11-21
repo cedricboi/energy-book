@@ -501,18 +501,7 @@ html, body {
 .q-fb-text { font-size: 0.84em; line-height: 1.32; font-style: normal; }
 .page-panel.is-printed .q-feedback { margin-top: 0.45em; padding: 0.35em 0.65em 0.45em; }
 
-/* Guided steps in the bottom bar: the sentence, progress dots, pause and skip. */
-.hud-beat { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; justify-content: center; }
-.hud-beat[hidden] { display: none; }
-.hud-beat-text { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; }
-.hud-dots { display: inline-flex; gap: 5px; flex: none; }
-.hud-dots i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid rgba(244, 238, 223, 0.6); }
-.hud-dots i.done { background: rgba(244, 238, 223, 0.6); }
-.hud-dots i.on { background: var(--lamp); border-color: var(--lamp); }
-.hud-beat-play, .hud-beat-skip { min-width: 42px; padding: 0 !important; }
-/* The text page steps aside while a guided shot is close up. */
 .page-panel, .ledger-slot, .figure-slot { transition: opacity 0.35s ease; }
-.is-away { opacity: 0 !important; pointer-events: none !important; }
 
 /* Text printed onto surfaces in the scene: paper cards on the jars, ruler marks. */
 .printed { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; color: var(--ink); font-family: var(--font-book); }
@@ -547,8 +536,6 @@ html, body {
 html[data-look=day] .hud { background: rgba(250, 247, 240, 0.92); color: var(--ink); box-shadow: 0 6px 22px rgba(40, 30, 20, 0.18); }
 html[data-look=day] .hud-btn, html[data-look=day] .hud-quality select { color: var(--ink); }
 html[data-look=day] .hud-btn:hover { background: rgba(30, 27, 36, 0.07); }
-html[data-look=day] .hud-dots i { border-color: rgba(30, 27, 36, 0.5); }
-html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 
 /* While a diagram folds back onto the page, its labels and cards fade. */
 .label, .printed { transition: opacity 0.25s ease; }
@@ -714,3 +701,33 @@ html[data-look=day] .hud-dots i.done { background: rgba(30, 27, 36, 0.45); }
 .eq-box, .work-box, .todays-questions { border-width: 1.4px; }
 .page-running { border-bottom-width: 1.4px; }
 .page-kicker, .key-words-head, .key-head, .how-to h3, .toc-num { font-weight: 700; }
+
+/* A part's name, handwritten on the page beside its drawing. */
+.scene-note.is-hand { font-family: var(--font-hand); font-weight: 400; font-size: 36px; }
+
+/* The stacked layout (a tall or narrow window): the text panel scrolls when
+   its page is longer than the panel, with a soft shadow where more waits. */
+.page-panel.is-portrait {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  background:
+    linear-gradient(var(--paper) 40%, rgba(244, 238, 223, 0)) top / 100% 28px no-repeat local,
+    linear-gradient(rgba(244, 238, 223, 0), var(--paper) 60%) bottom / 100% 28px no-repeat local,
+    linear-gradient(rgba(30, 27, 36, 0.16), rgba(30, 27, 36, 0)) top / 100% 10px no-repeat scroll,
+    linear-gradient(rgba(30, 27, 36, 0), rgba(30, 27, 36, 0.16)) bottom / 100% 10px no-repeat scroll,
+    var(--paper);
+}
+
+/* Narrow windows: the bar's buttons stay on one line, and the contents list
+   comes straight after the title. */
+.hud-btn { white-space: nowrap; }
+@media (max-width: 480px) {
+  .hud-mute { display: none; }
+  .hud-title { font-size: 0.85em; }
+}
+.page-panel.is-portrait[data-type=contents] .page-body { display: flex; flex-direction: column; }
+.page-panel.is-portrait[data-type=contents] .title-motto { order: -2; }
+.page-panel.is-portrait[data-type=contents] .toc-portrait { order: -1; margin-bottom: 1em; }
+.page-panel.is-portrait[data-type=contents] .page-title { font-size: 1.7em; }

@@ -188,6 +188,9 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, ledger
   const observer = new MutationObserver((records) => {
     for (const r of records) {
       const t = r.target.nodeType === 1 ? r.target : r.target.parentElement;
+      // Writing an attribute's old value back is not a change (the layout
+      // sets hidden and classes every frame).
+      if (r.type === 'attributes' && r.oldValue === r.target.getAttribute(r.attributeName)) continue;
       // The panel's own position changes every frame: not a change of content.
       if (r.type === 'attributes' && roots.includes(t) && r.attributeName === 'style') continue;
       // Changes inside a live control do not move the printed text.
@@ -198,7 +201,7 @@ export function createPagePrint({ scene, leaf, panel, figure, rightPanel, ledger
   function watch() {
     if (!enabled) return;
     for (const el of roots) {
-      observer.observe(el, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'hidden', 'style', 'open', 'src'] });
+      observer.observe(el, { childList: true, subtree: true, characterData: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'hidden', 'style', 'open', 'src'] });
     }
   }
   for (const el of roots) {

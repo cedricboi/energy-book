@@ -36,11 +36,6 @@ export default {
       type: 'explore',
       scene: 'power',
       title: 'Two people, two times',
-      beats: [
-        { say: 'Two people carry the same bag up the same stairs.', shot: 'stairs', seconds: 3.5 },
-        { say: 'Each jar shows the energy in the gravitational potential store of one bag.', shot: 'jars', seconds: 3.5 },
-        { say: 'Your turn. Set a time for each person, then start the stopwatches.' },
-      ],
       text: [`Each person lifts a ${fq(STAIRS.bag, 'kg', 2)} bag up ${fq(STAIRS.height, 'm', 2)} of stairs.`],
       goal: 'Set a different time for each person and start the stopwatches. Watch how fast each jar fills, and how full each ends.',
       controls: ['timeA', 'timeB'],
@@ -63,10 +58,6 @@ export default {
       type: 'explore',
       scene: 'power',
       title: 'Two kettles',
-      beats: [
-        { say: 'Two kettles heat the same mass of water.', shot: 'kettles', seconds: 3 },
-        { say: 'Your turn. Start the stopwatches and compare the two times.' },
-      ],
       text: ['Both kettles heat the same water, which needs the same energy to boil.'],
       goal: 'Start the stopwatches. Which kettle boils its water first, and how do the two times compare?',
       actions: ['run', 'reset'],

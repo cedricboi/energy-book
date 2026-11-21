@@ -27,9 +27,11 @@ const merge = (parts) => {
 };
 
 export default function createLedgerRunScene(ctx) {
-  const z = 0.045;
-  const x0 = BOOK.gutter + 0.03;
-  const W = (xm, ym = 0) => new Vector3(x0 + xm * S, pageSurfaceY(x0 + xm * S, z) + ym * S, z);
+  const z = 0.035;
+  // The machine starts near the spine, so its raised cup at the far end
+  // (and the cup's name) stay over the page.
+  const x0 = BOOK.gutter + 0.012;
+  const W = (xm, ym = 0) => new Vector3(x0 + xm * S, pageSurfaceY(x0 + xm * S, z) + 0.0008 + ym * S, z);
   const kit = createEnergyKit(ctx, {
     stores: ['gravitational', 'elastic', 'chemical', 'kinetic', 'internal'],
     scale: 0.5,
@@ -64,7 +66,8 @@ export default function createLedgerRunScene(ctx) {
     ctx.scene.add(machine);
     const segs = [];
     const floorEnd = 1.72;
-    segs.push(...polylineToSegments([W(0, 0), W(floorEnd, 0)]));
+    // The floor follows the page's curve (a single straight line would dip under the paper).
+    segs.push(...polylineToSegments(Array.from({ length: 25 }, (_, i) => W((floorEnd * i) / 24, 0))));
     const uses = (id) => level.inputs[id] !== undefined;
     const start = (inputs.height ?? 0) + (level.startHeight ?? 0);
     if (uses('height') || level.startHeight) {
@@ -111,7 +114,7 @@ export default function createLedgerRunScene(ctx) {
       machine.add(gate.group);
       ctx.overlay.setHtml('target', `speed gate, ${formatQuantity(level.target.speed, 'm/s', 2)}`);
     }
-    machine.add(createInkLines(segs, { widthScale: 0.8, chain: false }));
+    machine.add(createInkLines(segs, { widthScale: 1.3, chain: false }));
     labelParts();
   }
 
@@ -145,7 +148,7 @@ export default function createLedgerRunScene(ctx) {
     for (const [k, list] of Object.entries(lines)) add(`part-${k}`, spot[k], list.join('<br>'));
   }
 
-  ctx.overlay.add({ id: 'target', kind: 'part', anchor: () => (level.target.height !== undefined ? W(1.62, level.target.height + 0.12) : W(1.45, 0.25)), html: '', gap: 2 });
+  ctx.overlay.add({ id: 'target', kind: 'part', anchor: () => (level.target.height !== undefined ? W(1.62, level.target.height + 0.12) : W(1.45, 0.25)), html: '', gap: 2, prefer: 'left' });
   ctx.overlay.add({ id: 'result', anchor: () => W(1.0, 0.75), html: '', gap: 2 });
   ctx.overlay.setVisible('result', false);
 

@@ -33,11 +33,6 @@ export default {
       type: 'explore',
       scene: 'gpe',
       title: 'Height and mass',
-      beats: [
-        { say: 'Four shelves stand beside a metre rule.', shot: 'shelves', seconds: 3 },
-        { say: 'The jar shows the energy in the gravitational potential store of the box.', shot: 'jar', seconds: 3.5 },
-        { say: 'Your turn. Drag the box up to another shelf.' },
-      ],
       text: ['Put the box on different shelves, and change its mass. Watch the gravitational potential jar.'],
       goal: 'Move the box from the 0.5 m shelf to the 1.0 m shelf. Then go back and double its mass instead. What happens to the energy each time?',
       controls: ['shelf', 'mass'],

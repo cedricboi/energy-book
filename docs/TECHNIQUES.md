@@ -139,7 +139,7 @@ The headline: Every Joule is built the same way as our book (three.js, everythin
 ### C6. Guided steps
 - **The sequence:** five shots of about 2 s each, with a hand-over as the fifth. Each shot has a camera position and target in the diagram's own frame, a follow target and an action.
 - **When it plays:** automatically, once per lesson, shortly after the diagram goes live, after a close "hero" shot on first arrival.
-- **Ours:** already close in spirit.
+- **Ours:** built, then removed on 22 Nov 2026 at the teacher's request. The page is shown as it is, with no step bar and no camera moves.
 
 ---
 

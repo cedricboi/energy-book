@@ -68,10 +68,7 @@ async function start() {
   const orbit = createDragOrbit(canvas, {
     maxDeg: 15,
     reducedMotion,
-    onStart: () => {
-      book?.interrupt();
-      loop.hold('drag');
-    },
+    onStart: () => loop.hold('drag'),
     onEnd: () => loop.release('drag'),
   });
 
@@ -79,7 +76,6 @@ async function start() {
   // listens in the capture phase, so a press on an object never orbits.
   createPicker(canvas, stage.camera, {
     getTargets: () => book?.state.scene?.interactive ?? [],
-    onStart: () => book?.interrupt(),
     onChange: () => loop.request(),
   });
 
@@ -96,8 +92,6 @@ async function start() {
       saveTier(q === 'auto' ? null : q);
       location.reload();
     },
-    onBeatToggle: () => book?.beats.toggle(),
-    onBeatSkip: () => book?.beats.skip(),
     quality: forcedTier() ?? 'auto',
     muted: isMuted(),
   });
@@ -115,7 +109,7 @@ async function start() {
   }
 
   loop = createLoop((dt) => {
-    const orbiting = orbit.update(dt) || stage.updateShot(dt);
+    const orbiting = orbit.update(dt);
     const a = book ? book.update(dt) : false;
     const b = demo ? demo.drawIn.update(dt) || (demo.update ? demo.update(dt) : false) : false;
     drawFrame(dt);
@@ -209,10 +203,6 @@ async function start() {
     },
     /** Finish the draw-in and put the scene at model time t, then draw. */
     settle(t) {
-      // Screenshots show the page as the student gets it: guided steps
-      // handed over, camera at the reading view.
-      book.beats.interrupt();
-      stage.setShot(null, 0);
       // Skip the fade back in, so the screenshot shows the finished page.
       for (const el of document.querySelectorAll('.page-panel, .ledger-slot, .figure-slot')) {
         el.style.transition = 'none';
@@ -266,16 +256,6 @@ async function start() {
         out.push({ visible: vis, pen: o.material.uniforms.uPen.value, strokes: o.userData.strokes });
       });
       return out;
-    },
-    /** The guided steps: { index, playing, text, away, inShot }. */
-    beats() {
-      return {
-        index: book.beats.index,
-        playing: book.beats.playing,
-        text: document.querySelector('.hud-beat:not([hidden]) .hud-beat-text')?.textContent ?? null,
-        away: book.panel.classList.contains('is-away'),
-        inShot: stage.inShot,
-      };
     },
   };
 

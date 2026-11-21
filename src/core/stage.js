@@ -20,7 +20,10 @@ import { setPageLightProvider } from '../ink/inkMaterial.js';
 export const STACK_BELOW_ASPECT = 1.0;
 // Height kept in frame above the head of the page (jars plus their labels), m.
 const JAR_ROOM = 0.085;
-export const isStacked = (aspect) => aspect < STACK_BELOW_ASPECT;
+// Below this window width the printed page's text would be too small to
+// read (under about 12 px), so a small window is stacked whatever its shape.
+export const STACK_BELOW_WIDTH = 700;
+export const isStacked = (aspect, width = Infinity) => aspect < STACK_BELOW_ASPECT || width < STACK_BELOW_WIDTH;
 
 export const LAMP_HEX = '#FFD9A0';
 const WALL_Z = -0.42;
@@ -102,7 +105,7 @@ function windowCookie() {
 
 /** Camera poses. `reading` is the working view, `intro` shows the window. */
 const POSES = {
-  reading: { elevationDeg: 46, fovDeg: 30 },
+  reading: { elevationDeg: 54, fovDeg: 30 },
   intro: { fovDeg: 34, position: new Vector3(0, 0.2, 0.92), target: new Vector3(0, 0.2, -0.3) },
 };
 
@@ -160,26 +163,24 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
   if (look === 'day') {
     // Soft daylight from a high window at the upper left, a bright sky fill
     // and light bounced off the desk. No lamp spill.
+    // The window light does most of the work and the sky fill is modest,
+    // so shadows are clear and fairly crisp, and the paper reads white.
     lamp.color.set('#FFF7EC');
-    lamp.intensity = 3.1;
-    lamp.angle = 0.75;
-    lamp.penumbra = 1;
-    lamp.position.set(-0.7, 1.1, 0.35);
     lampTarget.position.set(0, 0, 0);
-    lamp.shadow.radius = 10;
+    lamp.shadow.radius = 3.5;
     spill.intensity = 0;
     moon.color.set('#E3EAF6');
-    moon.intensity = 0.7;
+    moon.intensity = 0.45;
     hemi.color.set('#F3F1EC');
-    hemi.groundColor.set('#A8927A');
-    hemi.intensity = 1.25;
+    hemi.groundColor.set('#B9A58E');
+    hemi.intensity = 0.95;
     // The window's pattern falls across the desk (the spotlight casts shadows,
     // which its pattern needs).
     lamp.map = windowCookie();
-    lamp.intensity = 4.2;
+    lamp.intensity = 5.0;
     lamp.angle = 0.62;
     lamp.penumbra = 0.25;
-    lamp.position.set(-0.75, 1.05, -0.55);
+    lamp.position.set(-0.85, 0.95, -0.5);
   }
 
   // Energy lights the paper: a small fixed set of coloured point lights that
@@ -343,59 +344,15 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
       camera.updateProjectionMatrix();
       return;
     }
-    const { target, dist } = framing(regionAspect, isStacked(aspect));
+    const { target, dist } = framing(regionAspect, isStacked(aspect, viewW));
     const elevation = MathUtils.degToRad(pose.elevationDeg) + pitch;
-    basePos.set(
+    camera.position.set(
       target.x + dist * Math.cos(elevation) * Math.sin(yaw),
       target.y + dist * Math.sin(elevation),
       target.z + dist * Math.cos(elevation) * Math.cos(yaw),
     );
-    baseTgt.copy(target);
-    // A guided shot: blend from where the camera was to the shot's pose.
-    let toPos = basePos;
-    let toTgt = baseTgt;
-    const f = shot.to?.();
-    if (f) {
-      const e = MathUtils.degToRad(f.elevationDeg ?? pose.elevationDeg);
-      const az = MathUtils.degToRad(f.azimuthDeg ?? 0);
-      focusTgt.copy(f.target);
-      focusPos.set(f.target.x + f.dist * Math.cos(e) * Math.sin(az), f.target.y + f.dist * Math.sin(e), f.target.z + f.dist * Math.cos(e) * Math.cos(az));
-      toPos = focusPos;
-      toTgt = focusTgt;
-    }
-    if (shot.from && shot.t < 1) {
-      const k = shot.t * shot.t * (3 - 2 * shot.t); // ease in and out
-      camera.position.lerpVectors(shot.from.pos, toPos, k);
-      lookTgt.lerpVectors(shot.from.tgt, toTgt, k);
-    } else {
-      camera.position.copy(toPos);
-      lookTgt.copy(toTgt);
-    }
-    camera.lookAt(lookTgt);
+    camera.lookAt(target);
     camera.updateProjectionMatrix();
-  }
-
-  // Guided shots (CLAUDE.md section 11: never with reduced motion; the book
-  // checks that). shot.to returns { target, dist, elevationDeg?, azimuthDeg? }
-  // each frame, so a shot can follow a moving object. Null is the reading view.
-  const basePos = new Vector3();
-  const baseTgt = new Vector3();
-  const focusPos = new Vector3();
-  const focusTgt = new Vector3();
-  const lookTgt = new Vector3();
-  const shot = { from: null, to: null, t: 1, seconds: 1, start: 0 };
-  function setShot(to, seconds = 1.4) {
-    shot.from = { pos: camera.position.clone(), tgt: lookTgt.clone() };
-    shot.to = to;
-    shot.t = seconds > 0 ? 0 : 1;
-    shot.seconds = Math.max(0.01, seconds);
-    shot.start = performance.now();
-  }
-  /** Step a shot's blend (by the clock). Returns true while the camera is still moving. */
-  function updateShot() {
-    if (shot.t >= 1) return false;
-    shot.t = Math.min(1, (performance.now() - shot.start) / 1000 / shot.seconds);
-    return true;
   }
 
   return {
@@ -415,12 +372,6 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
     },
     placeCamera,
     energyLights,
-    setShot,
-    updateShot,
-    /** True while a guided shot holds the camera away from the reading view. */
-    get inShot() {
-      return !!shot.to || shot.t < 1;
-    },
     setTier(t) {
       if (lamp.shadow.mapSize.x !== t.shadowMapSize) {
         lamp.shadow.mapSize.set(t.shadowMapSize, t.shadowMapSize);

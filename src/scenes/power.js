@@ -11,7 +11,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createStoreJar } from '../energy/storeJar.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
-import { createPerson, shotOf } from './helpers.js';
+import { createPerson } from './helpers.js';
 import { createStand } from './stand.js';
 import { kettleGeometry, kettleInside } from '../objects/kettle.js';
 import { createCutaway } from '../objects/cutaway.js';
@@ -142,11 +142,6 @@ export default function createPowerScene(ctx) {
   build();
 
   const api = {
-    shots: {
-      stairs: shotOf(() => (parts.kind === 'stairs' ? [parts.stairs.group, ...parts.people.map((x) => x.p.group)] : []), { fill: 2 }),
-      kettles: shotOf(() => (parts.kind === 'kettles' ? parts.kettles.map((k) => k.group) : []), { fill: 2.2 }),
-      jars: shotOf(() => parts.jars.map((j) => j.jar.group), { fill: 2.2, elevationDeg: 22 }),
-    },
     get figure() {
       return parts.kind === 'stairs'
         ? { caption: `The staircase is drawn at 1 : ${Math.round(1 / S)}. It is ${formatQuantity(STAIRS.height, 'm', 2)} high.`, hint: 'Tap a person to start the stopwatches.' }

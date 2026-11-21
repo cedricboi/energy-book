@@ -10,7 +10,7 @@ import { createEnergyKit } from './energyKit.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { createInkLines, polylineToSegments } from '../ink/creases.js';
 import { pageSurfaceY, BOOK } from '../objects/book.js';
-import { carGeometry, addRuler, shotOf, shotOfJars, addNote } from './helpers.js';
+import { carGeometry, addRuler, addNote } from './helpers.js';
 import { kineticEnergy, distanceFromWorkDone } from '../physics/equations.js';
 import { formatQuantity } from '../physics/format.js';
 import { play } from '../core/sound.js';
@@ -91,11 +91,6 @@ export default function createKineticScene(ctx) {
   reset();
 
   api = {
-    shots: {
-      car: shotOf(() => car.group, { fill: 3.2 }),
-      clay: shotOf(() => clay.group, { fill: 3.2 }),
-      jars: shotOfJars(kit),
-    },
     figure: {
       caption: 'The car and the clay are drawn at real size and shown ten times slower.',
       hint: 'Tap the car to roll it.',

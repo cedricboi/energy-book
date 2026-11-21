@@ -15,7 +15,7 @@ export const PORTRAIT_PANEL = 0.44; // fraction of the height for the text panel
 
 /** Fraction of the screen height the stage must keep clear at the bottom. */
 export function reserveFor(width, height) {
-  return isStacked(width / height) ? PORTRAIT_PANEL : HUD_HEIGHT / height;
+  return isStacked(width / height, width) ? PORTRAIT_PANEL : HUD_HEIGHT / height;
 }
 
 const v = new Vector3();
@@ -98,7 +98,7 @@ export function quadMatrix(w, h, quad) {
  * @returns {{ portrait: boolean, text: object, ledger: object, textQuad?: object[], ledgerQuad?: object[] }} rectangles in CSS px
  */
 export function computeLayout(camera, rect, { wide = false } = {}) {
-  const portrait = isStacked(rect.width / rect.height);
+  const portrait = isStacked(rect.width / rect.height, rect.width);
   if (wide && portrait) {
     // The contents in the stacked layout uses the whole screen.
     return {

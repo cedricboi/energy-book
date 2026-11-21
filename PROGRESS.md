@@ -4,6 +4,21 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 ---
 
+
+## 22 Nov 2026. Guided steps removed, bug hunt, small-window layout
+
+The teacher asked for three things: no "next step" bar (show the page as it is), fix the bugs, and check against Every Joule again.
+
+- **Guided steps removed.** `book/beats.js`, the bar's step text, dots, pause and skip, the camera shots (`stage.setShot`, `scene.shots`, `shotOf`) and every lesson's `beats` list are gone, with `tests/beats.spec.js`. A page opens at the reading view and stays there. The bar shows the page title again.
+- **Bug: the page was reprinted about four times a second, forever.** `layout()` writes `hidden` and classes on the caption and contents panels every frame. Writing the same value still fires a mutation record, and the print watcher took each one as a change, so it reprinted the page texture and asked for another frame, which ran `layout()` again. The book never truly rested, which made everything sluggish and made real clicks on the contents rows unreliable. The watcher now compares the old and new attribute values (`attributeOldValue`) and ignores no-change writes.
+- **Bug: small windows.** In the stacked layout the text panel was cut off with no way to scroll, so the lesson list, sliders and buttons could not be reached (seen at 320 px and 600 px wide). The stacked panel now scrolls, with a soft shadow where more waits. Windows under 700 px wide use the stacked layout whatever their shape (`STACK_BELOW_WIDTH`), because the printed page's text would be under about 12 px. In a narrow contents page the lesson list comes straight after the title, and the bar's buttons stay on one line.
+- **Lesson 1:** part names are handwritten flat on the page in front of each object (`addNote` with `is-hand`), so they no longer cover the drawings. The tall cup moved to the back row and the catapult to the front.
+- **Ledger Run:** the machine starts near the spine, so the raised cup and its name stay over the page. The floor line follows the page's curve (a single straight line dipped under the paper and vanished), and the track lines are bolder.
+- **Light:** the window light is stronger and the sky fill lower, with a tighter shadow blur, so objects cast clear shadows on the page (lamp 5.0, hemisphere 0.95, shadow radius 3.5).
+- **Camera:** the reading view looks down more steeply (54°, was 46°), so both pages are larger and less foreshortened, closer to how the reference frames its book.
+- **Lesson 1 details:** steam rises from the kopi and speed lines trail the car.
+- **Tools:** `scripts/all-pages.mjs` screenshots every page of every lesson and reports errors and overflow. `scripts/walk.mjs` walks the book with real clicks and real turns.
+
 ## 20 Nov 2026. The page text is printed into the paper
 
 The largest gap from the technique study (TECHNIQUES.md C1) is closed. On landscape lesson pages the words are now part of the page itself.
