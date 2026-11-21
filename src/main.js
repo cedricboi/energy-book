@@ -27,6 +27,7 @@ import { createOverlay } from './ui/overlay.js';
 import { createHud } from './ui/hud.js';
 import { createBook } from './book/book.js';
 import { reserveFor } from './book/layout.js';
+import { paperTone } from './ink/paper.js';
 import { createDebugPanel } from './ui/debug.js';
 import { setMuted, isMuted, unlockAudio } from './core/sound.js';
 
@@ -53,7 +54,14 @@ async function start() {
   // Daylight is the house look. ?look=night shows the lamp-lit night version.
   const look = params.get('look') === 'night' ? 'night' : 'day';
   document.documentElement.dataset.look = look;
-  const stage = createStage({ tier, view, focus: { x: 0.1057, y: 0.058, z: 0.06 }, look });
+  // A sample for the teacher: whiter paper on a pale desk with a mat.
+  const bright = look === 'day' && params.get('paper') === 'white';
+  if (bright) {
+    paperTone.paper = '#FBFAF5';
+    paperTone.shadow = '#E3DFD3';
+    document.documentElement.style.setProperty('--paper', '#FBFAF5');
+  }
+  const stage = createStage({ tier, view, focus: { x: 0.1057, y: 0.058, z: 0.06 }, look, bright });
   usePreset(INK_PRESETS[params.get('ink')] ? params.get('ink') : HOUSE_INK);
   const post = createPost(renderer, stage.scene, stage.camera, { tier, look, toneMapping: params.get('tm') ?? (look === 'day' ? 'neutral' : 'aces') });
   if (params.get('debug') === 'hot') post.setDebugHot(true);

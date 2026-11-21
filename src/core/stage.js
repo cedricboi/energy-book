@@ -4,7 +4,7 @@
 // No lesson content lives here.
 import {
   Scene, PerspectiveCamera, SpotLight, PointLight, DirectionalLight, HemisphereLight, Object3D,
-  Mesh, PlaneGeometry, ShaderMaterial, Vector2, Vector3, Color, MathUtils, CanvasTexture, SRGBColorSpace,
+  Mesh, PlaneGeometry, ShaderMaterial, Shape, ShapeGeometry, MeshLambertMaterial, Vector2, Vector3, Color, MathUtils, CanvasTexture, SRGBColorSpace,
 } from 'three';
 import { createBook, BOOK, BOOK_EXTENT } from '../objects/book.js';
 import { createDesk } from '../objects/desk.js';
@@ -103,6 +103,29 @@ function windowCookie() {
   return tex;
 }
 
+/** A plain desk mat under the book, with rounded corners. It lies flat on the desk. */
+function deskMat(hex) {
+  const w = BOOK_EXTENT.width / 2 + 0.11;
+  const d = BOOK_EXTENT.depth / 2 + 0.075;
+  const r = 0.018;
+  const s = new Shape();
+  s.moveTo(-w + r, -d);
+  s.lineTo(w - r, -d);
+  s.quadraticCurveTo(w, -d, w, -d + r);
+  s.lineTo(w, d - r);
+  s.quadraticCurveTo(w, d, w - r, d);
+  s.lineTo(-w + r, d);
+  s.quadraticCurveTo(-w, d, -w, d - r);
+  s.lineTo(-w, -d + r);
+  s.quadraticCurveTo(-w, -d, -w + r, -d);
+  const mesh = new Mesh(new ShapeGeometry(s, 8), new MeshLambertMaterial({ color: new Color(hex) }));
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.y = 0.00015;
+  mesh.receiveShadow = true;
+  mesh.name = 'desk-mat';
+  return mesh;
+}
+
 /** Camera poses. `reading` is the working view, `intro` shows the window. */
 const POSES = {
   reading: { elevationDeg: 54, fovDeg: 30 },
@@ -118,8 +141,9 @@ const LOOKS = {
   day: { background: '#DCD6CB', desk: '#C4A988', wall: '#CFC8BA' },
 };
 
-export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.05, z: 0 }, look = 'day' }) {
-  const L = LOOKS[look] ?? LOOKS.night;
+export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.05, z: 0 }, look = 'day', bright = false }) {
+  // bright: a sample of whiter paper on a pale desk with a mat (?paper=white).
+  const L = bright ? { background: '#E4E2DC', desk: '#DCCDB6', wall: '#CFC8BA' } : LOOKS[look] ?? LOOKS.night;
   const scene = new Scene();
   scene.background = new Color(L.background);
 
@@ -131,6 +155,7 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
   const book = createBook();
   scene.add(book);
   scene.add(contactShadow());
+  if (bright) scene.add(deskMat('#B9C6BE'));
 
   // Warm desk lamp, just out of frame at the upper left. Only its pool of
   // light is seen. The pool is centred on the left page and falls off to the right.
@@ -181,6 +206,14 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
     lamp.angle = 0.62;
     lamp.penumbra = 0.25;
     lamp.position.set(-0.85, 0.95, -0.5);
+    if (bright) {
+      // Whiter paper reflects more, so the light comes down to keep lit
+      // paper under the bloom threshold. The light itself is a cooler white.
+      lamp.color.set('#FFFCF7');
+      lamp.intensity = 4.55;
+      hemi.groundColor.set('#C9C6BE');
+      hemi.intensity = 0.9;
+    }
   }
 
   // Energy lights the paper: a small fixed set of coloured point lights that

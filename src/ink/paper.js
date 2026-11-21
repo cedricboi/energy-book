@@ -10,6 +10,12 @@ import { MeshLambertMaterial, Color, Vector2, DataTexture } from 'three';
 
 export const PAPER_HEX = '#F4EEDF';
 export const PAPER_SHADOW_HEX = '#D9CFB8';
+/**
+ * The paper's colours as used by the materials. The house values are the
+ * ones above. A sample look (?paper=white) sets whiter ones before the
+ * stage is built.
+ */
+export const paperTone = { paper: PAPER_HEX, shadow: PAPER_SHADOW_HEX };
 
 // A blank print: one transparent texel, used until a page has text on it.
 const BLANK = new DataTexture(new Uint8Array(4), 1, 1);
@@ -73,12 +79,12 @@ export function injectVaryings(shader) {
  * @param {number} o.seed   offsets the noise so the two pages differ
  */
 export function createPaperMaterial({ width, height, spineU, seed = 0 }) {
-  const material = new MeshLambertMaterial({ color: new Color(PAPER_HEX) });
+  const material = new MeshLambertMaterial({ color: new Color(paperTone.paper) });
   const uniforms = {
     uPageSize: { value: new Vector2(width, height) },
     uSpineU: { value: spineU },
     uSeed: { value: seed },
-    uShadowTone: { value: new Color(PAPER_SHADOW_HEX) },
+    uShadowTone: { value: new Color(paperTone.shadow) },
     // The printed text (book/pagePrint.js): a canvas covering the whole
     // page, for the front face and the back face (the turning leaf has
     // both). uPrintFlip says, per face, whether the canvas runs from the
@@ -165,7 +171,7 @@ export function createPaperMaterial({ width, height, spineU, seed = 0 }) {
 
 /** The stacked edges of the page block (head, tail and fore-edge). */
 export function createPageEdgeMaterial() {
-  const material = new MeshLambertMaterial({ color: new Color(PAPER_SHADOW_HEX) });
+  const material = new MeshLambertMaterial({ color: new Color(paperTone.shadow) });
   material.onBeforeCompile = (shader) => {
     injectVaryings(shader);
     shader.fragmentShader = shader.fragmentShader.replace(
