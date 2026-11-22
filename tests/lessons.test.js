@@ -7,13 +7,15 @@ import { describe, it, expect } from 'vitest';
 import { LESSONS } from '../src/lessons/index.js';
 import { mark, close } from '../src/ui/marking.js';
 
-const PAGE_TYPES = new Set(['hook', 'predict', 'explore', 'name', 'use', 'check', 'notes', 'exit', 'text', 'game', 'win']);
+const PAGE_TYPES = new Set(['hook', 'predict', 'explore', 'name', 'use', 'check', 'notes', 'exit', 'text', 'game', 'win', 'spread']);
 
 function questionsOf(lesson) {
   const out = [];
   for (const p of lesson.pages) {
     if (p.question) out.push({ q: p.question, page: p });
     for (const q of p.questions ?? []) out.push({ q, page: p });
+    // A textbook spread carries its questions in its blocks.
+    for (const b of [...(p.left ?? []), ...(p.right ?? [])]) if (b?.q) out.push({ q: b.q, page: p });
   }
   return out;
 }
@@ -32,7 +34,12 @@ for (const entry of LESSONS) {
     }
     it('uses only known page types, and opens with today\'s questions', () => {
       for (const p of lesson.pages) expect(PAGE_TYPES.has(p.type), p.type).toBe(true);
-      if (!lesson.hidden && !lesson.game) {
+      if (lesson.textbook) {
+        // A textbook lesson is a few dense spreads, and the last one earns the stamp.
+        expect(lesson.questions?.length).toBeGreaterThan(0);
+        expect(lesson.pages.every((p) => p.type === 'spread')).toBe(true);
+        expect(lesson.pages.at(-1).completes).toBe(true);
+      } else if (!lesson.hidden && !lesson.game) {
         expect(lesson.questions?.length).toBeGreaterThan(0);
         expect(lesson.pages[0].type).toBe('hook');
         expect(lesson.pages.at(-1).type).toBe('exit');

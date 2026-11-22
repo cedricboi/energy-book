@@ -5,6 +5,19 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 ---
 
 
+
+## 23 Nov 2026. Sample: Lesson 1 as a textbook (two spreads)
+
+The teacher said the lessons do not read as a textbook: one small thing per page, half-empty pages, the same drawing on every page. This is a sample of the other way, for them to judge. Nothing in the eight lessons has changed.
+
+- **Open it with** `?lesson=l1-textbook` (hidden from the contents). File: `src/lessons/l1-textbook.js`, flagged `textbook: true`.
+- **New page type `spread`** (`book/pages.js`): `left` and `right` are lists of blocks (paragraph, `lead`, `h`, `key`, `table`, `keyWords`, `equations`, `questions`, `try`, numbered `q`, `stamp`). Type is 13 px on the 430 px page, so one page carries what four or five did.
+- **The right page prints text too:** `figure.room` keeps the top of the page for the living figure, and the caption and questions are printed beneath it (`renderRight`, shown through the right panel that the contents list uses). Only the printed blocks take taps, so the figure above can still be handled. In the stacked layout the right page's blocks follow the left page's in the panel.
+- **Scene variants:** a scene id can carry a variant after a colon. `stores:top` draws the six objects compactly at the head of the page. `stores:cases` draws three new figures (a durian on a branch, a bowl of hot rice, a drawn bow). An object can now fill more than one jar: the hot rice fills chemical potential and internal.
+- **Content:** spread 1 is the explanation, the table of six stores and Fig. 1.1. Spread 2 is a worked example, four questions and Fig. 1.2, and it earns the stamp. Eleven pages became two.
+- **Checked:** real taps on the figure, a question answered on the right page, a real page turn, and the 600 px stacked layout. 204 unit tests pass (the lesson tests know spreads).
+- **Not decided:** this breaks CLAUDE.md's lesson sequence (hook, predict, explore, name...) and the 22 px projector text rule. If the teacher adopts it, those rules need rewriting before the other seven lessons are converted.
+
 ## 22 Nov 2026. Guided steps removed, bug hunt, small-window layout
 
 The teacher asked for three things: no "next step" bar (show the page as it is), fix the bugs, and check against Every Joule again.

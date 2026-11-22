@@ -5,7 +5,7 @@
 import { Group } from 'three';
 import { LESSONS, loadLesson as importLesson } from '../lessons/index.js';
 import { loadScene } from '../scenes/index.js';
-import { renderPage } from './pages.js';
+import { renderPage, renderRight } from './pages.js';
 import { createPageTurn } from './pageTurn.js';
 import { createPagePrint } from './pagePrint.js';
 import { createFigureSnapshot } from './figureSnapshot.js';
@@ -69,6 +69,7 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     objects: [],
     busy: false,
     cue: null,
+    rightBody: null, // a textbook spread's right-hand page
   };
 
   // ---------- scenes ----------
@@ -123,11 +124,13 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
 
   /** Build a page's scene. Hidden: it waits, undrawn, until the leaf lands. */
   async function makeScene(id, { hidden = false } = {}) {
-    const create = await loadScene(id);
+    // A scene id can name a variant of a scene: 'stores:top'.
+    const [base, variant] = id.split(':');
+    const create = await loadScene(base);
     const group = new Group();
     group.name = `scene-${id}`;
     stage.scene.add(group);
-    const scene = create({ scene: group, overlay, overlayRoot, ledgerRoot, reducedMotion, energyLights: stage.energyLights });
+    const scene = create({ scene: group, overlay, overlayRoot, ledgerRoot, reducedMotion, energyLights: stage.energyLights, variant });
     // Students handle the model itself (CLAUDE.md section 6, rule 1). A scene
     // can list its own touchable objects. Otherwise each lit object is a tap
     // that does its own action, or the scene's main action.
@@ -170,8 +173,9 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     // pages, and predict pages once the prediction is in.
     const canHandle = page.type === 'explore' || (page.type === 'predict' && state.progress.answers[page.question?.id]);
     const hint = page.figureHint ?? (canHandle && state.scene?.interactive?.length ? fig?.hint : null);
-    figureRoot.innerHTML = fig ? `<p class="fig-caption"><b>Fig. ${number ? `${number}.` : ''}${state.index + 1}</b>${fig.caption}</p>${hint ? `<p class="fig-hint">${hint}</p>` : ''}` : '';
-    renderPage(panel, page, {
+    // A textbook spread prints its own caption with the right page's text.
+    figureRoot.innerHTML = fig && page.type !== 'spread' ? `<p class="fig-caption"><b>Fig. ${number ? `${number}.` : ''}${state.index + 1}</b>${fig.caption}</p>${hint ? `<p class="fig-hint">${hint}</p>` : ''}` : '';
+    const c = {
       lesson,
       number: LESSONS.find((l) => l.id === lesson.id)?.number,
       index: state.index,
@@ -201,7 +205,11 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
       onUnlock() {
         state.scene?.setLocked?.(false);
       },
-    });
+    };
+    renderPage(panel, page, c);
+    state.rightBody?.remove();
+    rightPanel.innerHTML = '';
+    state.rightBody = page.type === 'spread' ? renderRight(page, c) : null;
     // Hide the scene's numbers while this page's question asks for them
     // (CLAUDE.md section 5, rule 6), until the student has answered.
     const qid = page.question?.id;
@@ -343,6 +351,8 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     const shown = LESSONS.filter((l) => !l.hidden);
     const lessons = shown.filter((l) => l.number).length;
     const toc = () => `<ol class="toc">${shown.map((l) => `<li><button type="button" class="ink-row" data-lesson="${l.id}"><span class="toc-num">${l.number ? `Lesson ${l.number}` : 'Game'}</span><span class="toc-title">${l.title}</span>${loadLesson(l.id)?.done ? '<span class="c-stamp" aria-label="complete">Balanced</span>' : ''}</button></li>`).join('')}</ol>`;
+    state.rightBody = null;
+    panel.classList.remove('is-textbook');
     panel.dataset.type = 'contents';
     panel.dataset.pageKey = 'contents';
     panel.innerHTML = `<p class="page-running" aria-hidden="true">G2 Science · Energy</p>
@@ -447,9 +457,16 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     // A printed page never scrolls (focus can nudge it), so keep it at its
     // top. The stacked panel scrolls when its page is longer than the panel.
     if (printed && panel.scrollTop) panel.scrollTop = 0;
-    // The contents list is printed on the right page in landscape.
-    const showRight = !state.lesson && !!l.rightTextQuad;
-    rightPanel.hidden = !showRight;
+    // The right page's text is printed in landscape: the contents list, or a
+    // textbook spread's right-hand page. In the stacked layout a spread's
+    // right-hand page follows the left one in the panel.
+    const showRight = (!state.lesson || !!state.rightBody) && !!l.rightTextQuad;
+    if (state.rightBody) {
+      const home = showRight ? rightPanel : panel;
+      if (state.rightBody.parentElement !== home) home.append(state.rightBody);
+    }
+    rightPanel.classList.toggle('is-textbook', !!state.rightBody);
+    if (rightPanel.hidden === showRight) rightPanel.hidden = !showRight;
     if (showRight) {
       const rb = { x: 0, y: 0, w: PRINT_W, h: printHeight(AREAS.rightText) };
       placeBox(rightPanel, rb);

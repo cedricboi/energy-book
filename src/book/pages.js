@@ -9,7 +9,7 @@ import { GLOSSARY } from '../lessons/glossaryTerms.js';
 
 const KICKER = {
   hook: 'Starting point', predict: 'Predict', explore: 'Explore', name: 'New term', use: 'Use it',
-  check: 'Check', notes: 'Notes', exit: 'Exit ticket', text: '', contents: '', game: 'Ledger Run', win: 'Ledger Run',
+  check: 'Check', notes: 'Notes', exit: 'Exit ticket', text: '', contents: '', game: 'Ledger Run', win: 'Ledger Run', spread: '',
 };
 
 const paras = (list) => (list ?? []).map((p) => `<p>${p}</p>`).join('');
@@ -22,6 +22,7 @@ const paras = (list) => (list ?? []).map((p) => `<p>${p}</p>`).join('');
  */
 export function renderPage(panel, page, c) {
   panel.innerHTML = '';
+  panel.classList.remove('is-textbook');
   panel.dataset.type = page.type;
   panel.dataset.pageKey = `${c.lesson.id}-${c.index}`;
   // Like a printed book: a running head, then the kicker and the title.
@@ -32,7 +33,7 @@ export function renderPage(panel, page, c) {
   panel.append(running);
   const head = document.createElement('header');
   head.className = 'page-head';
-  const kicker = KICKER[page.type] ?? '';
+  const kicker = page.kicker ?? KICKER[page.type] ?? '';
   head.innerHTML = `${kicker ? `<p class="page-kicker">${kicker}</p>` : ''}<h2 class="page-title">${page.title ?? ''}</h2>`;
   panel.append(head);
   const folio = document.createElement('p');
@@ -136,6 +137,11 @@ export function renderPage(panel, page, c) {
       questionSequence(body, page.questions, c);
       break;
     }
+    case 'spread':
+      // A textbook spread: this page's blocks, set densely.
+      panel.classList.add('is-textbook');
+      blocks(body, page.left, page, c);
+      break;
     case 'game':
       gamePage(body, page, c);
       break;
@@ -149,6 +155,103 @@ export function renderPage(panel, page, c) {
 
   if (page.note) body.insertAdjacentHTML('beforeend', `<p class="page-note">${fill(page.note)}</p>`);
   return { destroy() { panel.innerHTML = ''; } };
+}
+
+/**
+ * The right-hand page of a textbook spread: room for the living figure at
+ * the top, then its caption and the blocks printed beneath it. Returns the
+ * element (the book puts it on the right page, or after the left page's
+ * text in the stacked layout).
+ */
+export function renderRight(page, c) {
+  const el = document.createElement('div');
+  el.className = 'spread-right';
+  const room = document.createElement('div');
+  room.className = 'figure-room';
+  room.style.setProperty('--room', String(page.figure?.room ?? 0.6));
+  room.setAttribute('aria-hidden', 'true');
+  el.append(room);
+  const body = document.createElement('div');
+  body.className = 'page-body';
+  el.append(body);
+  if (page.figure?.caption) {
+    body.insertAdjacentHTML('beforeend', `<p class="fig-caption"><b>Fig. ${c.number ? `${c.number}.` : ''}${page.figure.n ?? c.index + 1}</b>${page.figure.caption}</p>`);
+  }
+  blocks(body, page.right, page, c);
+  const folio = document.createElement('p');
+  folio.className = 'page-folio page-folio-right';
+  folio.setAttribute('aria-hidden', 'true');
+  folio.textContent = String(c.index * 2 + 3);
+  el.append(folio);
+  return el;
+}
+
+/**
+ * The blocks of a textbook spread, in reading order. Each is a string (a
+ * paragraph) or one of:
+ *   { h }                    a subheading
+ *   { lead }                 the opening paragraph, set larger
+ *   { questions: true }      the lesson's questions for today
+ *   { key }                  a boxed key idea
+ *   { table: { head, rows }} a ruled table
+ *   { keyWords: [ids] }      glossary terms and meanings
+ *   { equations: [...] }     boxed equations
+ *   { try: { goal, actions, controls } }  the instruction for handling the figure
+ *   { q: question, n }       a numbered question, marked on the page
+ *   { stamp: true }          where the lesson's stamp is pressed
+ */
+function blocks(parent, list, page, c) {
+  const asked = [...(page.left ?? []), ...(page.right ?? [])].filter((b) => b?.q).map((b) => b.q.id);
+  for (const b of list ?? []) {
+    if (typeof b === 'string') {
+      parent.insertAdjacentHTML('beforeend', `<p>${b}</p>`);
+    } else if (b.h) {
+      parent.insertAdjacentHTML('beforeend', `<h3 class="tb-h">${b.h}</h3>`);
+    } else if (b.lead) {
+      parent.insertAdjacentHTML('beforeend', `<p class="tb-lead">${b.lead}</p>`);
+    } else if (b.questions) {
+      parent.insertAdjacentHTML('beforeend', `<aside class="todays-questions" aria-label="Today's questions"><h3>Today's questions</h3><ol>${c.lesson.questions.map((q) => `<li>${q}</li>`).join('')}</ol></aside>`);
+    } else if (b.key) {
+      parent.insertAdjacentHTML('beforeend', `<p class="tb-key">${b.key}</p>`);
+    } else if (b.table) {
+      parent.insertAdjacentHTML('beforeend', `<table class="tb-table"><thead><tr>${b.table.head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${b.table.rows.map((r) => `<tr>${r.map((v, i) => (i ? `<td>${v}</td>` : `<th scope="row">${v}</th>`)).join('')}</tr>`).join('')}</tbody></table>`);
+    } else if (b.keyWords || b.equations) {
+      textbookParts(parent, { keyWords: b.keyWords, equations: b.equations });
+      for (const id of b.keyWords ?? []) c.onNamed(id);
+    } else if (b.try) {
+      workBox(parent, b.try, c);
+    } else if (b.q) {
+      const wrap = document.createElement('div');
+      wrap.className = 'tb-q';
+      if (b.n) wrap.insertAdjacentHTML('beforeend', `<span class="tb-q-n" aria-hidden="true">${b.n}</span>`);
+      parent.append(wrap);
+      renderQuestion(wrap, b.q, {
+        saved: c.saved?.answers?.[b.q.id],
+        checkLabel: 'Check',
+        onCommit: (rec) => {
+          c.onAnswer(rec);
+          // The last spread's questions all answered: the lesson's stamp is pressed.
+          if (page.completes && asked.every((id) => c.saved?.answers?.[id] || id === rec.id)) c.onComplete?.(true);
+        },
+      });
+    } else if (b.stamp) {
+      const slot = document.createElement('div');
+      slot.className = 'stamp-slot tb-stamp';
+      slot.innerHTML = stampHtml(c.number);
+      slot.hidden = !c.saved?.done;
+      parent.append(slot);
+      const prior = c.onComplete;
+      c.onComplete = (fresh) => {
+        slot.hidden = false;
+        if (fresh && !slot.dataset.pressed) {
+          slot.dataset.pressed = '1';
+          slot.classList.add('is-pressing');
+          setTimeout(() => slot.classList.remove('is-pressing'), 500);
+        }
+        prior?.(fresh);
+      };
+    }
+  }
 }
 
 /**

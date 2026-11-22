@@ -11,6 +11,8 @@ export const LESSONS = [
   { id: 'l7-work', number: 7, title: 'Work done', load: () => import('./l7-work.js') },
   { id: 'l8-power', number: 8, title: 'Power', load: () => import('./l8-power.js') },
   { id: 'game', number: null, title: 'Chapter game: Ledger Run', load: () => import('./game.js') },
+  // A sample of Lesson 1 set as a textbook (two spreads). Open with ?lesson=l1-textbook.
+  { id: 'l1-textbook', number: 1, title: 'Energy stores (textbook sample)', hidden: true, load: () => import('./l1-textbook.js') },
   { id: 'l0-engine-test', number: null, title: 'Engine test', hidden: true, load: () => import('./l0-engine-test.js') },
 ];
 
