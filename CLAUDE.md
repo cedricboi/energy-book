@@ -106,7 +106,7 @@ Run a colour-blind simulation (deuteranopia and protanopia) on the palette in Ph
 - All text, numbers and labels are **HTML overlays** positioned from 3D points (in `ui/overlay.js`). They are not textures. This keeps them sharp, translatable and readable by screen readers.
 - Handwritten labels (Kalam) are for the names of parts in diagrams only. Book text, questions and numbers use Newsreader.
 - Labels have a soft paper-coloured halo. They never sit on top of an energy glow or another label.
-- Body text is at least 18 px on iPad and 22 px on the projector.
+- A printed page is laid out 430 px wide and mapped onto the paper. Textbook spreads set their text at 13 px on that page, which is about 13 px on a laptop and larger on a projector. The book is read at a student's own screen first. The stacked layout keeps body text at 18 px or more.
 
 ## 5. Physics accuracy rules (non-negotiable)
 
@@ -127,18 +127,18 @@ These come from the teacher. Follow all of them.
 2. **Explore is always part of a lesson.** Students handle the model before they are asked anything about it.
 3. **Predict only about everyday things** that students have seen in real life, such as a bouncing ball, a playground slide or a phone battery running down. Never ask students to predict a reading or a result for something they have not used. A "work it out, then check" question with greyed-out controls is predicting under another name, so it is not allowed.
 4. When students do predict, every student commits to an answer **with a reason** before seeing the result.
-5. **One idea per page.** Introduce ideas gently, in small steps, like a Canva build. Each step lands before the next.
+5. **The book is a textbook** (the teacher's decision, 23 Nov 2026). A lesson is a few dense spreads, not one idea per page. The left page carries the text, the equations, the key words and numbered questions. The right page carries a living figure. Ideas still come in small steps and in order: each step is a short section under its own subheading, and each lands before the next.
 6. **Name a term before students use it.** The order is: experience it, name the term, use it, then explain it in their own words.
 7. **Linking:** once a term is named, the next pages make students use it, practise it and apply it to new cases.
 8. **The five-stage lesson:** hook, investigated scenario, concept, test, check for understanding. The hook is a real event with a twist, and it returns at the end to close the loop.
 9. Show **today's questions** at the top of the lesson. The exit ticket returns to them.
 10. **Questions apply the idea to a new case.** They never match nearby wording.
 11. **Feedback responds to the actual mistake.** For example, if a student forgets to square v, say so.
-12. Any set of questions shows **one question at a time**, on one screen.
+12. Questions are **numbered on the page**, like a printed exercise. Each is marked on its own, with its own feedback.
 13. Live sliders have − and + buttons, so students can reach exact values.
 14. **No busywork.** Students never copy what the page has already worked out.
 15. Students' eyes always know where to look. Light or lift the object they should touch. Put the instruction inside the box they work in. Never use a separate "DO THIS" bar.
-16. Every page fits one screen on the projector and on an iPad. No scrolling inside a page.
+16. Every spread fits one screen. No scrolling inside a printed page. (The stacked layout for narrow windows scrolls its text panel.)
 17. MCQ options are parallel in structure (if one uses "because", they all do).
 18. Each lesson ends with a short **notes page in exam format**, which students must do something with (fill a blank, label a ledger, match a term), not just read.
 
@@ -179,6 +179,8 @@ export default {
 ```
 
 Every question has a stable `id` (`l5-q3`) so the Teacher Hub can chart answers.
+
+**How the pages are set.** The lesson file keeps the steps in order, as above. The book lays them out as textbook spreads (`src/lessons/textbook.js`): a spread ends when the next step would not fit, when the figure has to change, or when a question needs the figure's numbers hidden. `?layout=steps` shows the steps one to a page. A lesson can also be written directly as spreads (`textbook: true`, pages of type `spread` with `left` and `right` lists of blocks, as in `l1-stores.js`), which lets the right page carry printed text beneath a figure of its own.
 
 ## 9. Performance budget
 

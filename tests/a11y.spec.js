@@ -30,14 +30,14 @@ test.describe('accessibility', () => {
     await tab.evaluate(() => document.activeElement.blur());
     await tab.keyboard.press('ArrowRight');
     await tab.waitForFunction(() => window.__book.state.index === 1 && !window.__book.state.busy, null, { timeout: 30_000 });
-    // PageDown (a presentation clicker) also turns the page.
-    await tab.keyboard.press('PageDown');
-    await tab.waitForFunction(() => window.__book.state.index === 2 && !window.__book.state.busy, null, { timeout: 30_000 });
+    // PageUp (a presentation clicker) turns back.
+    await tab.keyboard.press('PageUp');
+    await tab.waitForFunction(() => window.__book.state.index === 0 && !window.__book.state.busy, null, { timeout: 30_000 });
   });
 
   test('every scene object a student can act on has an HTML button twin', async ({ page: tab }) => {
     await ready(tab, '?q=low&drawin=off');
-    await tab.evaluate(() => window.__book.open('l1-stores', 1));
+    await tab.evaluate(() => window.__book.open('l1-stores', 0));
     const names = await tab.$$eval('.work-box button', (bs) => bs.map((b) => b.textContent));
     expect(names).toEqual(expect.arrayContaining(['Tap the rolling toy car', 'Tap the book held up high', 'Tap the stretched catapult']));
   });

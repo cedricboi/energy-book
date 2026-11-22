@@ -38,7 +38,8 @@ test('drag the skateboarder up the wall, then she rolls', async ({ page: tab }) 
 
 test('the skateboarder stays put on the predict page until the prediction is in', async ({ page: tab }) => {
   await openBook(tab);
-  await openAt(tab, 'l5-ramp', 1);
+  // The lesson's first spread holds the prediction.
+  await openAt(tab, 'l5-ramp', 0);
   await dragFirst(tab, 60);
   await tab.waitForTimeout(800);
   expect((await tab.evaluate(() => window.__book.values())).kinetic).toBe(0);
@@ -46,7 +47,7 @@ test('the skateboarder stays put on the predict page until the prediction is in'
 
 test('drag the box onto a higher shelf', async ({ page: tab }) => {
   await openBook(tab);
-  await openAt(tab, 'l4-gpe', 1);
+  await openAt(tab, 'l4-gpe', 0);
   const before = await tab.evaluate(() => window.__book.values());
   await dragFirst(tab, 60);
   const after = await tab.evaluate(() => window.__book.values());
@@ -56,7 +57,7 @@ test('drag the box onto a higher shelf', async ({ page: tab }) => {
 
 test('drag the ball higher, then it drops', async ({ page: tab }) => {
   await openBook(tab);
-  await openAt(tab, 'l6-bounce', 2);
+  await openAt(tab, 'l6-bounce', 1);
   const before = await tab.evaluate(() => window.__book.values());
   await dragFirst(tab, 20);
   const after = await tab.evaluate(() => window.__book.values());
@@ -66,7 +67,7 @@ test('drag the ball higher, then it drops', async ({ page: tab }) => {
 
 test('tap the toy car to send its energy to the kinetic jar', async ({ page: tab }) => {
   await openBook(tab);
-  await openAt(tab, 'l1-stores', 1);
+  await openAt(tab, 'l1-stores', 0);
   const car = (await tab.evaluate(() => window.__book.touchables())).find((t) => t.label === 'car');
   await tab.mouse.click(car.x, car.y);
   // Software rendering is slow, so wait for the energy to arrive.

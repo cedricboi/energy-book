@@ -777,3 +777,30 @@ html[data-look=day] .hud-btn:hover { background: rgba(30, 27, 36, 0.07); }
 /* Stacked layout: the figure is on the stage above, so no room is kept. */
 .page-panel.is-portrait .figure-room, .page-panel.is-portrait .page-folio-right { display: none; }
 .page-panel.is-portrait .spread-right { height: auto; margin-top: 0.8em; }
+
+/* Textbook spreads set from a lesson's steps. */
+.tb-steps { margin: 0.2em 0 0.5em; padding-left: 1.4em; }
+.tb-steps li { margin: 0 0 0.2em; }
+.page-panel.is-textbook .eq-box { padding: 0.3em 0.7em; margin: 0.35em 0 0.5em; }
+.page-panel.is-textbook .eq { font-size: 1.25em; margin: 0; }
+.page-panel.is-textbook .eq-words { font-size: 0.82em; margin: 0 0 0.15em; }
+.page-panel.is-textbook .key-words > div { margin: 0 0 0.12em; line-height: 1.22; }
+.page-panel.is-textbook .page-note { font-size: 0.85em; }
+.page-panel.is-textbook .runs-table { font-size: 0.9em; }
+.page-panel.is-textbook .q-num-row input, .page-panel.is-textbook .q-num-row select { min-height: 28px; font: inherit; }
+.page-panel.is-textbook .q-order li { margin: 0.05em 0; }
+.page-panel.is-printed.is-textbook .q-order button { min-height: 24px !important; }
+.page-panel.is-textbook .q-cloze { line-height: 1.7; }
+.page-panel.is-printed.is-textbook select { min-height: 26px; font: inherit; }
+/* A numeric answer and its Check button share a line. */
+.tb-q .q-numeric { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.6em; }
+.tb-q .q-numeric > * { flex: 0 0 100%; }
+.tb-q .q-numeric > .q-num-row, .tb-q .q-numeric > .q-actions { flex: 0 0 auto; margin-top: 0; }
+.tb-q .q-numeric .q-value { width: 7em; }
+/* Answer options in two columns, like a printed multiple-choice question. */
+.page-panel.is-printed .tb-q .q-options { grid-template-columns: 1fr 1fr; column-gap: 0.8em; }
+.tb-q .q-option { line-height: 1.22; }
+/* The buttons that twin the figure's objects are small and sit in a row. */
+.page-panel.is-textbook .work-actions { display: flex; flex-wrap: wrap; gap: 0.25em 0.35em; }
+.page-panel.is-printed.is-textbook .work-actions button { min-height: 24px; font-size: 0.86em; padding: 0.05em 0.65em; }
+.page-panel.is-printed.is-textbook.tightest { font-size: 11.6px; line-height: 1.26; }

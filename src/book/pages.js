@@ -199,16 +199,54 @@ export function renderRight(page, c) {
  *   { try: { goal, actions, controls } }  the instruction for handling the figure
  *   { q: question, n }       a numbered question, marked on the page
  *   { stamp: true }          where the lesson's stamp is pressed
+ *   { steps: [...] }         a numbered list of short statements
+ *   { predict: question, after: [blocks] }  a prediction with a reason,
+ *                            committed before the blocks after it show
+ *   { note }                 a small note under the text
+ * A string can also be a function of the scene's values.
  */
 function blocks(parent, list, page, c) {
   const asked = [...(page.left ?? []), ...(page.right ?? [])].filter((b) => b?.q).map((b) => b.q.id);
+  const fill = (s) => (typeof s === 'function' ? s(c.values?.() ?? {}) : s);
   for (const b of list ?? []) {
-    if (typeof b === 'string') {
-      parent.insertAdjacentHTML('beforeend', `<p>${b}</p>`);
+    if (typeof b === 'string' || typeof b === 'function') {
+      parent.insertAdjacentHTML('beforeend', `<p>${fill(b)}</p>`);
+    } else if (b.steps) {
+      parent.insertAdjacentHTML('beforeend', `<ol class="tb-steps">${b.steps.map((s) => `<li>${fill(s)}</li>`).join('')}</ol>`);
+    } else if (b.note) {
+      parent.insertAdjacentHTML('beforeend', `<p class="page-note">${fill(b.note)}</p>`);
+    } else if (b.predict) {
+      // A prediction is not marked. Committing saves it and unlocks the
+      // run, and the run shows what really happens.
+      const q = {
+        ...b.predict,
+        type: 'mcqReason',
+        neutral: true,
+        options: b.predict.options.map((o) => ({ ...o, correct: undefined, feedback: 'Your prediction and reason are saved. Now run it and see.' })),
+      };
+      const saved = c.saved?.answers?.[q.id];
+      const wrap = document.createElement('div');
+      wrap.className = 'tb-q tb-predict';
+      parent.append(wrap);
+      const after = document.createElement('div');
+      after.className = 'predict-after';
+      after.hidden = !saved;
+      renderQuestion(wrap, q, {
+        saved,
+        checkLabel: 'Commit my prediction',
+        onCommit: (rec) => {
+          c.onAnswer(rec);
+          after.hidden = false;
+          c.onUnlock();
+        },
+      });
+      parent.append(after);
+      blocks(after, b.after, page, c);
+      if (saved) c.onUnlock();
     } else if (b.h) {
       parent.insertAdjacentHTML('beforeend', `<h3 class="tb-h">${b.h}</h3>`);
     } else if (b.lead) {
-      parent.insertAdjacentHTML('beforeend', `<p class="tb-lead">${b.lead}</p>`);
+      parent.insertAdjacentHTML('beforeend', `<p class="tb-lead">${fill(b.lead)}</p>`);
     } else if (b.questions) {
       parent.insertAdjacentHTML('beforeend', `<aside class="todays-questions" aria-label="Today's questions"><h3>Today's questions</h3><ol>${c.lesson.questions.map((q) => `<li>${q}</li>`).join('')}</ol></aside>`);
     } else if (b.key) {

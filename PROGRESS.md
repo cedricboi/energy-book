@@ -6,6 +6,23 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 
 
+
+## 23 Nov 2026. The whole book is set as a textbook
+
+The teacher approved the Lesson 1 sample and asked for the other seven lessons to be converted.
+
+- **Rules changed in CLAUDE.md** (section 6 rules 5, 12 and 16, the text-size line in section 4, and a note in section 8): the book is a textbook of dense spreads, questions are numbered on the page, and printed text is 13 px on the 430 px page.
+- **Lesson 1** is the hand-set version: `l1-stores.js` is now the two spreads from the sample (question ids kept from the old lesson where the question is the same). The sample file `l1-textbook.js` is gone.
+- **Lessons 2 to 8 are laid out by `src/lessons/textbook.js`.** The lesson files are unchanged: they still list the steps in order (hook, predict, explore, name, use, check, notes, exit). `toTextbook()` sets those steps as spreads, in the same order, with every question and id kept. A spread ends when the next step would not fit, when the figure has to change (another scene, or a starting state that contradicts the one in use), or when a question needs the figure's numbers hidden. `?layout=steps` shows the old one-step-per-page view.
+- **Result:** Lesson 1 has 2 spreads (was 11 pages). Lessons 2 to 8 have 4 to 7 (were 11 to 14): 37 spreads in the book, where there were 94 pages. The limit is the questions: each takes about a fifth of a page once its feedback shows.
+- **New blocks:** `steps`, `predict` (with `after` blocks shown once the prediction is committed), `note`, and strings that are functions of the scene's values. A spread can lock the figure until a prediction is in (`lockUntil`).
+- **Tighter questions:** answer options are set in two columns, and a numeric answer shares a line with its Check button.
+- **Fit:** the layout uses estimated heights (`cost()` in `textbook.js`), calibrated against the real rendering. `scripts/all-pages.mjs` reports any spread whose text overflows.
+
+### Not done
+- In Lessons 2 to 8 the right page is still one full-page figure, so the same drawing stays through a lesson's question spreads. Giving them compact figures with printed text beneath (as Lesson 1 has) needs each scene redrawn smaller, one lesson at a time.
+- Question spreads are not all full: a page takes three or four questions, and the layout does not split a lesson's last few evenly.
+
 ## 23 Nov 2026. Sample: Lesson 1 as a textbook (two spreads)
 
 The teacher said the lessons do not read as a textbook: one small thing per page, half-empty pages, the same drawing on every page. This is a sample of the other way, for them to judge. Nothing in the eight lessons has changed.

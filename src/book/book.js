@@ -171,10 +171,11 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     const number = LESSONS.find((l) => l.id === lesson.id)?.number;
     // The handling hint shows where students may handle the model: explore
     // pages, and predict pages once the prediction is in.
-    const canHandle = page.type === 'explore' || (page.type === 'predict' && state.progress.answers[page.question?.id]);
+    const lockId = page.type === 'predict' ? page.question?.id : page.lockUntil;
+    const canHandle = page.type === 'explore' || (page.type === 'spread' && page.handle && !(lockId && !state.progress.answers[lockId])) || (page.type === 'predict' && state.progress.answers[page.question?.id]);
     const hint = page.figureHint ?? (canHandle && state.scene?.interactive?.length ? fig?.hint : null);
     // A textbook spread prints its own caption with the right page's text.
-    figureRoot.innerHTML = fig && page.type !== 'spread' ? `<p class="fig-caption"><b>Fig. ${number ? `${number}.` : ''}${state.index + 1}</b>${fig.caption}</p>${hint ? `<p class="fig-hint">${hint}</p>` : ''}` : '';
+    figureRoot.innerHTML = fig && !(page.type === 'spread' && page.right) ? `<p class="fig-caption"><b>Fig. ${number ? `${number}.` : ''}${state.index + 1}</b>${fig.caption}</p>${hint ? `<p class="fig-hint">${hint}</p>` : ''}` : '';
     const c = {
       lesson,
       number: LESSONS.find((l) => l.id === lesson.id)?.number,
@@ -215,7 +216,7 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     const qid = page.question?.id;
     state.scene?.setHideValues?.(!!page.hideValues && !(qid && state.progress.answers[qid]));
     // Lock the run on a predict page until the prediction is committed.
-    if (page.type === 'predict' && !state.progress.answers[page.question.id]) state.scene?.setLocked?.(true);
+    if (lockId && !state.progress.answers[lockId]) state.scene?.setLocked?.(true);
     else state.scene?.setLocked?.(false);
     // The lit object cue: lift what students should touch.
     if (page.cue && state.scene?.cueTargets?.[page.cue]) {
@@ -448,12 +449,15 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     // minimum size). Re-check only when the panel or its page changes.
     if (sizeChanged || panel.dataset.fitFor !== panel.dataset.pageKey) {
       panel.dataset.fitFor = panel.dataset.pageKey;
-      panel.classList.remove('dense', 'denser');
+      panel.classList.remove('dense', 'denser', 'tightest');
     }
     // Content can grow after the page opens (feedback, a table of runs),
     // so keep checking and step to denser spacing when needed.
     if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('dense')) panel.classList.add('dense');
     if (panel.scrollHeight > panel.clientHeight + 1 && !panel.classList.contains('denser')) panel.classList.add('denser');
+    // A textbook spread that still does not fit (every answer marked, with
+    // long feedback) sets its type a little smaller.
+    if (printed && panel.scrollHeight > panel.clientHeight + 1 && panel.classList.contains('is-textbook') && !panel.classList.contains('tightest')) panel.classList.add('tightest');
     // A printed page never scrolls (focus can nudge it), so keep it at its
     // top. The stacked panel scrolls when its page is longer than the panel.
     if (printed && panel.scrollTop) panel.scrollTop = 0;

@@ -1,6 +1,8 @@
 // src/lessons/index.js
 // Lesson registry. Each lesson module is lazy-loaded (CLAUDE.md section 9).
 // Titles live here too, so the contents can show without loading lessons.
+import { toTextbook } from './textbook.js';
+
 export const LESSONS = [
   { id: 'l1-stores', number: 1, title: 'Energy stores', load: () => import('./l1-stores.js') },
   { id: 'l2-transfers', number: 2, title: 'Energy transfers', load: () => import('./l2-transfers.js') },
@@ -11,8 +13,6 @@ export const LESSONS = [
   { id: 'l7-work', number: 7, title: 'Work done', load: () => import('./l7-work.js') },
   { id: 'l8-power', number: 8, title: 'Power', load: () => import('./l8-power.js') },
   { id: 'game', number: null, title: 'Chapter game: Ledger Run', load: () => import('./game.js') },
-  // A sample of Lesson 1 set as a textbook (two spreads). Open with ?lesson=l1-textbook.
-  { id: 'l1-textbook', number: 1, title: 'Energy stores (textbook sample)', hidden: true, load: () => import('./l1-textbook.js') },
   { id: 'l0-engine-test', number: null, title: 'Engine test', hidden: true, load: () => import('./l0-engine-test.js') },
 ];
 
@@ -22,5 +22,9 @@ export async function loadLesson(id) {
   const mod = await entry.load();
   const lesson = mod.default;
   if (!lesson?.pages?.length) throw new Error(`Lesson "${id}" has no pages yet`);
-  return lesson;
+  // The book sets every lesson as a textbook (a few dense spreads). The
+  // lesson files keep the steps in order, and ?layout=steps shows them one
+  // step to a page, as they were first built.
+  const steps = new URLSearchParams(globalThis.location?.search ?? '').get('layout') === 'steps';
+  return steps ? lesson : toTextbook(lesson, entry.number);
 }

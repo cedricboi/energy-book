@@ -7,8 +7,11 @@ const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h 
 export async function checkPage(tab, info, name) {
   // Screenshot first, so a failing page can still be looked at.
   await tab.screenshot({ path: `tests/screenshots/${info.project.name}/${name}.png` });
+  // A printed page never scrolls, so its text must fit. The stacked layout
+  // (tall or narrow windows) scrolls its text panel instead.
+  const stacked = await tab.evaluate(() => document.querySelector('.page-panel').classList.contains('is-portrait'));
   const fit = await tab.evaluate(() => window.__book.panelFits());
-  expect(fit.fits, `${name}: the text panel needs ${fit.scrollHeight}px but has ${fit.clientHeight}px`).toBe(true);
+  if (!stacked) expect(fit.fits, `${name}: the text panel needs ${fit.scrollHeight}px but has ${fit.clientHeight}px`).toBe(true);
   const { labels, glows, area, printed = [] } = await tab.evaluate(() => window.__book.labelRects());
   for (let i = 0; i < labels.length; i++) {
     const l = labels[i];
