@@ -131,6 +131,18 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
     group.name = `scene-${id}`;
     stage.scene.add(group);
     const scene = create({ scene: group, overlay, overlayRoot, ledgerRoot, reducedMotion, energyLights: stage.energyLights, variant });
+    // Anything a student does to the model wakes the render loop, whether it
+    // came from a tap on the drawing, a button, or the keyboard. (The loop
+    // sleeps when nothing moves, so a button press alone would not show.)
+    for (const name of ['act', 'setParam']) {
+      const fn = scene[name];
+      if (typeof fn !== 'function') continue;
+      scene[name] = (...args) => {
+        const out = fn.apply(scene, args);
+        onChange?.();
+        return out;
+      };
+    }
     // Students handle the model itself (CLAUDE.md section 6, rule 1). A scene
     // can list its own touchable objects. Otherwise each lit object is a tap
     // that does its own action, or the scene's main action.
@@ -476,6 +488,13 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
       placeBox(rightPanel, rb);
       rightPanel.style.transform = quadMatrix(rb.w, rb.h, l.rightTextQuad);
     }
+    // The right-hand page of a spread gets the same last resort as the left:
+    // if marked answers make it too long, its type is set a little smaller.
+    if (rightPanel.dataset.fitFor !== panel.dataset.pageKey) {
+      rightPanel.dataset.fitFor = panel.dataset.pageKey;
+      rightPanel.classList.remove('tightest');
+    }
+    if (showRight && state.rightBody && rightPanel.scrollHeight > rightPanel.clientHeight + 1 && !rightPanel.classList.contains('tightest')) rightPanel.classList.add('tightest');
     // The caption is printed only in landscape, where the page is in view.
     figureRoot.hidden = !l.figureQuad || !figureRoot.innerHTML;
     if (l.figureQuad) {

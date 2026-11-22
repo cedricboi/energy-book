@@ -274,7 +274,7 @@ function blocks(parent, list, page, c) {
       });
     } else if (b.stamp) {
       const slot = document.createElement('div');
-      slot.className = 'stamp-slot tb-stamp';
+      slot.className = `stamp-slot tb-stamp${b.corner ? ' is-corner' : ''}`;
       slot.innerHTML = stampHtml(c.number);
       slot.hidden = !c.saved?.done;
       parent.append(slot);

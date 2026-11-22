@@ -7,6 +7,19 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 
 
+
+## 23 Nov 2026. Lesson 1: jars fill on their own, and bugs fixed
+
+The teacher asked for the "transfer" animation in Lesson 1 to go: tapping an object should just fill its jar.
+
+- **No transfer animation.** `scenes/stores.js` no longer draws glowing dots from the object to the jar. Tapping an object makes the level in its jar rise (about a second, instant with reduced motion). Lesson 1 is about where energy is kept, so nothing should look as if it travels.
+- **Bug: a button press did not show.** The render loop sleeps when nothing moves, and only pointer events on the drawing woke it. A button (or the keyboard) changed the model without waking the loop, so nothing happened until the mouse moved. `book.js` now wakes the loop on every `act` and `setParam`, for every scene.
+- **Bug: page 1's Check button was cut off**, and there was no room for its feedback. The figure is more compact (room 0.55), the six buttons have short labels (`short` on an action, with the full name kept as the `aria-label`), and the kopi cup is smaller so it does not cover the jar stand.
+- **Bug: spread 2 ran off the page once answers were marked.** The worked example now sits under Fig. 1.2 (the durian it is about), question 4 moved to the left page, and the stamp is pressed beside the title.
+- **All textbook spreads:** a marked question's verdict card sits beside its Check button, which saves a line per question. The right-hand page gets the same smaller-type last resort as the left.
+- **Drawing:** the durian and the bow are drawn in outline, so they no longer read as black blobs.
+- `scripts/l1-check.mjs` looks over Lesson 1 at six window sizes: as it opens, with every object tapped, and with every question marked.
+
 ## 23 Nov 2026. The whole book is set as a textbook
 
 The teacher approved the Lesson 1 sample and asked for the other seven lessons to be converted.

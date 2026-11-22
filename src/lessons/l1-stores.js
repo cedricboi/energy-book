@@ -49,9 +49,9 @@ export default {
         },
         'The hotter an object is, the more energy is in its internal store. The faster it moves, the more is in its kinetic store. Later lessons put numbers to both.',
       ],
-      figure: { n: 1, room: 0.585, caption: 'Six objects, and a jar for each store. Each object keeps energy in one of the six stores.' },
+      figure: { n: 1, room: 0.55, caption: 'Six objects, and a jar for each of the six stores.' },
       right: [
-        { try: { goal: 'Tap each object in the drawing. Watch which jar its energy goes to, then check it against the table.' } },
+        { try: { goal: 'Tap each object. Watch which jar fills, then check it against the table.' } },
         {
           n: 1,
           q: {
@@ -75,12 +75,8 @@ export default {
       title: 'Using the six stores',
       completes: true,
       left: [
-        { lead: 'The six stores are enough for anything you meet. Three new cases are drawn in Fig. 1.2. Tap each one before you answer.' },
-        { h: 'Worked example' },
-        'A durian hangs high on a branch, not moving. Which store has energy in it because of the durian\'s height?',
-        'It is not moving, so its kinetic store is empty. It is not stretched. It is high above the ground, so the energy is in its <b>gravitational potential store</b>.',
-        'The durian is also food, so it has energy in its chemical potential store too. One object, two stores.',
-        { h: 'Questions' },
+        { lead: 'The six stores are enough for anything you meet. Three new cases are drawn in Fig. 1.2. Tap each one and read the worked example beneath it. Then answer the questions.' },
+        { stamp: true, corner: true },
         {
           n: 2,
           q: {
@@ -109,11 +105,6 @@ export default {
             choices: STORE_CHOICES,
           },
         },
-      ],
-      figure: { n: 2, room: 0.485, caption: 'A durian on a branch, a bowl of hot rice and a drawn bow. Tap each one to see its stores.' },
-      right: [
-        { try: { goal: 'Tap each case in the drawing and watch its jars.' } },
-        { h: 'Explain it' },
         {
           n: 4,
           q: {
@@ -129,7 +120,14 @@ export default {
             model: 'The rubber band has energy in its elastic potential store because it is stretched. The skateboarder has energy in her gravitational potential store because she is high up at the top of the ramp.',
           },
         },
-        { h: 'Back to the phone' },
+      ],
+      figure: { n: 2, room: 0.41, caption: 'A durian on a branch, a bowl of hot rice and a drawn bow. Tap each one and watch its jars.' },
+      right: [
+        { try: {} },
+        { h: 'Worked example' },
+        'A durian hangs high on a branch, not moving. Which store has energy in it because of the durian\'s height?',
+        'It is not moving, so its kinetic store is empty. It is not stretched. It is high above the ground, so the energy is in its <b>gravitational potential store</b>.',
+        'The durian is also food, so it has energy in its chemical potential store too. One object, two stores.',
         {
           n: 5,
           q: {
@@ -141,7 +139,6 @@ export default {
             model: 'The energy is kept in the chemical potential store of the phone battery.',
           },
         },
-        { stamp: true },
       ],
     },
   ],

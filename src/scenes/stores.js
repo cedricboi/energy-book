@@ -1,7 +1,7 @@
 // src/scenes/stores.js
 // Lesson 1 scene: a row of six store jars and some everyday objects. Tapping
-// an object (or its button) sends its energy, as glowing colour, into the jar
-// of each store it has energy in. No joules are shown: this lesson comes
+// an object (or its button) fills the jar of each store it has energy in.
+// Nothing travels across the page: the jar simply fills. No joules are shown: this lesson comes
 // before any equation, so the jars only show which store holds energy.
 //
 // Variants (the part of a scene id after the colon):
@@ -18,7 +18,6 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createCutaway } from '../objects/cutaway.js';
 import { glowColour, STORE_IDS } from '../energy/palette.js';
 import { createEnergyKit } from './energyKit.js';
-import { createFlowPath } from '../energy/flow.js';
 import { createInkObject } from '../ink/inkObject.js';
 import { createInkLines, polylineToSegments } from '../ink/creases.js';
 import { createSpring } from '../objects/spring.js';
@@ -37,6 +36,8 @@ export const OBJECT_NAMES = {
   durian: 'durian on a branch', rice: 'bowl of hot rice', bow: 'drawn bow',
 };
 
+const SHORT_NAMES = { car: 'Toy car', book: 'Book', catapult: 'Catapult', battery: 'Battery', kopi: 'Kopi', sun: 'Sun', durian: 'Durian', rice: 'Rice', bow: 'Bow' };
+
 // Where things stand: [x from the middle of the page, z, lift above the
 // page, how far in front its name is written].
 const LAYOUTS = {
@@ -46,11 +47,11 @@ const LAYOUTS = {
   },
   top: {
     jarSize: 0.33, rowZ: -0.104,
-    at: { car: [-0.062, -0.05, 0, 0.02], book: [0, -0.052, 0.04, 0.021], kopi: [0.06, -0.054, 0, 0.026], battery: [-0.062, 0.004, 0, 0.017], catapult: [0, 0.004, 0.008, 0.014], sun: [0.064, 0.006, 0, 0.016] },
+    at: { car: [-0.062, -0.056, 0, 0.02], book: [0, -0.058, 0.03, 0.021], kopi: [0.06, -0.06, 0, 0.022], battery: [-0.062, -0.01, 0, 0.017], catapult: [0, -0.01, 0.008, 0.014], sun: [0.064, -0.008, 0, 0.016] },
   },
   cases: {
     jarSize: 0.33, rowZ: -0.11,
-    at: { durian: [-0.056, -0.034, 0, 0.02], rice: [0.004, -0.034, 0, 0.021], bow: [0.06, -0.032, 0, 0.018] },
+    at: { durian: [-0.056, -0.05, 0, 0.02], rice: [0.004, -0.05, 0, 0.021], bow: [0.06, -0.048, 0, 0.018] },
   },
 };
 
@@ -65,19 +66,19 @@ const DURIAN_Y = 0.028; // height of the fruit's centre above the page
 /** A durian hanging from a branch on a post. Origin on the page, under the fruit. */
 function durianGeometry() {
   const parts = [
-    new CylinderGeometry(0.0014, 0.0018, 0.048, 8).translate(-0.02, 0.024, 0), // post
-    new CylinderGeometry(0.0011, 0.0013, 0.03, 8).rotateZ(Math.PI / 2 - 0.12).translate(-0.006, 0.0465, 0), // branch
+    new CylinderGeometry(0.0022, 0.0026, 0.048, 10).translate(-0.02, 0.024, 0), // post
+    new CylinderGeometry(0.0018, 0.002, 0.03, 10).rotateZ(Math.PI / 2 - 0.12).translate(-0.006, 0.0465, 0), // branch
     new CylinderGeometry(0.0006, 0.0006, 0.009, 6).translate(0, DURIAN_Y + 0.0135, 0), // stalk
     new SphereGeometry(0.0095, 16, 12).scale(1, 1.12, 1).translate(0, DURIAN_Y, 0),
   ];
   // Spikes: short cones all over the husk.
-  const n = 30;
+  const n = 22;
   for (let i = 0; i < n; i++) {
     const y = 1 - (2 * (i + 0.5)) / n;
     const r = Math.sqrt(1 - y * y);
     const a = i * 2.39996;
     const d = new Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
-    const spike = new ConeGeometry(0.0022, 0.0045, 5).translate(0, 0.0022, 0);
+    const spike = new ConeGeometry(0.0028, 0.005, 6).translate(0, 0.0022, 0);
     spike.applyQuaternion(quatFromUp(d));
     spike.translate(d.x * 0.0092, DURIAN_Y + d.y * 0.0104, d.z * 0.0092);
     parts.push(spike);
@@ -107,8 +108,8 @@ const NOCK_X = -0.011;
 /** A bow bent back, standing on its lower tip. Origin on the page under the grip. */
 function bowGeometry() {
   return merge([
-    new TorusGeometry(BOW_R, 0.0016, 8, 36, BOW_ARC).rotateZ(-BOW_ARC / 2).translate(-BOW_R * Math.cos(BOW_ARC / 2), BOW_Y, 0),
-    new CylinderGeometry(0.0017, 0.0017, 0.008, 8).translate(BOW_R - BOW_R * Math.cos(BOW_ARC / 2), BOW_Y, 0), // grip
+    new TorusGeometry(BOW_R, 0.0024, 10, 36, BOW_ARC).rotateZ(-BOW_ARC / 2).translate(-BOW_R * Math.cos(BOW_ARC / 2), BOW_Y, 0),
+    new CylinderGeometry(0.003, 0.003, 0.008, 10).translate(BOW_R - BOW_R * Math.cos(BOW_ARC / 2), BOW_Y, 0), // grip
   ]);
 }
 
@@ -161,11 +162,11 @@ export default function createStoresScene(ctx) {
 
   let batCut = null;
   if (variant === 'cases') {
-    const durian = place('durian', createInkObject(durianGeometry(), { color: '#EDE6D2', name: 'durian' }));
+    const durian = place('durian', createInkObject(durianGeometry(), { color: '#EDE6D2', creaseDeg: false, name: 'durian' }));
     dashedDrop(durian.group.position.x, durian.group.position.z, DURIAN_Y - 0.011);
     const rice = place('rice', createInkObject(riceGeometry(), { color: '#F4EEDF', name: 'rice' }));
     steam(rice.group.position, 0.021, 0.005);
-    const bow = place('bow', createInkObject(bowGeometry(), { color: '#E9DFC8', name: 'bow' }));
+    const bow = place('bow', createInkObject(bowGeometry(), { color: '#E9DFC8', creaseDeg: false, name: 'bow' }));
     // The string, pulled back to the nock, and the arrow resting on the grip.
     const bp = bow.group.position;
     const tipX = BOW_R * Math.cos(BOW_ARC / 2) - BOW_R * Math.cos(BOW_ARC / 2);
@@ -183,7 +184,7 @@ export default function createStoresScene(ctx) {
     const battery = place('battery', createInkObject(batteryGeometry(), { color: '#E9E1D0', name: 'battery' }));
     battery.group.scale.setScalar(0.7);
     const cup = place('kopi', createInkObject(cupGeometry(), { color: '#F1EADB', name: 'kopi' }));
-    cup.group.scale.setScalar(0.38);
+    cup.group.scale.setScalar(variant === 'top' ? 0.3 : 0.38);
     place('sun', createInkObject(new SphereGeometry(0.011, 24, 16).translate(0, 0.011, 0), { color: '#F4EEDF', creaseDeg: false, name: 'sun' }));
 
     // A dashed line under the raised book, the Sun's rays, speed lines
@@ -200,7 +201,7 @@ export default function createStoresScene(ctx) {
     for (const [dy, len] of [[0.006, 0.012], [0.011, 0.018], [0.016, 0.01]]) {
       extra.push(...polylineToSegments([new Vector3(cp.x - 0.026 - len, cp.y + dy, cp.z), new Vector3(cp.x - 0.026, cp.y + dy, cp.z)]));
     }
-    steam(objects.kopi.group.position, 0.038);
+    steam(objects.kopi.group.position, variant === 'top' ? 0.03 : 0.038);
 
     // The battery opens in a cutaway when tapped: its front half is cut
     // away (surfaces and lines), showing a glowing core, its chemical
@@ -224,38 +225,27 @@ export default function createStoresScene(ctx) {
     addNote(ctx, { id: `obj-${id}`, centre: () => at.clone(), width: 0.066, height: variant === 'full' ? 0.0095 : 0.0085, className: 'is-hand' }).textContent = OBJECT_NAMES[id];
   }
 
-  // A flow from each object to each jar it fills.
+  // Tapping an object fills the jar of each store it has energy in. The
+  // level rises in the jar itself, with nothing drawn between the two.
   const storesOf = (id) => [].concat(STORE_OF[id]);
-  const flows = {};
-  for (const [id, obj] of Object.entries(objects)) {
-    flows[id] = storesOf(id).map((store) => {
-      const from = obj.group.position.clone().add(new Vector3(0, 0.03, 0));
-      const to = kit.jars[store].group.position.clone().add(new Vector3(0, 0.045 * (L.jarSize / 0.36), 0));
-      const flow = createFlowPath({ from, to, pathway: 'mechanical', fromStore: store, toStore: store, arc: 0.03, travel: 0.9 });
-      flow.pathLine.visible = false;
-      ctx.scene.add(flow.pathLine, flow.points);
-      return { store, flow };
-    });
-  }
-
+  const LEVEL = 0.7;
   const shown = Object.fromEntries(STORE_IDS.map((s) => [s, 0]));
-  const sending = new Map(); // id -> remaining amount to emit
+  const target = { ...shown };
 
   function reveal(id) {
     if (id === 'battery') batCut?.open(true);
-    if (!objects[id] || sending.has(id) || storesOf(id).every((s) => shown[s] >= 0.7)) return;
-    sending.set(id, 0.7);
-    for (const f of flows[id]) f.flow.pathLine.visible = true;
+    if (!objects[id]) return;
+    for (const s of storesOf(id)) target[s] = LEVEL;
   }
 
   const actions = {};
-  for (const id of Object.keys(objects)) actions[id] = { label: `Tap ${OBJECT_NAMES[id].startsWith('the ') ? '' : 'the '}${OBJECT_NAMES[id]}` };
+  for (const id of Object.keys(objects)) actions[id] = { label: `Tap ${OBJECT_NAMES[id].startsWith('the ') ? '' : 'the '}${OBJECT_NAMES[id]}`, short: SHORT_NAMES[id] };
   actions.reset = { label: 'Empty the jars' };
 
   return {
     figure: {
       caption: variant === 'cases' ? 'Three new cases. One of them has energy in two stores.' : 'Each object keeps energy in one of the six stores.',
-      hint: 'Tap an object to send its energy to its jar.',
+      hint: 'Tap an object to see which jar fills.',
     },
     objects: [...kit.objects, ...Object.values(objects)],
     cueTargets: Object.fromEntries(Object.entries(objects).map(([k, o]) => [k, o.group])),
@@ -264,13 +254,9 @@ export default function createStoresScene(ctx) {
     act(id) {
       if (id === 'reset') {
         batCut?.open(false);
-        for (const s of STORE_IDS) shown[s] = 0;
-        sending.clear();
-        for (const list of Object.values(flows)) {
-          for (const f of list) {
-            f.flow.clear();
-            f.flow.pathLine.visible = false;
-          }
+        for (const s of STORE_IDS) {
+          shown[s] = 0;
+          target[s] = 0;
         }
         kit.set({ ...shown });
         return;
@@ -285,24 +271,20 @@ export default function createStoresScene(ctx) {
     update(dt, { formReady }) {
       let moving = kit.fadeGlow(dt, formReady);
       if (batCut) moving = batCut.update(dt, ctx.reducedMotion) || moving;
-      for (const [id, left] of sending) {
-        const amt = Math.min(left, dt * 0.9);
-        for (const f of flows[id]) f.flow.emit(amt);
-        if (left - amt <= 1e-6) sending.delete(id);
-        else sending.set(id, left - amt);
+      for (const s of STORE_IDS) {
+        const gap = target[s] - shown[s];
+        if (gap <= 0) continue;
+        // Rises quickly, then settles, in about a second.
+        shown[s] = ctx.reducedMotion || gap < 0.004 ? target[s] : shown[s] + Math.min(gap, Math.max(gap * dt * 4.5, dt * 0.12));
         moving = true;
-      }
-      for (const list of Object.values(flows)) {
-        for (const f of list) {
-          if (!f.flow.active) continue;
-          shown[f.store] += f.flow.step(dt);
-          moving = true;
-        }
       }
       kit.set({ ...shown });
       return moving;
     },
-    setTime() {
+    setTime(t) {
+      // For screenshots: past the start, every jar tapped so far is full.
+      if (t > 0) Object.assign(shown, target);
+      kit.set({ ...shown });
       kit.setGlow(1);
     },
     values: () => ({ ...shown }),

@@ -38,7 +38,7 @@ test.describe('accessibility', () => {
   test('every scene object a student can act on has an HTML button twin', async ({ page: tab }) => {
     await ready(tab, '?q=low&drawin=off');
     await tab.evaluate(() => window.__book.open('l1-stores', 0));
-    const names = await tab.$$eval('.work-box button', (bs) => bs.map((b) => b.textContent));
+    const names = await tab.$$eval('.work-box button', (bs) => bs.map((b) => b.getAttribute('aria-label') ?? b.textContent));
     expect(names).toEqual(expect.arrayContaining(['Tap the rolling toy car', 'Tap the book held up high', 'Tap the stretched catapult']));
   });
 

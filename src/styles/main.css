@@ -804,3 +804,21 @@ html[data-look=day] .hud-btn:hover { background: rgba(30, 27, 36, 0.07); }
 .page-panel.is-textbook .work-actions { display: flex; flex-wrap: wrap; gap: 0.25em 0.35em; }
 .page-panel.is-printed.is-textbook .work-actions button { min-height: 24px; font-size: 0.86em; padding: 0.05em 0.65em; }
 .page-panel.is-printed.is-textbook.tightest { font-size: 11.6px; line-height: 1.26; }
+
+/* The right-hand page's last resort when marked answers make it too long. */
+.page-panel-right.is-textbook.tightest { font-size: 11.6px; line-height: 1.26; }
+
+/* A marked question in a textbook spread: the verdict card sits beside the
+   Check button, so marking a question adds as little height as possible. */
+.tb-q { display: flow-root; }
+.page-panel.is-printed .tb-q .q-actions { float: left; margin: 0.3em 0.6em 0 0; }
+.page-panel.is-printed .tb-q .q-feedback { display: flow-root; }
+.page-panel.is-printed .tb-q .q-feedback[hidden] { display: none; }
+.page-panel.is-printed .tb-q .q-model { clear: both; }
+.tb-q .q-model summary { display: inline; margin: 0; }
+.tb-q .q-model p { display: inline; margin: 0 0 0 0.3em; }
+/* The lesson stamp pressed into the head of the page, beside the title. */
+.page-panel.is-printed .tb-stamp.is-corner { position: absolute; top: 0.9em; right: 4%; bottom: auto; margin: 0; }
+/* A try box with only buttons needs no frame of its own. */
+.page-panel.is-textbook .work-box:not(:has(.work-goal, .work-controls > *)) { border: none; padding: 0; margin: 0.2em 0; }
+.tb-q .q-model { margin-top: 0.4em; }

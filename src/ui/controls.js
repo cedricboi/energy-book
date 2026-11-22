@@ -116,11 +116,13 @@ export function createChoice(parent, p, onChange) {
 }
 
 /** A button for a scene action (run, reset, pause at the bottom). */
-export function createActionButton(parent, { label, primary = false }, onClick) {
+export function createActionButton(parent, { label, short, primary = false }, onClick) {
   const b = document.createElement('button');
   b.type = 'button';
   b.className = `ctl-action${primary ? ' primary' : ''}`;
-  b.textContent = label;
+  // A short label keeps a row of buttons small. Its full name is still read out.
+  b.textContent = short ?? label;
+  if (short) b.setAttribute('aria-label', label);
   b.addEventListener('click', onClick);
   parent.append(b);
   return b;
