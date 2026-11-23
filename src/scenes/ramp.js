@@ -106,7 +106,7 @@ export default function createRampScene(ctx) {
     quad: () => [toWorld(marks.left, marks.top, front), toWorld(marks.right, marks.top, front), toWorld(marks.right, marks.bottom, front), toWorld(marks.left, marks.bottom, front)].map((v) => ctx.scene.localToWorld(v)),
     html: [1, 2, 3].map((h) => `<span style="top:${((marks.top - h) / (marks.top - marks.bottom)) * 100}%">${formatQuantity(h, 'm')}</span>`).join(''),
   });
-  const speedLabel = ctx.overlay.add({ id: 'speed', anchor: () => rider.group.position.clone().add(new Vector3(0, -0.012, 0.02)), html: '' });
+  const speedLabel = ctx.overlay.add({ id: 'speed', anchor: () => ctx.scene.localToWorld(rider.group.position.clone().add(new Vector3(0, -0.012, 0.02))), html: '' });
   ctx.overlay.setVisible('speed', false);
 
   // Where friction warms the wheels and the ramp: a small glow of the

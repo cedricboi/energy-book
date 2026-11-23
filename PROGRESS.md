@@ -8,6 +8,25 @@ Read after `CLAUDE.md` at the start of every session. Newest entry at the top.
 
 
 
+
+## 24 Nov 2026. Compact figures and right-page text in every lesson, and the white paper
+
+The teacher approved Lesson 1 and asked for the rest: Lessons 2 to 8 set the same way, and the whiter paper as the house look.
+
+- **Compact figures.** A spread can ask for its figure drawn smaller (`figure: { scale, room }`). `book.js` shrinks the scene's group about the head of the right-hand page, so no scene had to be redrawn. Part labels now go through `ctx.scene.localToWorld`, so they follow the smaller drawing. Only in the printed (landscape) layout: the stacked layout keeps the figure at full size.
+- **Text runs on to the right-hand page.** `textbook.js` now fills the left page, then the space under the figure, then starts a new spread. The controls (the Try box) go under the figure they work. A question never splits from its own step, plain text may run on over the turn, and a subheading is never left at the foot of a page. A spread with nothing to print under its figure keeps the figure at full size.
+- **Result:** 28 spreads in the book (it was 37, and 94 pages before that). Lesson 2 has 4, Lessons 3 and 4 have 3, Lesson 5 has 5, Lessons 6 and 7 have 4, Lesson 8 has 3.
+- **The energy ledger is a slim strip** at the foot of the right-hand page on these spreads, with each store's value in joules beside its name (the jar cards are small in a compact figure).
+- **Bug: the reason under the flap was invisible** on a printed page. The verdict card inherited the page's transparent text colour. It now has its own ink.
+- **Marked numeric answers** put the verdict card on the same line as the answer box.
+- **House look:** whiter paper (`#FBFAF5`), a paler desk and a mat under the book. The lamp is at 4.3 so lit paper stays under the bloom threshold. `?paper=cream` shows the earlier paper. CLAUDE.md section 4 has the new colours.
+- **Scripts:** `scripts/answered.mjs` marks every question in the book and reports any page that no longer fits. `scripts/sheet.py` makes contact sheets of the page screenshots. `scripts/figure-rooms.mjs` measures a scene's depth (its numbers are unreliable for scenes with large hidden parts, so the rooms in `textbook.js` were set by eye).
+
+### Not done
+- The last spread of some lessons is short (an exit ticket of two questions).
+- Jar cards are small in compact figures. The values are readable in the ledger strip.
+- Lesson 5 and 6 open on a spread whose prediction fills the left page, so that spread keeps a full-size figure.
+
 ## 23 Nov 2026. Lesson 1: jars fill on their own, and bugs fixed
 
 The teacher asked for the "transfer" animation in Lesson 1 to go: tapping an object should just fill its jar.

@@ -822,3 +822,19 @@ html[data-look=day] .hud-btn:hover { background: rgba(30, 27, 36, 0.07); }
 /* A try box with only buttons needs no frame of its own. */
 .page-panel.is-textbook .work-box:not(:has(.work-goal, .work-controls > *)) { border: none; padding: 0; margin: 0.2em 0; }
 .tb-q .q-model { margin-top: 0.4em; }
+
+/* A spread with a compact figure: the energy ledger is a slim strip at the
+   foot of the right-hand page, with each store's value beside its name. */
+.spread-right.has-ledger > .page-body { padding-bottom: 58px; }
+.ledger-slot.is-printed.is-slim .ledger-bar { font-size: 11px; line-height: 1.2; }
+.ledger-slot.is-printed.is-slim .ledger-caption { font-weight: 600; margin-bottom: 1px; }
+.ledger-slot.is-printed.is-slim .ledger-svg { height: 14px; }
+.ledger-slot.is-printed.is-slim .ledger-key { display: flex; gap: 0 10px; margin: 1px 0 0; }
+
+/* Handwritten part names shrink with a compact figure. */
+.is-compact-figure .label-part { font-size: clamp(12px, 0.95vw, 18px); }
+/* A marked numeric answer: the verdict card shares the answer's line. */
+.page-panel.is-printed .tb-q .q-numeric > .q-feedback { flex: 1 1 0; min-width: 36%; margin-top: 0; }
+/* The verdict card is live HTML on a printed page, so it needs its own ink:
+   the page around it is transparent, and it would inherit that. */
+.q-feedback { color: var(--ink); }

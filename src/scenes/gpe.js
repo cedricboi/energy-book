@@ -57,7 +57,7 @@ export default function createGpeScene(ctx) {
   const box = createCrate({ size: 0.4 * S, name: 'box' });
   ctx.scene.add(box.group);
   addRuler(ctx, { at: (m) => W(-0.7, m, 0.2), length: 2.0, tick: 0.1, labelEvery: 0.5, tickDir: new Vector3(0.005, 0, 0), id: 'rule' });
-  ctx.overlay.add({ id: 'part-box', kind: 'part', anchor: () => box.group.position.clone().add(new Vector3(0.012, 0.012, 0)), html: 'box', gap: 2 });
+  ctx.overlay.add({ id: 'part-box', kind: 'part', anchor: () => ctx.scene.localToWorld(box.group.position.clone().add(new Vector3(0.012, 0.012, 0))), html: 'box', gap: 2 });
 
   function place() {
     box.group.position.copy(W(0.1, h(), 0));

@@ -174,8 +174,9 @@ export function renderRight(page, c) {
   const body = document.createElement('div');
   body.className = 'page-body';
   el.append(body);
-  if (page.figure?.caption) {
-    body.insertAdjacentHTML('beforeend', `<p class="fig-caption"><b>Fig. ${c.number ? `${c.number}.` : ''}${page.figure.n ?? c.index + 1}</b>${page.figure.caption}</p>`);
+  const caption = page.figure?.caption ?? (page.right ? c.scene?.figure?.caption : null);
+  if (caption) {
+    body.insertAdjacentHTML('beforeend', `<p class="fig-caption"><b>Fig. ${c.number ? `${c.number}.` : ''}${page.figure?.n ?? c.index + 1}</b>${caption}</p>`);
   }
   blocks(body, page.right, page, c);
   const folio = document.createElement('p');

@@ -60,17 +60,18 @@ energy-book/
 
 ### Mood
 
-A hand-inked field notebook lies open on a light oak desk in soft daylight, which falls from a high window at the upper left. The paper reads white, the ink is crisp and the shadows are soft. The scene is calm and quiet. The only saturated colour in it is energy. (The teacher chose daylight on 19 Nov 2026. The earlier lamp-lit night look is kept as `?look=night`.)
+A hand-inked field notebook lies open on a light oak desk in soft daylight, which falls from a high window at the upper left. The paper reads white, the ink is crisp and the shadows are soft. The scene is calm and quiet. The only saturated colour in it is energy. (The teacher chose daylight on 19 Nov 2026. The earlier lamp-lit night look is kept as `?look=night`. On 24 Nov 2026 the teacher chose whiter paper on a paler desk with a mat under the book. The earlier cream paper is kept as `?paper=cream`.)
 
 ### Base colours
 
 | Use | Hex |
 |---|---|
-| Paper | `#F4EEDF` |
-| Paper shadow tone | `#D9CFB8` |
+| Paper | `#FBFAF5` |
+| Paper shadow tone | `#E3DFD3` |
 | Ink | `#1E1B24` |
-| Desk wood | `#C4A988` |
-| Background | `#DCD6CB` |
+| Desk wood | `#DCCDB6` |
+| Desk mat (under the book) | `#B9C6BE` |
+| Background | `#E4E2DC` |
 | Daylight | `#FFF7EC` |
 
 ### Energy store palette
@@ -180,7 +181,7 @@ export default {
 
 Every question has a stable `id` (`l5-q3`) so the Teacher Hub can chart answers.
 
-**How the pages are set.** The lesson file keeps the steps in order, as above. The book lays them out as textbook spreads (`src/lessons/textbook.js`): a spread ends when the next step would not fit, when the figure has to change, or when a question needs the figure's numbers hidden. `?layout=steps` shows the steps one to a page. A lesson can also be written directly as spreads (`textbook: true`, pages of type `spread` with `left` and `right` lists of blocks, as in `l1-stores.js`), which lets the right page carry printed text beneath a figure of its own.
+**How the pages are set.** The lesson file keeps the steps in order, as above. The book lays them out as textbook spreads (`src/lessons/textbook.js`): a spread ends when the next step would not fit, when the figure has to change, or when a question needs the figure's numbers hidden. `?layout=steps` shows the steps one to a page. A lesson can also be written directly as spreads (`textbook: true`, pages of type `spread` with `left` and `right` lists of blocks, as in `l1-stores.js`), which lets the right page carry printed text beneath a figure of its own. Spreads laid out from steps do the same automatically: the figure is drawn smaller at the head of the right page (`figure.scale`), the controls sit under it, and the text runs on beneath.
 
 ## 9. Performance budget
 

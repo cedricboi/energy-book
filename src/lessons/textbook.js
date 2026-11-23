@@ -15,10 +15,10 @@ const KICKER = { explore: 'Investigate', predict: 'Predict', name: 'New term', u
 // Rough heights in px at the printed page's size (13 px type, about 88
 // characters to a line), used only to decide where a spread ends. Each
 // question leaves room for the feedback that appears once it is marked.
-const BUDGET = 570;
+const BUDGET = 585;
 const LINE = 17.2;
 const plain = (s) => String(s).replace(/<[^>]+>/g, '');
-const lines = (s, perLine = 88) => Math.max(1, Math.ceil(plain(s).length / perLine));
+const lines = (s, perLine = 78) => Math.max(1, Math.ceil(plain(s).length / perLine));
 const text = (s) => (typeof s === 'function' ? 'x'.repeat(130) : s);
 
 /** Answer options are set in two columns, so each pair shares a row. */
@@ -33,7 +33,7 @@ function questionCost(q) {
   const marked = 26 + 26; // the Check button, then a line of feedback
   switch (q.type) {
     case 'mcq':
-      return prompt + optionsCost(q.options) + marked;
+      return prompt + optionsCost(q.options) + marked + 14;
     case 'mcqReason':
       return prompt + optionsCost(q.options) + 60 + marked;
     case 'numeric':
@@ -54,7 +54,7 @@ function questionCost(q) {
   }
 }
 
-function cost(b) {
+export function cost(b) {
   if (typeof b === 'string' || typeof b === 'function') return lines(text(b)) * LINE + 6;
   if (b.lead) return lines(text(b.lead), 72) * 19.5 + 7;
   if (b.h) return 24;
@@ -63,16 +63,16 @@ function cost(b) {
   if (b.steps) return b.steps.reduce((a, s) => a + lines(text(s), 78) * LINE + 3, 6);
   if (b.equations || b.keyWords) {
     const eq = (b.equations ?? []).reduce((a, e) => a + 30 + (e.words ? lines(e.words, 90) * 14 : 0), b.equations?.length ? 18 : 0);
-    const kw = (b.keyWords ?? []).length ? 20 + b.keyWords.length * 26 : 0;
+    const kw = (b.keyWords ?? []).length ? 16 + b.keyWords.length * 18 : 0;
     return eq + kw;
   }
   if (b.try) {
     const t = b.try;
-    return 22 + (t.goal ? lines(t.goal, 74) * LINE + 6 : 0) + (t.controls?.length ?? 0) * 40 + (t.controls?.length ? 62 : 0) + Math.ceil((t.actions?.length ?? 2) / 4) * 34;
+    return 18 + (t.goal ? lines(t.goal, 74) * LINE + 6 : 0) + (t.controls?.length ?? 0) * 36 + (t.controls?.length ? 26 : 0) + Math.ceil((t.actions?.length ?? 2) / 4) * 30;
   }
   if (b.predict) return questionCost({ ...b.predict, type: 'mcqReason' }) + (b.after ?? []).reduce((a, x) => a + cost(x), 0);
   if (b.q) return questionCost(b.q) + 8;
-  if (b.stamp) return 70;
+  if (b.stamp) return b.corner ? 0 : 70;
   return 20;
 }
 
@@ -116,7 +116,6 @@ function blocksOf(page, { lesson, first, headed, next }) {
     case 'exit':
       out.push(...paras);
       for (const q of page.questions ?? []) out.push({ q, n: next() });
-      out.push({ stamp: true });
       break;
     default: // use, check, notes
       out.push(...paras);
@@ -128,6 +127,18 @@ function blocksOf(page, { lesson, first, headed, next }) {
   return out;
 }
 
+// The figure of a spread set from steps is drawn smaller, at the head of the
+// right-hand page, so the text can run on beneath it. `scale` shrinks the
+// scene about the top of the page, and `room` is the share of the page it
+// then needs (measured from each scene, see scripts/figure-rooms.mjs).
+const FIGURE_SCALE = 0.7;
+const ROOMS = { default: 0.535, kinetic: 0.585 };
+const NO_LEDGER = ['transfers', 'power'];
+const PAGE_PX = 645; // height of the printed right-hand page
+const figureOf = (scene) => ({ scale: FIGURE_SCALE, room: ROOMS[String(scene).split(':')[0]] ?? ROOMS.default });
+// What is left under the figure, less its caption and the energy ledger.
+const rightBudget = (scene) => Math.round((1 - figureOf(scene).room) * PAGE_PX - 36 - (NO_LEDGER.includes(String(scene).split(':')[0]) ? 0 : 56));
+
 /**
  * @param {object} lesson  a lesson written as steps
  * @param {number} [number] the lesson's number, for the kicker
@@ -138,8 +149,72 @@ export function toTextbook(lesson, number) {
   const spreads = [];
   let cur = null;
   let n = 0;
+  let asked = false; // today's questions are printed once
   const next = () => (n += 1);
   const label = number ? `Lesson ${number}` : 'Lesson';
+
+  const open = (page) => {
+    cur = {
+      type: 'spread',
+      scene: page.scene,
+      kicker: spreads.length ? `${label} · ${KICKER[page.type] ?? 'continued'}` : label,
+      title: spreads.length ? page.title ?? lesson.title : lesson.title,
+      left: [],
+      right: [],
+      figure: figureOf(page.scene),
+      usedL: 0,
+      usedR: 0,
+      roomR: rightBudget(page.scene),
+      side: 'left',
+      live: false,
+      hideValues: false,
+    };
+    spreads.push(cur);
+  };
+
+  /** True if these blocks all fit in what is left of a spread. */
+  const fits = (blocks, sp) => {
+    let { usedL, usedR, side } = sp;
+    for (const b of blocks) {
+      const c = cost(b);
+      if (b.try && usedR + c <= sp.roomR) usedR += c;
+      else if (side === 'left' && usedL + c <= BUDGET) usedL += c;
+      else if (usedR + c <= sp.roomR) {
+        side = 'right';
+        usedR += c;
+      } else return false;
+    }
+    return true;
+  };
+
+  /** Set one block on the left page, then the right, then a new spread. */
+  const place = (b, after, page, touched) => {
+    const c = cost(b);
+    // The controls go under the figure they work.
+    if (b.try && cur.usedR + c <= cur.roomR) {
+      cur.right.push(b);
+      cur.usedR += c;
+      return;
+    }
+    // A subheading stays with the text it heads.
+    const need = c + (b.h && after ? cost(after) : 0);
+    if (cur.side === 'left' && cur.usedL + need > BUDGET && cur.left.length) cur.side = 'right';
+    if (cur.side === 'left') {
+      cur.left.push(b);
+      cur.usedL += c;
+      return;
+    }
+    if (cur.usedR + need <= cur.roomR || (!cur.right.length && !cur.left.length)) {
+      cur.right.push(b);
+      cur.usedR += c;
+      return;
+    }
+    open(page);
+    touched.push(cur);
+    if (b.h) return; // the new spread is headed by this step's title
+    cur.left.push(b);
+    cur.usedL += c;
+  };
 
   for (const page of lesson.pages) {
     const live = ['hook', 'predict', 'explore'].includes(page.type) || !!page.controls?.length || !!page.actions?.length;
@@ -148,43 +223,63 @@ export function toTextbook(lesson, number) {
       || (live && cur.live && !agrees(page.sceneState, cur.sceneState))
       || (page.hideValues && cur.live)
       || (live && cur.hideValues);
-    let blocks = blocksOf(page, { lesson, first: !spreads.length, headed: mustBreak, next: () => 0 });
-    const size = blocks.reduce((a, b) => a + cost(b), 0);
-    const starts = mustBreak || cur.used + size > BUDGET;
+    let blocks = blocksOf(page, { lesson, first: !asked, headed: false, next });
+    if (blocks.some((b) => b.questions)) asked = true;
+    // A step that will not fit in what is left starts a new spread, unless
+    // it is too long for any one spread (then it runs on across the turn).
+    const whole = blocks.reduce((a, b) => a + cost(b), 0);
+    // Plain text may run on over the turn: only a question stays whole.
+    const asks = blocks.some((b) => b.q || b.predict || b.try);
+    const starts = mustBreak || (asks && !fits(blocks, cur) && whole <= BUDGET + cur.roomR);
     if (starts) {
-      cur = {
-        type: 'spread',
-        scene: page.scene,
-        kicker: spreads.length ? `${label} · ${KICKER[page.type] ?? 'continued'}` : label,
-        title: spreads.length ? page.title ?? lesson.title : lesson.title,
-        left: [],
-        used: 0,
-        live: false,
-        hideValues: false,
-      };
-      // The lesson's first spread is headed by the lesson's title, so its
-      // opening step keeps its own title as a subheading.
-      if (!spreads.length && page.title) cur.left.push({ h: page.title });
-      spreads.push(cur);
+      const firstSpread = !spreads.length;
+      open(page);
+      // The spread is headed by this step's title. The lesson's first spread
+      // is headed by the lesson's title, so its opening step keeps its own.
+      if (blocks[0]?.h) blocks = blocks.slice(1);
+      if (firstSpread && page.title) blocks.unshift({ h: page.title });
     }
-    // Number the questions only now, when the step's place is known.
-    blocks = blocksOf(page, { lesson, first: spreads.length === 1 && !cur.left.some((b) => b.questions), headed: starts, next });
-    cur.left.push(...blocks);
-    cur.used += blocks.reduce((a, b) => a + cost(b), 0);
-    if (page.sceneState && (live || !cur.sceneState)) cur.sceneState = { ...cur.sceneState, ...page.sceneState };
-    if (live) {
-      cur.live = true;
-      cur.handle = true;
-      cur.cue ??= page.cue;
+    const touched = [cur];
+    blocks.forEach((b, i) => place(b, blocks[i + 1], page, touched));
+    for (const sp of touched) {
+      if (page.sceneState && (live || !sp.sceneState)) sp.sceneState = { ...sp.sceneState, ...page.sceneState };
+      if (live) {
+        sp.live = true;
+        sp.handle = true;
+        sp.cue ??= page.cue;
+      }
+      if (page.hideValues) sp.hideValues = true;
+      if (page.figureHint) sp.figureHint = page.figureHint;
     }
-    if (page.hideValues) cur.hideValues = true;
-    if (page.type === 'predict') cur.lockUntil = page.question.id;
-    if (page.figureHint) cur.figureHint = page.figureHint;
+    if (page.type === 'predict') touched[0].lockUntil = page.question.id;
+  }
+
+  for (const sp of spreads) {
+    // A right-hand page left bare takes the end of the left page's text.
+    const tries = 0;
+    while (sp.right.length === (sp.moved ?? 0) && sp.left.length >= 2) {
+      let take = 1;
+      const last = sp.left.at(-1);
+      if (sp.left.at(-2)?.h) take = 2;
+      if (sp.left.length - take < 1) break;
+      const moving = sp.left.slice(-take);
+      const c = moving.reduce((a, b) => a + cost(b), 0);
+      if (last.questions || last.lead || last.predict || sp.usedR + c > sp.roomR || sp.usedR + c > sp.usedL) break;
+      sp.left.splice(-take);
+      sp.right.splice(tries, 0, ...moving);
+      sp.usedL -= c;
+      sp.usedR += c;
+      sp.moved = (sp.moved ?? 0) + take;
+    }
+    // With nothing to print beneath it, the figure keeps the whole page.
+    if (!sp.right.length) {
+      delete sp.right;
+      delete sp.figure;
+    }
+    for (const k of ['usedL', 'usedR', 'roomR', 'side', 'live', 'moved']) delete sp[k];
   }
   spreads.at(-1).completes = true;
-  for (const s of spreads) {
-    delete s.used;
-    delete s.live;
-  }
+  // The lesson's stamp is pressed beside the last spread's title.
+  spreads.at(-1).left.push({ stamp: true, corner: true });
   return { ...lesson, textbook: true, pages: spreads };
 }

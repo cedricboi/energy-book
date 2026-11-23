@@ -210,7 +210,7 @@ export function createStage({ tier, view = 'reading', focus = { x: 0.105, y: 0.0
       // Whiter paper reflects more, so the light comes down to keep lit
       // paper under the bloom threshold. The light itself is a cooler white.
       lamp.color.set('#FFFCF7');
-      lamp.intensity = 4.55;
+      lamp.intensity = 4.3;
       hemi.groundColor.set('#C9C6BE');
       hemi.intensity = 0.9;
     }

@@ -125,7 +125,7 @@ export default function createLedgerRunScene(ctx) {
     partLabelIds.length = 0;
     const add = (id, at, html) => {
       partLabelIds.push(id);
-      ctx.overlay.add({ id, anchor: () => at, html, gap: 2, kind: 'value' });
+      ctx.overlay.add({ id, anchor: () => ctx.scene.localToWorld(at), html, gap: 2, kind: 'value' });
     };
     const spot = { tower: W(0.05, 0.15), spring: W(0.38, 0.12), lift: W(0.7, 0.7), fan: W(1.0, 0.22), track: W(0.95, -0.05), ramp: W(1.38, 0.05), first: W(0.22, 0.1) };
     const where = (part) => {
@@ -148,8 +148,8 @@ export default function createLedgerRunScene(ctx) {
     for (const [k, list] of Object.entries(lines)) add(`part-${k}`, spot[k], list.join('<br>'));
   }
 
-  ctx.overlay.add({ id: 'target', kind: 'part', anchor: () => (level.target.height !== undefined ? W(1.62, level.target.height + 0.12) : W(1.45, 0.25)), html: '', gap: 2, prefer: 'left' });
-  ctx.overlay.add({ id: 'result', anchor: () => W(1.0, 0.75), html: '', gap: 2 });
+  ctx.overlay.add({ id: 'target', kind: 'part', anchor: () => ctx.scene.localToWorld((level.target.height !== undefined ? W(1.62, level.target.height + 0.12) : W(1.45, 0.25))), html: '', gap: 2, prefer: 'left' });
+  ctx.overlay.add({ id: 'result', anchor: () => ctx.scene.localToWorld(W(1.0, 0.75)), html: '', gap: 2 });
   ctx.overlay.setVisible('result', false);
 
   let run = null; // { r, t }

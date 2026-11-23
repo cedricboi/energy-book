@@ -55,8 +55,8 @@ export default function createKineticScene(ctx) {
   const clayDepth = 0.05;
   const clay = createInkObject(new BoxGeometry(1, 0.03, 0.05).translate(0.5, 0.015, 0), { color: '#E2CDB0', name: 'clay', maxLayers: 2 });
   ctx.scene.add(clay.group);
-  ctx.overlay.add({ id: 'part-car', kind: 'part', anchor: () => car.group.position.clone().add(new Vector3(0, 0.05, 0)), html: 'toy car', gap: 2 });
-  ctx.overlay.add({ id: 'part-clay', kind: 'part', anchor: () => clay.group.position.clone().add(new Vector3(0.025, 0.04, 0)), html: 'soft clay', gap: 2 });
+  ctx.overlay.add({ id: 'part-car', kind: 'part', anchor: () => ctx.scene.localToWorld(car.group.position.clone().add(new Vector3(0, 0.034, 0))), html: 'toy car', gap: 2 });
+  ctx.overlay.add({ id: 'part-clay', kind: 'part', anchor: () => ctx.scene.localToWorld(clay.group.position.clone().add(new Vector3(0.025, 0.04, 0))), html: 'soft clay', gap: 2 });
   // The dent depth is written on the clay block's front face.
   addNote(ctx, { id: 'dent', centre: () => new Vector3(clay.group.position.x + 0.024, y(clayFront) + 0.015, z + 0.0256), v: new Vector3(0, 1, 0), width: 0.042, height: 0.0095 });
   ctx.overlay.setVisible('dent', false);

@@ -67,7 +67,7 @@ export default function createBounceScene(ctx) {
     ctx.scene.add(ball.group);
   }
   makeBall();
-  ctx.overlay.add({ id: 'part-ball', kind: 'part', anchor: () => ball.group.position.clone().add(new Vector3(0.012, 0.015, 0)), html: BALLS[s.ball].label, gap: 2 });
+  ctx.overlay.add({ id: 'part-ball', kind: 'part', anchor: () => ctx.scene.localToWorld(ball.group.position.clone().add(new Vector3(0.012, 0.015, 0))), html: BALLS[s.ball].label, gap: 2 });
 
   // Sound ripples: rings that spread from the contact point after a bounce.
   let ripple = null;

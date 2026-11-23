@@ -140,7 +140,7 @@ export default function createTransfersScene(ctx) {
     dev.build((obj, label, labelAt) => {
       group.add(obj.group);
       objects.push(obj);
-      ctx.overlay.add({ id: `part-${label}`, kind: 'part', anchor: () => labelAt, html: label, gap: 2 });
+      ctx.overlay.add({ id: `part-${label}`, kind: 'part', anchor: () => ctx.scene.localToWorld(labelAt.clone()), html: label, gap: 2 });
     });
     const pointOf = (name) => dev.points?.[name] ?? kit.jars[name]?.group.position.clone().add(new Vector3(0, 0.04, 0));
     const edges = dev.edges.map((e) => {

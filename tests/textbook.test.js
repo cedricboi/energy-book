@@ -36,7 +36,14 @@ for (const entry of LESSONS.filter((l) => !l.hidden)) {
       expect(withQs.slice(1).every((n) => n === 0)).toBe(true);
     });
     it('never mixes a hidden-numbers question with a spread students handle', () => {
-      for (const p of book.pages) if (p.hideValues) expect((p.left ?? []).some((b) => b.try || b.predict)).toBe(false);
+      for (const p of book.pages) if (p.hideValues) expect([...(p.left ?? []), ...(p.right ?? [])].some((b) => b.try || b.predict)).toBe(false);
+    });
+    it('draws the figure smaller only where text is printed beneath it', () => {
+      if (raw.textbook) return;
+      for (const p of book.pages) {
+        expect(!!p.figure?.scale).toBe(!!p.right?.length);
+        expect((p.left ?? []).at(-1)?.h).toBeUndefined();
+      }
     });
   });
 }

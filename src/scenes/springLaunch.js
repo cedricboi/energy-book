@@ -39,8 +39,8 @@ export default function createSpringLaunchScene(ctx) {
   spring.group.position.set(startX - 0.002, pageSurfaceY(startX, laneZ) + ballR, laneZ);
   ctx.scene.add(block.group, ball.group, spring.group);
 
-  ctx.overlay.add({ id: 'part-spring', kind: 'part', anchor: () => spring.group.position.clone().add(new Vector3(0.012, 0.022, 0)), html: 'spring' });
-  ctx.overlay.add({ id: 'part-ball', kind: 'part', anchor: () => ball.group.position.clone().add(new Vector3(0, 0.072, 0)), html: 'ball' });
+  ctx.overlay.add({ id: 'part-spring', kind: 'part', anchor: () => ctx.scene.localToWorld(spring.group.position.clone().add(new Vector3(0.012, 0.022, 0))), html: 'spring' });
+  ctx.overlay.add({ id: 'part-ball', kind: 'part', anchor: () => ctx.scene.localToWorld(ball.group.position.clone().add(new Vector3(0, 0.072, 0))), html: 'ball' });
 
   let open = -1;
   function setSpring(o) {

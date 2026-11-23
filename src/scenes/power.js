@@ -77,7 +77,7 @@ export default function createPowerScene(ctx) {
         p.group.scale.setScalar(S);
         group.add(p.group);
         objects.push(p);
-        ctx.overlay.add({ id: `who-${k}`, kind: 'part', anchor: () => p.group.position.clone().add(new Vector3(0, 1.9 * S, 0)), html: `person ${k}`, gap: 2 });
+        ctx.overlay.add({ id: `who-${k}`, kind: 'part', anchor: () => ctx.scene.localToWorld(p.group.position.clone().add(new Vector3(0, 1.9 * S, 0))), html: `person ${k}`, gap: 2 });
         return { p, dz: i === 0 ? -0.012 : 0.012 };
       });
       standFor([cx - 0.03, cx + 0.03], -0.09);
@@ -96,7 +96,7 @@ export default function createPowerScene(ctx) {
         k.inside.set(0, false);
         k.cutaway = createCutaway(k, { centre: new Vector3(0, 0.025, 0), depth: 0.028, inside: k.inside.meshes, clip: k.inside.clip });
         objects.push(k);
-        ctx.overlay.add({ id: `kettle-${i}`, kind: 'part', anchor: () => k.group.position.clone().add(new Vector3(0, -0.004, 0.035)), html: `${formatQuantity(P, 'W')} kettle`, gap: 2, prefer: 'below' });
+        ctx.overlay.add({ id: `kettle-${i}`, kind: 'part', anchor: () => ctx.scene.localToWorld(k.group.position.clone().add(new Vector3(0, -0.004, 0.035))), html: `${formatQuantity(P, 'W')} kettle`, gap: 2, prefer: 'below' });
         return k;
       });
       standFor([cx - 0.045, cx + 0.045], -0.09);

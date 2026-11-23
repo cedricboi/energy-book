@@ -2,7 +2,8 @@
 // The book engine. Lessons are data (CLAUDE.md section 8). The engine opens a
 // lesson, turns pages, swaps scenes, draws diagrams in after each turn, saves
 // progress and keeps the text panel fitted to the left page.
-import { Group } from 'three';
+import { Group, Vector3 } from 'three';
+import { BOOK, pageSurfaceY } from '../objects/book.js';
 import { LESSONS, loadLesson as importLesson } from '../lessons/index.js';
 import { loadScene } from '../scenes/index.js';
 import { renderPage, renderRight } from './pages.js';
@@ -25,6 +26,9 @@ function combine(list) {
     setTime: (t) => list.forEach((d) => d.setTime(t)),
   };
 }
+
+// The point a compact figure shrinks towards: the head of the right page.
+const FIGURE_HEAD = new Vector3(BOOK.gutter + BOOK.pageW / 2, pageSurfaceY(BOOK.gutter + BOOK.pageW / 2, 0), -BOOK.pageH / 2 + 0.008);
 
 export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotion, hud, onChange, instant = false }) {
   const panel = document.createElement('section');
@@ -495,6 +499,20 @@ export function createBook({ stage, renderer, overlay, overlayRoot, reducedMotio
       rightPanel.classList.remove('tightest');
     }
     if (showRight && state.rightBody && rightPanel.scrollHeight > rightPanel.clientHeight + 1 && !rightPanel.classList.contains('tightest')) rightPanel.classList.add('tightest');
+    // A spread can ask for its figure drawn smaller, at the head of the
+    // right-hand page, so the text runs on beneath it. Only when the pages
+    // are printed: the stacked layout shows the figure at its full size.
+    const fig = state.lesson?.pages[state.index]?.figure;
+    const k = printed && fig?.scale ? fig.scale : 1;
+    if (state.group && state.group.scale.x !== k) {
+      state.group.scale.setScalar(k);
+      state.group.position.copy(FIGURE_HEAD).multiplyScalar(1 - k);
+      state.group.updateMatrixWorld(true);
+      onChange?.();
+    }
+    ledgerRoot.classList.toggle('is-slim', printed && !!state.rightBody);
+    overlayRoot.classList.toggle('is-compact-figure', k < 1);
+    state.rightBody?.classList.toggle('has-ledger', !!ledgerRoot.innerHTML);
     // The caption is printed only in landscape, where the page is in view.
     figureRoot.hidden = !l.figureQuad || !figureRoot.innerHTML;
     if (l.figureQuad) {

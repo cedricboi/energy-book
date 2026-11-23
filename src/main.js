@@ -54,8 +54,9 @@ async function start() {
   // Daylight is the house look. ?look=night shows the lamp-lit night version.
   const look = params.get('look') === 'night' ? 'night' : 'day';
   document.documentElement.dataset.look = look;
-  // A sample for the teacher: whiter paper on a pale desk with a mat.
-  const bright = look === 'day' && params.get('paper') === 'white';
+  // The house look (the teacher's choice, 24 Nov 2026): whiter paper on a pale
+  // desk with a mat. ?paper=cream shows the earlier cream paper.
+  const bright = look === 'day' && params.get('paper') !== 'cream';
   if (bright) {
     paperTone.paper = '#FBFAF5';
     paperTone.shadow = '#E3DFD3';
@@ -242,6 +243,22 @@ async function start() {
       });
     },
     /** True once every diagram on the page has finished drawing in. */
+    /** For scripts/figure-rooms.mjs: how far down the page the drawing reaches. */
+    figureDepth() {
+      const g = book?.state.group;
+      if (!g) return null;
+      let z = -Infinity;
+      const v = new Vector3();
+      g.updateMatrixWorld(true);
+      g.traverse((o) => {
+        if (!o.geometry || o.name === 'grab-target') return;
+        for (let p = o; p && p !== g.parent; p = p.parent) if (!p.visible) return;
+        o.geometry.computeBoundingBox();
+        const bb = o.geometry.boundingBox;
+        for (const x of [bb.min.x, bb.max.x]) for (const y of [bb.min.y, bb.max.y]) for (const zz of [bb.min.z, bb.max.z]) z = Math.max(z, v.set(x, y, zz).applyMatrix4(o.matrixWorld).z);
+      });
+      return { z, scale: g.scale.x, scene: book.state.sceneId, ledger: !!document.querySelector('.ledger-slot')?.innerHTML };
+    },
     drawInDone() {
       return (book?.state.objects ?? []).every((o) => o.formUniforms[0].value >= 1);
     },

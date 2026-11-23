@@ -57,8 +57,8 @@ export default function createWorkScene(ctx) {
   const wall = createInkObject(new BoxGeometry(0.3, 2.2, 1.2).translate(0, 1.1, 0), { color: '#E3D6BE', name: 'wall', maxLayers: 1 });
   wall.group.scale.setScalar(S);
   ctx.scene.add(person.group, crate.group, wall.group);
-  ctx.overlay.add({ id: 'part-person', kind: 'part', anchor: () => person.group.position.clone().add(new Vector3(0, 1.8 * S, 0)), html: 'person', gap: 2 });
-  ctx.overlay.add({ id: 'part-target', kind: 'part', anchor: () => (s.target === 'wall' ? wall.group.position : crate.group.position).clone().add(new Vector3(0, 1.3 * S, 0)), html: 'crate', gap: 2 });
+  ctx.overlay.add({ id: 'part-person', kind: 'part', anchor: () => ctx.scene.localToWorld(person.group.position.clone().add(new Vector3(0, 1.8 * S, 0))), html: 'person', gap: 2 });
+  ctx.overlay.add({ id: 'part-target', kind: 'part', anchor: () => ctx.scene.localToWorld((s.target === 'wall' ? wall.group.position : crate.group.position).clone().add(new Vector3(0, 1.3 * S, 0))), html: 'crate', gap: 2 });
   // The force is printed upright beside the arrow, in the drawing's plane.
   addNote(ctx, { id: 'force', centre: () => W(0.9, 1.6), v: new Vector3(0, 1, 0), width: 0.042, height: 0.0098 });
 

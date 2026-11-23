@@ -27,6 +27,8 @@ for (const id of ids) {
     await tab.waitForFunction(() => window.__stage.idle, null, { timeout: 20_000 }).catch(() => problems.push(`${id} p${p + 1}: never went idle`));
     const info = await tab.evaluate(() => ({ fits: window.__book.panelFits(), type: document.querySelector('.page-panel').dataset.type }));
     if (!info.fits.fits) problems.push(`${id} p${p + 1}: text overflows (${info.fits.scrollHeight} > ${info.fits.clientHeight})`);
+    const right = await tab.evaluate(() => { const r = document.querySelector('.page-panel-right'); return r && !r.hidden && r.classList.contains('is-textbook') ? { s: r.scrollHeight, c: r.clientHeight } : null; });
+    if (right && right.s > right.c + 2) problems.push(`${id} p${p + 1}: right page overflows (${right.s} > ${right.c})`);
     await tab.screenshot({ path: `${out}/${id}-p${String(p + 1).padStart(2, '0')}-${info.type}.jpg`, quality: 80 });
   }
   console.log(id, count);
